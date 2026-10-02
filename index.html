@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      (function() {
+        // Prevent and repair "Cannot set property fetch of #<Window> which has only a getter"
+        try {
+          var origFetch = window.fetch ? window.fetch.bind(window) : null;
+          var activeFetch = origFetch;
+          Object.defineProperty(window, 'fetch', {
+            configurable: true,
+            enumerable: true,
+            get: function() {
+              return activeFetch;
+            },
+            set: function(fn) {
+              activeFetch = fn;
+            }
+          });
+        } catch (e) {
+          try {
+            var proto = Object.getPrototypeOf(window);
+            if (proto) {
+              var protoFetch = proto.fetch ? proto.fetch.bind(window) : null;
+              var curFetch = protoFetch;
+              Object.defineProperty(proto, 'fetch', {
+                configurable: true,
+                enumerable: true,
+                get: function() {
+                  return curFetch;
+                },
+                set: function(fn) {
+                  curFetch = fn;
+                }
+              });
+            }
+          } catch (err) {}
+        }
+
+        window.addEventListener('error', function(event) {
+          if (
+            event &&
+            event.message &&
+            event.message.indexOf('fetch') !== -1 &&
+            (event.message.indexOf('getter') !== -1 || event.message.indexOf('read only') !== -1)
+          ) {
+            event.preventDefault();
+            if (event.stopImmediatePropagation) event.stopImmediatePropagation();
+            return true;
+          }
+        }, true);
+      })();
+    </script>
+    <title>QASWA TELECOM - Display Repair Specialists for Flagship Devices</title>
+    <meta name="description" content="QASWA TELECOM is a specialized mobile repair service focused exclusively on display repairs for high-end flagship devices: Apple iPhone, Samsung Galaxy S & Z, Google Pixel, OnePlus, Apple Watch, iPad, and premium tablets." />
+    <meta property="og:title" content="QASWA TELECOM - Display Repair Specialists for Flagship Devices" />
+    <meta property="og:description" content="QASWA TELECOM is a specialized mobile repair service focused exclusively on display repairs for high-end flagship devices: Apple iPhone, Samsung Galaxy S & Z, Google Pixel, OnePlus, Apple Watch, iPad, and premium tablets." />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="icon" type="image/svg+xml" href="/qaswa-logo.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <script>
+      (function() {
+        try {
+          var saved = localStorage.getItem('qaswa_theme') || localStorage.getItem('repairnex_theme');
+          if (saved === 'dark') {
+            document.documentElement.classList.add('dark');
+          } else {
+            document.documentElement.classList.remove('dark');
+          }
+        } catch (e) {}
+      })();
+    </script>
+  </head>
+  <body class="bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 antialiased transition-colors duration-200">
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+

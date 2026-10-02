@@ -1,0 +1,72 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  :root {
+    --bg-primary: #FFFFFF;
+    --bg-secondary: #F7FAFA;
+    --card-bg: #FFFFFF;
+    --text-primary: #111827;
+    --text-secondary: #6B7280;
+    --border-color: #E5E7EB;
+    --accent: #00B2A2;
+  }
+
+  .dark {
+    --bg-primary: #0B1110;
+    --bg-secondary: #111918;
+    --card-bg: #16201F;
+    --text-primary: #F9FAFB;
+    --text-secondary: #A7B0AE;
+    --border-color: #263331;
+    --accent: #00B2A2;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+  }
+
+  *, *::before, *::after {
+    border-color: var(--border-color);
+  }
+}
+
+/* Custom Design Token Utilities */
+.bg-theme-main {
+  background-color: var(--bg-primary) !important;
+}
+
+.bg-theme-sec {
+  background-color: var(--bg-secondary) !important;
+}
+
+.bg-theme-card {
+  background-color: var(--card-bg) !important;
+}
+
+.text-theme-main {
+  color: var(--text-primary) !important;
+}
+
+.text-theme-sub {
+  color: var(--text-secondary) !important;
+}
+
+.border-theme-main {
+  border-color: var(--border-color) !important;
+}
+
+.bg-theme-accent {
+  background-color: var(--accent) !important;
+}
+
+.text-theme-accent {
+  color: var(--accent) !important;
+}

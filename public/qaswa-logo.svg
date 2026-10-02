@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 600" width="100%" height="100%" shape-rendering="geometricPrecision">
+  <defs>
+    <!-- Crisp Teal Gradient matching the official brand emblem -->
+    <linearGradient id="qaswaBrandTeal" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#28BEA9" />
+      <stop offset="100%" stop-color="#1DB39F" />
+    </linearGradient>
+
+    <!-- Vibrant Red Gradient for the dynamic swoosh -->
+    <linearGradient id="qaswaSwooshRed" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#E72628" />
+      <stop offset="100%" stop-color="#D91E21" />
+    </linearGradient>
+  </defs>
+
+  <!-- Smooth Teal Oval Emblem Background -->
+  <ellipse cx="500" cy="300" rx="460" ry="255" fill="url(#qaswaBrandTeal)" />
+
+  <!-- Main Wordmark: QASWA (Authentic Vector Geometry from Brand Asset) -->
+  <g fill="#FFFFFF">
+    <!-- Letter 'Q': Sleek circular ring with downward curved tail -->
+    <path d="M 188 180 C 230 180 264 214 264 256 C 264 278 254 298 238 312 L 244 330 C 246 338 240 345 232 345 C 227 345 222 342 220 337 L 214 324 C 205 329 197 332 188 332 C 146 332 112 298 112 256 C 112 214 146 180 188 180 Z M 188 208 C 162 208 140 230 140 256 C 140 282 162 304 188 304 C 214 304 236 282 236 256 C 236 230 214 208 188 208 Z" />
+    <!-- Stylized Q Tail sweeping gracefully to the left -->
+    <path d="M 218 302 C 228 312 236 330 235 348 C 234 362 224 372 211 372 C 200 372 195 363 197 352 C 199 338 205 324 218 302 Z" />
+
+    <!-- Letter 'A' (1st): Modern chevron without crossbar -->
+    <path d="M 275 330 L 324 188 C 327 181 334 177 342 177 C 350 177 357 181 360 188 L 409 330 L 379 330 L 342 220 L 305 330 Z" />
+
+    <!-- Letter 'S': Clean, modern rounded curves with uniform stroke weight -->
+    <path d="M 432 313 C 438 325 452 332 468 332 C 488 332 501 321 501 306 C 501 289 486 282 466 276 L 456 273 C 434 266 422 254 422 233 C 422 210 440 177 470 177 C 493 177 508 188 514 203 L 488 213 C 485 205 478 199 469 199 C 456 199 448 207 448 218 C 448 229 458 235 475 240 L 485 243 C 512 251 528 266 528 290 C 528 317 504 336 468 336 C 434 336 414 316 406 298 Z" />
+
+    <!-- Letter 'W': Stylized geometric angular strokes -->
+    <path d="M 533 180 L 558 180 L 591 292 L 624 180 L 649 180 L 682 292 L 715 180 L 740 180 L 696 330 L 669 330 L 637 222 L 604 330 L 577 330 Z" />
+
+    <!-- Letter 'A' (2nd): Identical modern chevron without crossbar -->
+    <path d="M 744 330 L 793 188 C 796 181 803 177 811 177 C 819 177 826 181 829 188 L 878 330 L 848 330 L 811 220 L 774 330 Z" />
+  </g>
+
+  <!-- Dynamic Red Swoosh Accent Line (Thick on left under Q tail, sweeping upward and tapering to a sharp point on right) -->
+  <path d="M 148 376 C 220 361, 460 344, 856 348 C 500 357, 240 376, 156 392 C 148 393, 142 384, 148 376 Z" fill="url(#qaswaSwooshRed)" />
+
+  <!-- TELECOM: Centered Pure White Bold Clean Modern Sans-Serif Wordmark -->
+  <text x="500" y="445"
+        fill="#FFFFFF"
+        font-family="'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
+        font-size="46"
+        font-weight="800"
+        letter-spacing="16"
+        text-anchor="middle">
+    TELECOM
+  </text>
+</svg>

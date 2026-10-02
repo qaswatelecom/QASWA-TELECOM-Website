@@ -1,0 +1,6 @@
+{
+  "name": "REPAIRNEX - Mobile Repair Service & Lead Management",
+  "description": "Professional mobile phone repair booking and lead management platform. Dynamic brand, model, and service configuration with instant WhatsApp booking and full CMS admin panel.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
