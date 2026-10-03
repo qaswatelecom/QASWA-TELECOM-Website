@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 60" fill="none">
+  <!-- OnePlus Red Badge -->
+  <rect x="8" y="8" width="44" height="44" rx="8" fill="#EB0028"/>
+  <path fill="#FFFFFF" d="M26 23h4v17h-4z"/>
+  <path fill="#FFFFFF" d="M27.5 19c-1.8 0-3.5 1.5-3.5 3.5h3.5v-3.5z"/>
+  <path fill="#FFFFFF" d="M37 28h3v3h-3v3h-3v-3h-3v-3h3v-3h3v3z"/>
+  <!-- Wordmark -->
+  <text x="62" y="37" font-family="'Plus Jakarta Sans', system-ui, -apple-system, sans-serif" font-size="21" font-weight="900" fill="#111827" letter-spacing="0.5">ONEPLUS</text>
+</svg>

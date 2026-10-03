@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 190 60" fill="none">
+  <!-- Motorola batwing circle logo and clean bold wordmark -->
+  <circle cx="28" cy="30" r="22" fill="#00142E"/>
+  <path fill="#FFFFFF" d="M18 38c2.4-4.6 4.6-9.6 6.6-14 1.8 4 3 6.8 3 6.8s1.2-2.8 3-6.8c2 4.4 4.2 9.4 6.6 14-1.8.8-4.5 1.5-7.5 1.5s-5.7-.7-7.5-1.5zm-2.8-1.2c-1.8-1.5-2.7-3.7-2.7-6.3 0-5.8 5-11 15-11s15 5.2 15 11c0 2.6-.9 4.8-2.7 6.3-3.2-6.5-6.8-14-6.8-14l-5.5 11-5.5-11s-3.6 7.5-6.8 14z"/>
+  <text x="58" y="37" font-family="'Plus Jakarta Sans', system-ui, sans-serif" font-size="20" font-weight="700" fill="#00142E">motorola</text>
+</svg>

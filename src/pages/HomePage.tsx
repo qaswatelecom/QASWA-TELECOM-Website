@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { QaswaHero } from '../components/home/QaswaHero.tsx';
 import { FastEasyBookingCard } from '../components/home/FastEasyBookingCard.tsx';
 import { ExploreTopBrands } from '../components/home/ExploreTopBrands.tsx';
-import { BuzzmeehTrustCards } from '../components/home/BuzzmeehTrustCards.tsx';
-import { BuzzmeehNumberedSections } from '../components/home/BuzzmeehNumberedSections.tsx';
+import { QaswaTrustCards } from '../components/home/QaswaTrustCards.tsx';
+import { QaswaNumberedSections } from '../components/home/QaswaNumberedSections.tsx';
 import { SearchBrandModal } from '../components/home/SearchBrandModal.tsx';
 import { AboutSection } from '../components/home/AboutSection.tsx';
 import { RepairProcess } from '../components/home/RepairProcess.tsx';
@@ -83,10 +83,10 @@ export const HomePage: React.FC = () => {
       <ExploreTopBrands />
 
       {/* 3. One Trusted Place for All Your Flagship Display Repairs (Trust Cards) */}
-      <BuzzmeehTrustCards />
+      <QaswaTrustCards />
 
       {/* 4. QASWA TELECOM Signature Numbered Showcases (01, 02, 03, 04) with Interactive Problem Grids */}
-      <BuzzmeehNumberedSections
+      <QaswaNumberedSections
         onSelectProblem={handleSelectProblem}
       />
 

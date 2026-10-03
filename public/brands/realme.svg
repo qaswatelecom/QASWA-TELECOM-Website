@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 60" fill="none">
+  <!-- realme lowercase yellow badge / clean wordmark -->
+  <rect x="6" y="8" width="44" height="44" rx="10" fill="#FFC915"/>
+  <text x="28" y="38" font-family="'Plus Jakarta Sans', system-ui, sans-serif" font-size="30" font-weight="900" fill="#000000" text-anchor="middle">r</text>
+  <text x="60" y="38" font-family="'Plus Jakarta Sans', system-ui, sans-serif" font-size="24" font-weight="700" fill="#1F2937">realme</text>
+</svg>

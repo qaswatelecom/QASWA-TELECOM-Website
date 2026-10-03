@@ -17,11 +17,11 @@ import {
   ArrowDown,
 } from 'lucide-react';
 
-interface BuzzmeehNumberedSectionsProps {
+interface QaswaNumberedSectionsProps {
   onSelectProblem: (device: string, fault: string) => void;
 }
 
-export const BuzzmeehNumberedSections: React.FC<BuzzmeehNumberedSectionsProps> = ({
+export const QaswaNumberedSections: React.FC<QaswaNumberedSectionsProps> = ({
   onSelectProblem,
 }) => {
   const handleProblemClick = (device: string, fault: string) => {

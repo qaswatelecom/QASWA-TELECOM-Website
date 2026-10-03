@@ -2,7 +2,7 @@ import React from 'react';
 import { Home, Layers, Users, Cpu, Sparkles } from 'lucide-react';
 import { usePageContent, HomePageContent, DEFAULT_HOME_CONTENT } from '../../lib/pageContent.ts';
 
-export const BuzzmeehTrustCards: React.FC = () => {
+export const QaswaTrustCards: React.FC = () => {
   const { content } = usePageContent<HomePageContent>('home');
   const trustData = content?.trustCards || DEFAULT_HOME_CONTENT.trustCards;
 

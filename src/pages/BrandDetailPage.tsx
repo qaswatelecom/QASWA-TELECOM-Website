@@ -55,8 +55,13 @@ export const BrandDetailPage: React.FC<BrandDetailPageProps> = ({ brandSlug, cat
         }
       })
       .catch(() => {
-        // Fallback: look in context brands
-        const found = brands.find((b) => b.slug === brandSlug);
+        // Fallback: look in context brands (with alias support for apple/iphone and samsung/samsung-galaxy)
+        const found = brands.find(
+          (b) =>
+            b.slug === brandSlug ||
+            (brandSlug === 'apple' && (b.slug === 'iphone' || b.name.toLowerCase() === 'apple')) ||
+            (brandSlug === 'samsung' && (b.slug === 'samsung-galaxy' || b.name.toLowerCase().includes('samsung')))
+        );
         if (found) {
           setBrand(found);
           const catSlug = found.categorySlug || propCatSlug || 'mobile';
