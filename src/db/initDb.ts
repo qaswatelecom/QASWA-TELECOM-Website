@@ -278,6 +278,23 @@ export async function ensureDatabaseSchema() {
         key TEXT NOT NULL UNIQUE,
         value TEXT NOT NULL
       );
+
+      CREATE TABLE IF NOT EXISTS customer_enquiries (
+        id SERIAL PRIMARY KEY,
+        customer_name TEXT,
+        customer_phone TEXT,
+        device_category TEXT NOT NULL DEFAULT 'Mobile',
+        brand TEXT NOT NULL,
+        model TEXT NOT NULL,
+        display_issue TEXT NOT NULL,
+        customer_message TEXT,
+        status TEXT DEFAULT 'New',
+        whatsapp_status TEXT DEFAULT 'Sent',
+        enquiry_date TEXT,
+        enquiry_time TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
     `);
       console.log('PostgreSQL database tables verified successfully.');
     } catch (ddlError: any) {

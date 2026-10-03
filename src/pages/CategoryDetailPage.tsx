@@ -313,16 +313,16 @@ export const CategoryDetailPage: React.FC<CategoryDetailPageProps> = ({ category
                 <p className="text-xs mt-1 text-slate-400">Try adjusting your search terms or series filter.</p>
               </div>
             ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-4 sm:gap-6">
+              <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-2.5 sm:gap-3.5 md:gap-4 lg:gap-4.5">
                 {filteredModels.map((model) => (
                   <div
                     key={model.id}
                     onClick={() => navigate(`/models/${model.slug}`)}
-                    className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-slate-200/90 bg-white p-4 sm:p-5 shadow-xs transition-all duration-300 hover:-translate-y-1.5 hover:border-[#00B2A2] hover:shadow-xl dark:border-slate-800 dark:bg-slate-900 cursor-pointer"
+                    className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-slate-200/90 bg-white p-2.5 sm:p-3.5 md:p-4 shadow-xs transition-all duration-300 hover:-translate-y-1.5 hover:border-[#00B2A2] hover:shadow-xl dark:border-slate-800 dark:bg-slate-900 cursor-pointer select-none"
                   >
                     <div>
                       {/* Model Image Container */}
-                      <div className="relative h-32 sm:h-40 w-full overflow-hidden rounded-xl bg-slate-100 dark:bg-slate-800/80 mb-3.5 flex items-center justify-center p-2">
+                      <div className="relative h-24 sm:h-28 md:h-32 w-full overflow-hidden rounded-xl bg-slate-50 dark:bg-slate-800/80 mb-2 sm:mb-2.5 flex items-center justify-center p-1.5 sm:p-2">
                         {model.imageUrl ? (
                           <img
                             src={model.imageUrl}
@@ -331,28 +331,23 @@ export const CategoryDetailPage: React.FC<CategoryDetailPageProps> = ({ category
                             loading="lazy"
                           />
                         ) : (
-                          <CategoryIcon className="h-10 w-10 text-[#00B2A2]" />
-                        )}
-                        {model.series && (
-                          <span className="absolute top-2 left-2 rounded-md bg-black/60 backdrop-blur-md px-2 py-0.5 text-[10px] font-bold text-teal-300">
-                            {model.series}
-                          </span>
+                          <CategoryIcon className="h-8 w-8 sm:h-10 sm:w-10 text-[#00B2A2]" />
                         )}
                       </div>
 
-                      <h3 className="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white group-hover:text-[#00B2A2] transition-colors line-clamp-2">
+                      <span className="text-[10px] sm:text-[11px] font-bold text-[#00B2A2] uppercase tracking-wider block mb-0.5 truncate">
+                        {category.name}
+                      </span>
+
+                      <h3 className="text-[11px] sm:text-xs md:text-sm font-extrabold text-slate-900 dark:text-white group-hover:text-[#00B2A2] transition-colors line-clamp-2 leading-tight">
                         {model.name}
                       </h3>
-
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 line-clamp-2">
-                        {model.description || `Specialized display repair services for ${model.name}.`}
-                      </p>
                     </div>
 
-                    <div className="mt-3.5 pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs font-bold text-[#00B2A2]">
-                      <span className="group-hover:underline">Display Services</span>
-                      <div className="h-6 w-6 rounded-full bg-[#00B2A2]/10 dark:bg-[#00B2A2]/20 flex items-center justify-center text-[#00B2A2] group-hover:bg-[#00B2A2] group-hover:text-white transition-colors">
-                        <ArrowRight className="h-3 w-3" />
+                    <div className="mt-2.5 pt-2 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-[10px] sm:text-xs font-bold text-[#00B2A2]">
+                      <span className="truncate group-hover:underline">Display Services</span>
+                      <div className="h-5 w-5 sm:h-6 sm:w-6 rounded-full bg-[#00B2A2]/10 dark:bg-[#00B2A2]/20 flex items-center justify-center text-[#00B2A2] group-hover:bg-[#00B2A2] group-hover:text-white transition-colors shrink-0">
+                        <ArrowRight className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
                       </div>
                     </div>
                   </div>

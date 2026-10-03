@@ -101,7 +101,7 @@ const AppContent: React.FC = () => {
       content = <ModelDetailPage modelSlug={slug} />;
     } else if (currentPath.startsWith('/brands/')) {
       const slug = currentPath.replace('/brands/', '');
-      content = <BrandDetailPage brandSlug={slug} />;
+      content = <BrandDetailPage categorySlug="mobile" brandSlug={slug} />;
     } else if (currentPath === '/services') {
       content = <ServicesPage />;
     } else if (currentPath.startsWith('/services/')) {

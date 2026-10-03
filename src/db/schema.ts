@@ -316,3 +316,21 @@ export const ordersRelations = relations(orders, ({ one }) => ({
 export const customersRelations = relations(customers, ({ many }) => ({
   orders: many(orders),
 }));
+
+export const customerEnquiries = pgTable('customer_enquiries', {
+  id: serial('id').primaryKey(),
+  customerName: text('customer_name'),
+  customerPhone: text('customer_phone'),
+  deviceCategory: text('device_category').notNull().default('Mobile'),
+  brand: text('brand').notNull(),
+  model: text('model').notNull(),
+  displayIssue: text('display_issue').notNull(),
+  customerMessage: text('customer_message'),
+  status: text('status').notNull().default('New'),
+  whatsappStatus: text('whatsapp_status').notNull().default('Sent'),
+  enquiryDate: text('enquiry_date'),
+  enquiryTime: text('enquiry_time'),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+});
+

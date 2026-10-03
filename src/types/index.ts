@@ -274,3 +274,21 @@ export interface PageSeoConfig {
   isCustom?: boolean;
 }
 
+export interface CustomerEnquiry {
+  id: number;
+  customerName?: string | null;
+  customerPhone?: string | null;
+  deviceCategory: string;
+  brand: string;
+  model: string;
+  displayIssue: string;
+  customerMessage?: string | null;
+  status: 'New' | 'Contacted' | 'In Progress' | 'Closed' | string;
+  whatsappStatus: string;
+  enquiryDate: string;
+  enquiryTime: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+

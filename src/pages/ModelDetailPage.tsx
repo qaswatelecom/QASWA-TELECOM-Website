@@ -19,8 +19,89 @@ import {
   Calendar,
   X,
   ArrowRight,
+  Check,
+  Zap,
+  Moon,
+  Fingerprint,
+  Sliders,
+  ShieldAlert,
+  Monitor,
 } from 'lucide-react';
 import { generateBreadcrumbSchema, useJsonLd } from '../lib/seo.ts';
+
+const getIssueMeta = (issue: string) => {
+  const lower = issue.toLowerCase();
+  if (lower.includes('glass') || lower.includes('cracked')) {
+    return {
+      icon: Layers,
+      color: 'text-amber-500 bg-amber-500/10 border-amber-500/20 dark:bg-amber-500/20',
+      badge: 'Glass Layer Malfunction',
+      selectedClass: 'border-amber-500 ring-2 ring-amber-500/20 bg-amber-500/5 dark:bg-amber-500/10',
+    };
+  }
+  if (lower.includes('green & pink') || lower.includes('green and pink') || lower.includes('pink line') || lower.includes('vertical')) {
+    return {
+      icon: Sliders,
+      color: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20 dark:bg-emerald-500/20',
+      badge: 'Laser Line Fault',
+      selectedClass: 'border-emerald-500 ring-2 ring-emerald-500/20 bg-emerald-500/5 dark:bg-emerald-500/10',
+    };
+  }
+  if (lower.includes('green screen') || lower.includes('white screen')) {
+    return {
+      icon: Monitor,
+      color: 'text-green-500 bg-green-500/10 border-green-500/20 dark:bg-green-500/20',
+      badge: 'Panel Controller Bias',
+      selectedClass: 'border-green-500 ring-2 ring-green-500/20 bg-green-500/5 dark:bg-green-500/10',
+    };
+  }
+  if (lower.includes('black screen') || lower.includes('blank')) {
+    return {
+      icon: Moon,
+      color: 'text-indigo-400 bg-indigo-500/10 border-indigo-500/20 dark:bg-indigo-500/20',
+      badge: 'No Display / Backlight Off',
+      selectedClass: 'border-indigo-500 ring-2 ring-indigo-500/20 bg-indigo-500/5 dark:bg-indigo-500/10',
+    };
+  }
+  if (lower.includes('touch') || lower.includes('digitizer')) {
+    return {
+      icon: Fingerprint,
+      color: 'text-sky-500 bg-sky-500/10 border-sky-500/20 dark:bg-sky-500/20',
+      badge: 'Digitizer Touch Lag',
+      selectedClass: 'border-sky-500 ring-2 ring-sky-500/20 bg-sky-500/5 dark:bg-sky-500/10',
+    };
+  }
+  if (lower.includes('flicker') || lower.includes('tint') || lower.includes('distortion')) {
+    return {
+      icon: Zap,
+      color: 'text-purple-500 bg-purple-500/10 border-purple-500/20 dark:bg-purple-500/20',
+      badge: 'Refresh Voltage Flickering',
+      selectedClass: 'border-purple-500 ring-2 ring-purple-500/20 bg-purple-500/5 dark:bg-purple-500/10',
+    };
+  }
+  if (lower.includes('foldable') || lower.includes('hinge') || lower.includes('flex')) {
+    return {
+      icon: Cpu,
+      color: 'text-rose-500 bg-rose-500/10 border-rose-500/20 dark:bg-rose-500/20',
+      badge: 'Hinge & Flex Stress',
+      selectedClass: 'border-rose-500 ring-2 ring-rose-500/20 bg-rose-500/5 dark:bg-rose-500/10',
+    };
+  }
+  if (lower.includes('damage') || lower.includes('broken')) {
+    return {
+      icon: ShieldAlert,
+      color: 'text-rose-500 bg-rose-500/10 border-rose-500/20 dark:bg-rose-500/20',
+      badge: 'Physical Screen Impact',
+      selectedClass: 'border-rose-500 ring-2 ring-rose-500/20 bg-rose-500/5 dark:bg-rose-500/10',
+    };
+  }
+  return {
+    icon: Sparkles,
+    color: 'text-[#00B2A2] bg-[#00B2A2]/10 border-[#00B2A2]/20 dark:bg-[#00B2A2]/20',
+    badge: 'Hardware Screen Issue',
+    selectedClass: 'border-[#00B2A2] ring-2 ring-[#00B2A2]/20 bg-[#00B2A2]/5 dark:bg-[#00B2A2]/10',
+  };
+};
 
 interface ModelDetailPageProps {
   modelSlug: string;
@@ -33,7 +114,7 @@ export const ModelDetailPage: React.FC<ModelDetailPageProps> = ({ modelSlug }) =
   const [category, setCategory] = useState<DeviceCategory | null>(null);
   const [displayIssues, setDisplayIssues] = useState<string[]>([]);
   const [services, setServices] = useState<Service[]>([]);
-  const [selectedIssue, setSelectedIssue] = useState<string>('');
+  const [selectedIssues, setSelectedIssues] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Booking Modal State
@@ -44,6 +125,14 @@ export const ModelDetailPage: React.FC<ModelDetailPageProps> = ({ modelSlug }) =
   const [additionalNote, setAdditionalNote] = useState('');
   const [bookingSuccess, setBookingSuccess] = useState(false);
   const [submittingBooking, setSubmittingBooking] = useState(false);
+
+  // Customer WhatsApp Enquiry Submission State
+  const [submittingEnquiry, setSubmittingEnquiry] = useState(false);
+  const [enquirySuccess, setEnquirySuccess] = useState(false);
+  const [enquiryError, setEnquiryError] = useState<string | null>(null);
+  const [enquiryCustomerName, setEnquiryCustomerName] = useState('');
+  const [enquiryCustomerPhone, setEnquiryCustomerPhone] = useState('');
+  const [showOptionalDetails, setShowOptionalDetails] = useState(false);
 
   const rawWhatsApp = settings.WHATSAPP_NUMBER || '9324316048';
   const cleanWhatsApp = rawWhatsApp.replace(/\D/g, '');
@@ -62,7 +151,7 @@ export const ModelDetailPage: React.FC<ModelDetailPageProps> = ({ modelSlug }) =
         setDisplayIssues(data.displayIssues || []);
         setServices(data.services || []);
         if (data.displayIssues && data.displayIssues.length > 0) {
-          setSelectedIssue(data.displayIssues[0]);
+          setSelectedIssues([data.displayIssues[0]]);
         }
       })
       .catch((err) => {
@@ -70,6 +159,12 @@ export const ModelDetailPage: React.FC<ModelDetailPageProps> = ({ modelSlug }) =
       })
       .finally(() => setLoading(false));
   }, [modelSlug]);
+
+  const toggleIssue = (issue: string) => {
+    setSelectedIssues((prev) =>
+      prev.includes(issue) ? prev.filter((i) => i !== issue) : [...prev, issue]
+    );
+  };
 
   const categoryName = category?.name || (model?.categorySlug === 'apple-watch' ? 'Apple Watch' : model?.categorySlug === 'ipad' ? 'iPad' : model?.categorySlug === 'tablet' ? 'Tablet' : 'Mobile');
   const categorySlug = category?.slug || model?.categorySlug || 'mobile';
@@ -108,12 +203,63 @@ export const ModelDetailPage: React.FC<ModelDetailPageProps> = ({ modelSlug }) =
 
   // WhatsApp click handler
   const handleWhatsAppConsult = (issueName?: string) => {
-    const issueToReport = issueName || selectedIssue || 'Display Malfunction / Broken Glass';
+    const issueToReport = issueName || (selectedIssues.length > 0 ? selectedIssues.join(', ') : 'Display Malfunction / Broken Glass');
     const deviceName = model ? model.name : 'Flagship Device';
     const text = encodeURIComponent(
       `Hello QASWA TELECOM, I would like to enquire about display repair diagnosis for my ${deviceName}.\n\nReported Issue: ${issueToReport}\nDevice Category: ${categoryName}`
     );
     window.open(`https://wa.me/${cleanWhatsApp}?text=${text}`, '_blank');
+  };
+
+  // Flow: Device -> Brand -> Model -> Display Issues (Multi-Select) -> Proceed With WhatsApp
+  // Saves enquiry in PostgreSQL database first, then opens WhatsApp with formatted message
+  const handleProceedWithWhatsApp = async () => {
+    if (!model || selectedIssues.length === 0 || submittingEnquiry) return;
+    setSubmittingEnquiry(true);
+    setEnquiryError(null);
+
+    try {
+      const payload = {
+        deviceCategory: categoryName,
+        brand: brand?.name || 'Flagship Brand',
+        model: model.name,
+        displayIssue: selectedIssues.join(', '),
+        displayIssues: selectedIssues,
+        customerName: enquiryCustomerName.trim() || undefined,
+        customerPhone: enquiryCustomerPhone.trim() || undefined,
+        customerMessage: additionalNote.trim() || undefined,
+      };
+
+      const res = await fetch('/api/enquiries', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Failed to submit enquiry');
+      }
+
+      setEnquirySuccess(true);
+
+      const issuesFormattedMsg = selectedIssues.length > 1
+        ? `Display Issues:\n` + selectedIssues.map((iss) => `• ${iss}`).join('\n')
+        : `Display Issue: ${selectedIssues[0]}`;
+
+      const targetUrl = data.whatsappUrl || `https://wa.me/${cleanWhatsApp}?text=${encodeURIComponent(
+        `Hello QASWA TELECOM, I would like to enquire about a display repair.\n\nDevice Category: ${categoryName}\nBrand: ${brand?.name || 'Mobile'}\nModel: ${model.name}\n${issuesFormattedMsg}\n\nPlease let me know the next steps.`
+      )}`;
+
+      setTimeout(() => {
+        window.open(targetUrl, '_blank');
+        setSubmittingEnquiry(false);
+      }, 500);
+    } catch (err: any) {
+      console.error('Enquiry submission failed:', err);
+      setEnquiryError(err.message || 'Failed to record enquiry. Please try again.');
+      setSubmittingEnquiry(false);
+    }
   };
 
   const handleBookingSubmit = async (e: React.FormEvent) => {
@@ -130,8 +276,8 @@ export const ModelDetailPage: React.FC<ModelDetailPageProps> = ({ modelSlug }) =
         brandName: brand?.name || categoryName,
         modelId: model.id,
         modelName: model.name,
-        serviceName: selectedIssue || 'Display Diagnosis',
-        additionalNote: `Display Issue: ${selectedIssue}. Note: ${additionalNote}`,
+        serviceName: selectedIssues.length > 0 ? selectedIssues.join(' + ') : 'Display Diagnosis',
+        additionalNote: `Display Issues: ${selectedIssues.join(', ')}. Note: ${additionalNote}`,
         source: 'website_model_page',
       };
 
@@ -259,11 +405,6 @@ export const ModelDetailPage: React.FC<ModelDetailPageProps> = ({ modelSlug }) =
                   <span className="rounded-lg bg-black/60 backdrop-blur-md px-2.5 py-1 text-[11px] font-bold text-white shadow-xs">
                     {categoryName}
                   </span>
-                  {model.series && (
-                    <span className="rounded-lg bg-[#00B2A2]/90 backdrop-blur-md px-2.5 py-1 text-[10px] font-extrabold text-white shadow-xs">
-                      {model.series}
-                    </span>
-                  )}
                 </div>
               </div>
             </div>
@@ -336,34 +477,15 @@ export const ModelDetailPage: React.FC<ModelDetailPageProps> = ({ modelSlug }) =
                   </div>
                 </div>
               </div>
-
-              {/* Action Buttons */}
-              <div className="mt-8 pt-6 border-t border-slate-100 dark:border-slate-800/80 flex flex-wrap items-center gap-3.5">
-                <button
-                  onClick={() => setBookingModalOpen(true)}
-                  className="rounded-xl bg-[#00B2A2] px-6 py-3 text-xs sm:text-sm font-extrabold text-white shadow-md hover:bg-[#009b8d] transition-all cursor-pointer flex items-center gap-2"
-                >
-                  <Calendar className="h-4 w-4" />
-                  <span>Book Display Diagnosis</span>
-                </button>
-
-                <button
-                  onClick={() => handleWhatsAppConsult()}
-                  className="rounded-xl bg-[#25D366] px-6 py-3 text-xs sm:text-sm font-extrabold text-white shadow-md hover:bg-[#1eb956] transition-all cursor-pointer flex items-center gap-2"
-                >
-                  <MessageCircle className="h-4 w-4" />
-                  <span>Consult Display Specialist on WhatsApp</span>
-                </button>
-              </div>
             </div>
           </div>
         </div>
 
         {/* ========================================================================= */}
-        {/* SECTION 1: DISPLAY-RELATED ISSUES FOR THIS MODEL                          */}
+        {/* SECTION 1: DISPLAY-RELATED ISSUES FOR THIS MODEL (MULTI-SELECT)           */}
         {/* ========================================================================= */}
-        <div className="mb-12">
-          <div className="mb-5">
+        <div id="display-issues-section" className="mb-12">
+          <div className="mb-6">
             <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#00B2A2] mb-1">
               <AlertTriangle className="h-4 w-4" />
               <span>Diagnostic Problem Assessment</span>
@@ -371,65 +493,206 @@ export const ModelDetailPage: React.FC<ModelDetailPageProps> = ({ modelSlug }) =
             <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
               Display-Related Issues Reported & Solved for {model.name}
             </h2>
-            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-1">
-              Select the display fault your device is experiencing to consult our technicians:
+            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-1 max-w-3xl">
+              Select one or multiple display faults your device is experiencing. You can choose all problems that apply:
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
+          {/* Multi-Select Issue Cards with Issue Icons */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {displayIssues.map((issue, idx) => {
-              const isSelected = selectedIssue === issue;
+              const isSelected = selectedIssues.includes(issue);
+              const meta = getIssueMeta(issue);
+              const IssueIcon = meta.icon;
 
               return (
                 <div
                   key={idx}
-                  onClick={() => setSelectedIssue(issue)}
-                  className={`group relative flex flex-col justify-between rounded-xl p-4 transition-all duration-200 cursor-pointer border ${
+                  onClick={() => toggleIssue(issue)}
+                  className={`group relative flex flex-col justify-between rounded-2xl p-4 sm:p-5 transition-all duration-200 cursor-pointer border select-none ${
                     isSelected
-                      ? 'border-[#00B2A2] bg-[#00B2A2]/5 dark:bg-[#00B2A2]/10 ring-2 ring-[#00B2A2]/30 shadow-md'
-                      : 'border-slate-200 bg-white hover:border-[#00B2A2]/60 dark:border-slate-800 dark:bg-slate-900 shadow-xs'
+                      ? meta.selectedClass + ' shadow-md'
+                      : 'border-slate-200 bg-white hover:border-[#00B2A2]/60 dark:border-slate-800 dark:bg-slate-900 shadow-xs hover:shadow-md'
                   }`}
                 >
-                  <div className="flex items-start gap-3">
-                    <div
-                      className={`flex h-8 w-8 items-center justify-center rounded-lg shrink-0 transition-colors ${
-                        isSelected
-                          ? 'bg-[#00B2A2] text-white'
-                          : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 group-hover:text-[#00B2A2]'
-                      }`}
-                    >
-                      <AlertTriangle className="h-4 w-4" />
+                  <div>
+                    {/* Header: Issue Icon & Checkbox */}
+                    <div className="flex items-start justify-between gap-3 mb-3">
+                      <div
+                        className={`flex h-11 w-11 items-center justify-center rounded-xl shrink-0 border transition-transform duration-200 group-hover:scale-105 ${meta.color}`}
+                      >
+                        <IssueIcon className="h-5 w-5" />
+                      </div>
+
+                      {/* Custom Multi-Select Checkbox */}
+                      <div
+                        className={`h-5 w-5 rounded-md flex items-center justify-center transition-all ${
+                          isSelected
+                            ? 'bg-[#00B2A2] text-white shadow-xs'
+                            : 'border-2 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 group-hover:border-[#00B2A2]'
+                        }`}
+                      >
+                        {isSelected && <Check className="h-3.5 w-3.5 stroke-[3]" />}
+                      </div>
                     </div>
 
-                    <div className="flex-1">
-                      <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white block group-hover:text-[#00B2A2] transition-colors">
-                        {issue}
-                      </span>
-                      <span className="text-[11px] text-slate-500 dark:text-slate-400 block mt-1">
-                        Fully repairable in our display cleanroom lab
-                      </span>
-                    </div>
+                    {/* Issue Name & Diagnostic Badge */}
+                    <span className="text-sm font-black text-slate-900 dark:text-white block group-hover:text-[#00B2A2] transition-colors leading-snug">
+                      {issue}
+                    </span>
+                    <span className="text-[11px] text-slate-500 dark:text-slate-400 block mt-1">
+                      {meta.badge} • Certified cleanroom repair
+                    </span>
                   </div>
 
-                  <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
-                    <span className="text-[11px] font-semibold text-[#00B2A2]">
-                      {isSelected ? '✓ Selected Issue' : 'Click to select'}
+                  {/* Bottom selection state */}
+                  <div className="mt-4 pt-2.5 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
+                    <span className={`text-[11px] font-bold ${isSelected ? 'text-[#00B2A2]' : 'text-slate-400 dark:text-slate-500'}`}>
+                      {isSelected ? '✓ Selected' : 'Click to select'}
                     </span>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleWhatsAppConsult(issue);
-                      }}
-                      className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1"
-                    >
-                      <MessageCircle className="h-3 w-3" />
-                      <span>Ask via WhatsApp</span>
-                    </button>
+                    {isSelected && (
+                      <span className="text-[10px] font-extrabold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-md border border-emerald-500/20">
+                        Added to Enquiry
+                      </span>
+                    )}
                   </div>
                 </div>
               );
             })}
+          </div>
+
+          {/* ========================================================================= */}
+          {/* PROMINENT "PROCEED WITH WHATSAPP" ENQUIRY PANEL (BOTTOM CENTRE)          */}
+          {/* ========================================================================= */}
+          <div className="mt-8 rounded-3xl border-2 border-emerald-500/40 bg-gradient-to-b from-white via-emerald-50/30 to-teal-50/40 dark:from-slate-900 dark:via-emerald-950/20 dark:to-teal-950/20 p-6 sm:p-8 text-center shadow-lg dark:border-emerald-500/30">
+            <div className="max-w-2xl mx-auto flex flex-col items-center">
+              
+              <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 mb-2">
+                <CheckCircle2 className="h-4 w-4" />
+                <span>Selected Display Issues ({selectedIssues.length})</span>
+              </div>
+
+              <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
+                Proceed With WhatsApp Enquiry
+              </h3>
+
+              <p className="mt-1.5 text-xs sm:text-sm text-slate-600 dark:text-slate-400 max-w-lg">
+                Device: <strong className="text-slate-800 dark:text-slate-200">{categoryName}</strong> • Brand: <strong className="text-slate-800 dark:text-slate-200">{brand?.name || 'Device'}</strong> • Model: <strong className="text-slate-800 dark:text-slate-200">{model.name}</strong>
+              </p>
+
+              {/* Badges of all currently selected issues */}
+              <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+                {selectedIssues.length === 0 ? (
+                  <span className="text-xs font-semibold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border border-amber-500/30 px-3 py-1.5 rounded-xl">
+                    Please click at least one display issue above to continue
+                  </span>
+                ) : (
+                  selectedIssues.map((iss, i) => (
+                    <span
+                      key={i}
+                      className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 text-white px-3 py-1.5 text-xs font-extrabold shadow-xs"
+                    >
+                      <Check className="h-3 w-3 stroke-[3]" />
+                      <span>{iss}</span>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleIssue(iss);
+                        }}
+                        className="ml-1 hover:text-rose-200 cursor-pointer"
+                        title="Remove issue"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </span>
+                  ))
+                )}
+              </div>
+
+              {/* Optional Contact Fields */}
+              <div className="mt-5 w-full max-w-md">
+                {!showOptionalDetails ? (
+                  <button
+                    type="button"
+                    onClick={() => setShowOptionalDetails(true)}
+                    className="text-xs text-slate-600 dark:text-slate-400 hover:text-[#00B2A2] underline font-medium cursor-pointer"
+                  >
+                    + Add Your Name & Phone (Optional)
+                  </button>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-left pt-2 p-3 bg-white/70 dark:bg-slate-800/70 rounded-2xl border border-slate-200 dark:border-slate-700">
+                    <div>
+                      <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-400 block mb-1">
+                        Your Name (Optional)
+                      </label>
+                      <input
+                        type="text"
+                        value={enquiryCustomerName}
+                        onChange={(e) => setEnquiryCustomerName(e.target.value)}
+                        placeholder="e.g. Rahul Sharma"
+                        className="w-full text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-[#00B2A2]"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-400 block mb-1">
+                        Phone Number (Optional)
+                      </label>
+                      <input
+                        type="tel"
+                        value={enquiryCustomerPhone}
+                        onChange={(e) => setEnquiryCustomerPhone(e.target.value)}
+                        placeholder="e.g. 98200XXXXX"
+                        className="w-full text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-[#00B2A2]"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Bottom Centre "Proceed With WhatsApp" CTA */}
+              <div className="mt-6 flex flex-col items-center justify-center gap-3">
+                <button
+                  type="button"
+                  onClick={handleProceedWithWhatsApp}
+                  disabled={selectedIssues.length === 0 || submittingEnquiry}
+                  className={`inline-flex items-center justify-center gap-2.5 rounded-2xl px-10 py-4 text-base sm:text-lg font-black text-white shadow-xl transition-all cursor-pointer ${
+                    selectedIssues.length === 0
+                      ? 'bg-slate-400 cursor-not-allowed opacity-75'
+                      : submittingEnquiry
+                      ? 'bg-emerald-600 opacity-80 cursor-wait'
+                      : 'bg-[#25D366] hover:bg-[#1eb956] hover:shadow-emerald-500/30 hover:scale-[1.02] active:scale-[0.99]'
+                  }`}
+                >
+                  <MessageCircle className="h-6 w-6 fill-current" />
+                  <span>
+                    {submittingEnquiry
+                      ? 'Saving Enquiry in Database...'
+                      : enquirySuccess
+                      ? 'Enquiry Saved! Opening WhatsApp...'
+                      : 'Proceed With WhatsApp'}
+                  </span>
+                  {!submittingEnquiry && <ArrowRight className="h-5 w-5" />}
+                </button>
+
+                {enquiryError && (
+                  <span className="text-xs font-semibold text-rose-500 text-center">
+                    {enquiryError}
+                  </span>
+                )}
+                {enquirySuccess && (
+                  <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 text-center flex items-center gap-1.5">
+                    <CheckCircle2 className="h-4 w-4" />
+                    Enquiry registered with exact timestamp in Admin Panel
+                  </span>
+                )}
+
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 text-center max-w-md">
+                  All {selectedIssues.length} selected issues are permanently saved in PostgreSQL with server date and time, and instantly sent to QASWA TELECOM on WhatsApp.
+                </p>
+              </div>
+
+            </div>
           </div>
         </div>
 
@@ -565,7 +828,7 @@ export const ModelDetailPage: React.FC<ModelDetailPageProps> = ({ modelSlug }) =
                     Book Diagnosis for {model.name}
                   </h3>
                   <p className="text-xs text-slate-500 mt-1">
-                    Selected Issue: <span className="font-semibold text-slate-800 dark:text-slate-200">{selectedIssue || 'Screen Malfunction'}</span>
+                    Selected Issues: <span className="font-semibold text-slate-800 dark:text-slate-200">{selectedIssues.length > 0 ? selectedIssues.join(', ') : 'Screen Malfunction'}</span>
                   </p>
                 </div>
 

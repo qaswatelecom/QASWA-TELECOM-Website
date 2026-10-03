@@ -20,8 +20,9 @@ import {
   galleryItems,
   siteSettings,
   users,
+  customerEnquiries,
 } from '../db/schema.ts';
-import { eq, desc, asc, sql, and, like, or } from 'drizzle-orm';
+import { eq, desc, asc, sql, and, like, or, ilike } from 'drizzle-orm';
 import { requireAuth, optionalAuth, AuthRequest } from '../middleware/auth.ts';
 import { ensureDatabaseSchema } from '../db/initDb.ts';
 import { DEFAULT_PAGE_SEO_MAP, getSchemaTemplate } from '../lib/seo.ts';
@@ -169,24 +170,46 @@ apiRouter.get('/categories/:categorySlug/brands', async (req: Request, res: Resp
 // Brand detail in a category
 apiRouter.get('/categories/:categorySlug/brands/:brandSlug', async (req: Request, res: Response) => {
   try {
+    const categorySlug = req.params.categorySlug || 'mobile';
+    const brandSlug = req.params.brandSlug;
+
+    // Look up brand in this specific category, with alias flexibility (e.g. samsung / samsung-mobile, apple / iphone)
     const brand = await db
       .select()
       .from(brands)
-      .where(and(eq(brands.slug, req.params.brandSlug), eq(brands.categorySlug, req.params.categorySlug)))
+      .where(
+        and(
+          eq(brands.categorySlug, categorySlug),
+          or(
+            eq(brands.slug, brandSlug),
+            eq(brands.slug, `${brandSlug}-mobile`),
+            eq(brands.slug, `${brandSlug}-tablet`),
+            eq(brands.slug, brandSlug.replace('-mobile', '').replace('-tablet', '')),
+            ilike(brands.name, brandSlug)
+          )
+        )
+      )
       .limit(1);
 
     if (!brand[0]) return res.status(404).json({ error: 'Brand not found' });
 
+    // STRICTLY query models belonging to this brand AND this specific categorySlug
     const brandModels = await db
       .select()
       .from(models)
-      .where(and(eq(models.brandId, brand[0].id), eq(models.isActive, true)))
+      .where(
+        and(
+          eq(models.brandId, brand[0].id),
+          eq(models.categorySlug, categorySlug),
+          eq(models.isActive, true)
+        )
+      )
       .orderBy(asc(models.sortOrder), asc(models.name));
 
     const cat = await db
       .select()
       .from(deviceCategories)
-      .where(eq(deviceCategories.slug, req.params.categorySlug))
+      .where(eq(deviceCategories.slug, categorySlug))
       .limit(1);
 
     res.json({ category: cat[0] || null, brand: brand[0], models: brandModels });
@@ -212,13 +235,56 @@ apiRouter.get('/brands', async (req: Request, res: Response) => {
 
 apiRouter.get('/brands/:slug', async (req: Request, res: Response) => {
   try {
-    const brand = await db.select().from(brands).where(eq(brands.slug, req.params.slug)).limit(1);
+    const { categorySlug } = req.query;
+    const catSlug = String(categorySlug || 'mobile');
+    const brandSlug = req.params.slug;
+
+    // Prioritize categorySlug (defaulting to mobile)
+    let brand = await db
+      .select()
+      .from(brands)
+      .where(
+        and(
+          eq(brands.categorySlug, catSlug),
+          or(
+            eq(brands.slug, brandSlug),
+            eq(brands.slug, `${brandSlug}-mobile`),
+            eq(brands.slug, brandSlug.replace('-mobile', '')),
+            ilike(brands.name, brandSlug)
+          )
+        )
+      )
+      .limit(1);
+
+    if (!brand[0]) {
+      // Fallback: match without category
+      brand = await db
+        .select()
+        .from(brands)
+        .where(
+          or(
+            eq(brands.slug, brandSlug),
+            ilike(brands.name, brandSlug)
+          )
+        )
+        .limit(1);
+    }
+
     if (!brand[0]) return res.status(404).json({ error: 'Brand not found' });
 
+    const targetCategorySlug = brand[0].categorySlug || catSlug;
+
+    // Strictly fetch models for this category
     const brandModels = await db
       .select()
       .from(models)
-      .where(and(eq(models.brandId, brand[0].id), eq(models.isActive, true)))
+      .where(
+        and(
+          eq(models.brandId, brand[0].id),
+          eq(models.categorySlug, targetCategorySlug),
+          eq(models.isActive, true)
+        )
+      )
       .orderBy(asc(models.sortOrder), asc(models.name));
 
     res.json({ brand: brand[0], models: brandModels });
@@ -324,12 +390,15 @@ apiRouter.get('/models/:slug', async (req: Request, res: Response) => {
     }
     if (parsedIssues.length === 0) {
       parsedIssues = [
-        'Cracked or Shattered Front Glass',
-        'Green Line / Vertical & Horizontal Display Lines',
-        'OLED Black Screen / Blank Display Malfunction',
-        'Touch Digitizer Not Responding / Ghost Touch',
-        'Flickering, Pink Tint or Distorted Display',
-        'TrueTone & Ambient Light Sensor Calibration Required',
+        'Display Damaged',
+        'Display Touch Glass Broken',
+        'Green Screen Issue',
+        'Touch Not Responding Issue',
+        'Green & Pink Line Issue',
+        'Black Screen Issue',
+        'Display Flickering Issue',
+        'Other Display-Related Issue',
+        'Foldable Phone Hinge & Flex Cable Issue',
       ];
     }
 
@@ -758,6 +827,234 @@ apiRouter.get('/track-order', async (req: Request, res: Response) => {
     });
   } catch (error: any) {
     res.status(500).json({ error: 'Failed to track order' });
+  }
+});
+
+// ==========================================
+// CUSTOMER ISSUE SELECTION & WHATSAPP TRACKING
+// ==========================================
+/**
+ * Customer Flow: Device -> Brand -> Model -> Display Issue -> Proceed With WhatsApp
+ * 1. Validate device category, brand, model, and display issue.
+ * 2. Save enquiry to PostgreSQL database with exact server date, time, and timestamp.
+ * 3. Retrieve business WhatsApp number from settings.
+ * 4. Generate professional WhatsApp message and wa.me redirect link.
+ * 5. Return success and WhatsApp URL.
+ */
+apiRouter.post('/enquiries', async (req: Request, res: Response) => {
+  try {
+    const {
+      deviceCategory,
+      brand,
+      model,
+      displayIssue,
+      displayIssues,
+      customerName,
+      customerPhone,
+      customerMessage,
+    } = req.body;
+
+    if (!deviceCategory || !brand || !model || (!displayIssue && (!displayIssues || displayIssues.length === 0))) {
+      return res.status(400).json({
+        success: false,
+        error: 'Please select device category, brand, model, and at least one display issue.',
+      });
+    }
+
+    // Parse multiple issues
+    let issuesList: string[] = [];
+    if (Array.isArray(displayIssues) && displayIssues.length > 0) {
+      issuesList = displayIssues.map((s: any) => String(s).trim()).filter(Boolean);
+    } else if (typeof displayIssue === 'string') {
+      if (displayIssue.includes('•')) {
+        issuesList = displayIssue.split('•').map((s) => s.trim()).filter(Boolean);
+      } else if (displayIssue.includes(',')) {
+        issuesList = displayIssue.split(',').map((s) => s.trim()).filter(Boolean);
+      } else if (displayIssue.includes(' + ')) {
+        issuesList = displayIssue.split(' + ').map((s) => s.trim()).filter(Boolean);
+      } else if (displayIssue.trim()) {
+        issuesList = [displayIssue.trim()];
+      }
+    }
+
+    if (issuesList.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'Please select at least one display issue.',
+      });
+    }
+
+    const displayIssueDbText = issuesList.join(', ');
+
+    const now = new Date();
+    // Consistent date & time formatted in Indian Standard Time (IST, UTC+5:30)
+    const enquiryDate = now.toLocaleDateString('en-GB', {
+      timeZone: 'Asia/Kolkata',
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    }); // e.g. "3 Oct 2026"
+
+    const enquiryTime = now.toLocaleTimeString('en-US', {
+      timeZone: 'Asia/Kolkata',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+    }); // e.g. "07:30 PM"
+
+    const [inserted] = await db
+      .insert(customerEnquiries)
+      .values({
+        customerName: customerName ? String(customerName).trim() : null,
+        customerPhone: customerPhone ? String(customerPhone).trim() : null,
+        deviceCategory: String(deviceCategory).trim(),
+        brand: String(brand).trim(),
+        model: String(model).trim(),
+        displayIssue: displayIssueDbText,
+        customerMessage: customerMessage ? String(customerMessage).trim() : null,
+        status: 'New',
+        whatsappStatus: 'Sent',
+        enquiryDate,
+        enquiryTime,
+      })
+      .returning();
+
+    if (!inserted) {
+      throw new Error('Failed to record customer enquiry in database.');
+    }
+
+    // Retrieve verified Business WhatsApp number from site settings
+    const businessWhatsApp = await getSetting('WHATSAPP_NUMBER', '9324316048');
+    const cleanDestinationNumber = businessWhatsApp.replace(/\D/g, '');
+
+    // Format WhatsApp message strictly per requirement:
+    // If multiple issues:
+    // "Display Issues:
+    // • Display Damaged
+    // • Touch Not Responding Issue
+    // • Green & Pink Line Issue"
+    let issuesBlock = '';
+    if (issuesList.length > 1) {
+      issuesBlock = `Display Issues:\n` + issuesList.map((iss) => `• ${iss}`).join('\n') + `\n`;
+    } else {
+      issuesBlock = `Display Issue: ${issuesList[0]}\n`;
+    }
+
+    let msg = `Hello QASWA TELECOM, I would like to enquire about a display repair.\n\n` +
+      `Device Category: ${inserted.deviceCategory}\n` +
+      `Brand: ${inserted.brand}\n` +
+      `Model: ${inserted.model}\n` +
+      issuesBlock;
+
+    if (inserted.customerName) {
+      msg += `Customer Name: ${inserted.customerName}\n`;
+    }
+    if (inserted.customerPhone) {
+      msg += `Contact: ${inserted.customerPhone}\n`;
+    }
+    if (inserted.customerMessage) {
+      msg += `Note: ${inserted.customerMessage}\n`;
+    }
+
+    msg += `\nPlease let me know the next steps.`;
+
+    const whatsappUrl = `https://wa.me/${cleanDestinationNumber}?text=${encodeURIComponent(msg)}`;
+
+    res.status(201).json({
+      success: true,
+      enquiry: inserted,
+      whatsappUrl,
+      whatsappMessage: msg,
+    });
+  } catch (error: any) {
+    console.error('Error creating customer enquiry:', error);
+    res.status(500).json({ success: false, error: 'Failed to record customer enquiry' });
+  }
+});
+
+// Admin endpoints for Customer Enquiries
+apiRouter.get('/admin/enquiries', optionalAuth, async (req: Request, res: Response) => {
+  try {
+    const { search, deviceCategory, brand, displayIssue, status, date } = req.query;
+
+    let query = db.select().from(customerEnquiries);
+    const conditions = [];
+
+    if (deviceCategory && deviceCategory !== 'all') {
+      conditions.push(eq(customerEnquiries.deviceCategory, String(deviceCategory)));
+    }
+    if (brand && brand !== 'all') {
+      conditions.push(eq(customerEnquiries.brand, String(brand)));
+    }
+    if (displayIssue && displayIssue !== 'all') {
+      conditions.push(eq(customerEnquiries.displayIssue, String(displayIssue)));
+    }
+    if (status && status !== 'all') {
+      conditions.push(eq(customerEnquiries.status, String(status)));
+    }
+    if (date && date !== 'all') {
+      conditions.push(like(customerEnquiries.enquiryDate, `%${date}%`));
+    }
+    if (search && String(search).trim()) {
+      const term = `%${String(search).trim()}%`;
+      conditions.push(
+        or(
+          like(customerEnquiries.customerName, term),
+          like(customerEnquiries.customerPhone, term),
+          like(customerEnquiries.brand, term),
+          like(customerEnquiries.model, term),
+          like(customerEnquiries.displayIssue, term)
+        )
+      );
+    }
+
+    const items = conditions.length > 0
+      ? await query.where(and(...conditions)).orderBy(desc(customerEnquiries.id))
+      : await query.orderBy(desc(customerEnquiries.id));
+
+    res.json(items);
+  } catch (err: any) {
+    console.error('Failed to fetch enquiries:', err);
+    res.status(500).json({ error: 'Failed to fetch enquiries' });
+  }
+});
+
+apiRouter.patch('/admin/enquiries/:id', optionalAuth, async (req: Request, res: Response) => {
+  try {
+    const id = Number(req.params.id);
+    const { status, customerName, customerPhone, customerMessage } = req.body;
+    const updateData: any = { updatedAt: new Date() };
+
+    if (status) updateData.status = status;
+    if (customerName !== undefined) updateData.customerName = customerName;
+    if (customerPhone !== undefined) updateData.customerPhone = customerPhone;
+    if (customerMessage !== undefined) updateData.customerMessage = customerMessage;
+
+    const [updated] = await db
+      .update(customerEnquiries)
+      .set(updateData)
+      .where(eq(customerEnquiries.id, id))
+      .returning();
+
+    if (!updated) {
+      return res.status(404).json({ error: 'Enquiry not found' });
+    }
+
+    res.json({ success: true, enquiry: updated });
+  } catch (err: any) {
+    console.error('Failed to update enquiry:', err);
+    res.status(500).json({ error: 'Failed to update enquiry' });
+  }
+});
+
+apiRouter.delete('/admin/enquiries/:id', optionalAuth, async (req: Request, res: Response) => {
+  try {
+    const id = Number(req.params.id);
+    await db.delete(customerEnquiries).where(eq(customerEnquiries.id, id));
+    res.json({ success: true, message: 'Enquiry deleted successfully' });
+  } catch (err: any) {
+    console.error('Failed to delete enquiry:', err);
+    res.status(500).json({ error: 'Failed to delete enquiry' });
   }
 });
 

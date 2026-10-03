@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useApp } from '../../context/AppContext.tsx';
+import { Smartphone } from 'lucide-react';
 import {
   AppleLogo,
   SamsungLogo,
@@ -13,16 +14,17 @@ import {
   TecnoLogo,
 } from './BrandLogos.tsx';
 
-export interface RepairBrandConfig {
+export interface RepairBrandItem {
   id: number;
   name: string;
   slug: string;
   categorySlug: string;
-  Component: React.FC<{ className?: string }>;
+  logoUrl?: string | null;
+  Component?: React.FC<{ className?: string }> | null;
 }
 
-// 10 requested smartphone manufacturer brands
-export const REPAIR_BRANDS: RepairBrandConfig[] = [
+// 10 requested smartphone manufacturer brands as baseline
+export const REPAIR_BRANDS: RepairBrandItem[] = [
   { id: 1, name: 'Apple', slug: 'apple', categorySlug: 'mobile', Component: AppleLogo },
   { id: 2, name: 'Samsung', slug: 'samsung', categorySlug: 'mobile', Component: SamsungLogo },
   { id: 3, name: 'Google Pixel', slug: 'google-pixel', categorySlug: 'mobile', Component: GooglePixelLogo },
@@ -36,12 +38,47 @@ export const REPAIR_BRANDS: RepairBrandConfig[] = [
 ];
 
 export const ExploreTopBrands: React.FC = () => {
-  const { navigate } = useApp();
+  const { brands: allBrands, navigate } = useApp();
   const [hoveredBrandId, setHoveredBrandId] = useState<number | null>(null);
 
-  const handleBrandClick = (brand: RepairBrandConfig) => {
-    const categorySlug = brand.categorySlug || 'mobile';
-    navigate(`/categories/${categorySlug}/${brand.slug}`);
+  // STRICTLY filter active brands belonging to the 'mobile' category
+  const mobileBrandsFromDb = useMemo(() => {
+    return allBrands.filter(
+      (b) =>
+        (b.categorySlug === 'mobile' || (!b.categorySlug && (b as any).categoryId === 1)) &&
+        b.isActive !== false
+    );
+  }, [allBrands]);
+
+  // Combine database brands with matching high-fidelity SVG logos
+  const displayBrands = useMemo<RepairBrandItem[]>(() => {
+    if (mobileBrandsFromDb.length > 0) {
+      return mobileBrandsFromDb.map((b) => {
+        const matchingPreset = REPAIR_BRANDS.find(
+          (p) =>
+            p.slug === b.slug ||
+            p.name.toLowerCase() === b.name.toLowerCase() ||
+            (b.slug === 'iphone' && p.slug === 'apple') ||
+            (b.slug.includes('samsung') && p.slug === 'samsung') ||
+            (b.slug.includes('pixel') && p.slug === 'google-pixel')
+        );
+
+        return {
+          id: b.id,
+          name: b.name,
+          slug: b.slug,
+          categorySlug: 'mobile',
+          logoUrl: b.logoUrl,
+          Component: matchingPreset ? matchingPreset.Component : null,
+        };
+      });
+    }
+    return REPAIR_BRANDS;
+  }, [mobileBrandsFromDb]);
+
+  const handleBrandClick = (brand: RepairBrandItem) => {
+    // Strictly route to the mobile category models page
+    navigate(`/categories/mobile/${brand.slug}`);
   };
 
   return (
@@ -65,7 +102,7 @@ export const ExploreTopBrands: React.FC = () => {
             - Mobile: 3 cards per row (grid-cols-3)
         */}
         <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4 md:gap-5">
-          {REPAIR_BRANDS.map((brand) => {
+          {displayBrands.map((brand) => {
             const isHovered = hoveredBrandId === brand.id;
             const LogoComponent = brand.Component;
 
@@ -75,7 +112,7 @@ export const ExploreTopBrands: React.FC = () => {
                 onMouseEnter={() => setHoveredBrandId(brand.id)}
                 onMouseLeave={() => setHoveredBrandId(null)}
                 onClick={() => handleBrandClick(brand)}
-                title={`Explore ${brand.name} display repair services`}
+                title={`Explore ${brand.name} smartphone display repair services`}
                 className={`group relative flex flex-col items-center justify-between p-3.5 sm:p-5 aspect-square rounded-2xl border transition-all duration-300 cursor-pointer select-none bg-white dark:bg-slate-900 ${
                   isHovered
                     ? 'border-[#00B2A2] shadow-xl -translate-y-1.5 ring-2 ring-[#00B2A2]/25'
@@ -85,7 +122,18 @@ export const ExploreTopBrands: React.FC = () => {
                 {/* Brand Logo Container */}
                 <div className="w-full flex-1 flex items-center justify-center p-2">
                   <div className="w-full flex items-center justify-center transition-transform duration-300 ease-out group-hover:scale-110">
-                    <LogoComponent className="max-h-8 sm:max-h-10 md:max-h-11 max-w-[85%]" />
+                    {LogoComponent ? (
+                      <LogoComponent className="max-h-8 sm:max-h-10 md:max-h-11 max-w-[85%]" />
+                    ) : brand.logoUrl ? (
+                      <img
+                        src={brand.logoUrl}
+                        alt={`${brand.name} logo`}
+                        className="max-h-8 sm:max-h-10 md:max-h-11 max-w-[85%] object-contain"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <Smartphone className="h-8 w-8 text-[#00B2A2]" />
+                    )}
                   </div>
                 </div>
 
