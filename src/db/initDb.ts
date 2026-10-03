@@ -4,8 +4,25 @@ import { seedDatabaseIfEmpty } from './seed.ts';
 export async function ensureDatabaseSchema() {
   const pool = createPool();
   try {
-    console.log('Verifying / initializing PostgreSQL database tables...');
-    await pool.query(`
+    // 1. Check if public tables already exist
+    const checkResult = await pool.query(`
+      SELECT count(*) as count 
+      FROM information_schema.tables 
+      WHERE table_schema = 'public' AND table_name IN ('brands', 'users', 'models', 'device_categories');
+    `);
+    const tableCount = Number(checkResult.rows[0]?.count || 0);
+
+    // If tables already exist (e.g. Cloud SQL or pre-provisioned database), skip DDL completely
+    // to avoid "permission denied for schema public" on users without DDL privileges
+    if (tableCount >= 2) {
+      await seedDatabaseIfEmpty();
+      return;
+    }
+
+    // Otherwise (e.g. on fresh self-hosted VPS), attempt table creation
+    try {
+      console.log('Verifying / initializing PostgreSQL database tables...');
+      await pool.query(`
       CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,
         uid TEXT NOT NULL UNIQUE,
@@ -262,11 +279,14 @@ export async function ensureDatabaseSchema() {
         value TEXT NOT NULL
       );
     `);
-    console.log('PostgreSQL database tables verified successfully.');
+      console.log('PostgreSQL database tables verified successfully.');
+    } catch (ddlError: any) {
+      console.warn('Notice: DDL execution skipped or restricted by database permissions:', ddlError?.message || ddlError);
+    }
 
     // Seed default records if empty
     await seedDatabaseIfEmpty();
-  } catch (err) {
-    console.error('Failed to ensure database schema or seed data:', err);
+  } catch (err: any) {
+    console.warn('Database bootstrap notice:', err?.message || err);
   }
 }
