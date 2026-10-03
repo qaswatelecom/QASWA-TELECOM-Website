@@ -23,7 +23,7 @@ import {
 } from '../db/schema.ts';
 import { eq, desc, asc, sql, and, like, or } from 'drizzle-orm';
 import { requireAuth, optionalAuth, AuthRequest } from '../middleware/auth.ts';
-import { seedDatabaseIfEmpty } from '../db/seed.ts';
+import { ensureDatabaseSchema } from '../db/initDb.ts';
 import { DEFAULT_PAGE_SEO_MAP, getSchemaTemplate } from '../lib/seo.ts';
 import {
   DEFAULT_HOME_CONTENT,
@@ -33,15 +33,15 @@ import {
 
 export const apiRouter = Router();
 
-// Auto-seed on first request
-let hasSeeded = false;
+// Auto-initialize tables and seed on first request or startup
+let hasInitializedDb = false;
 apiRouter.use(async (_req, _res, next) => {
-  if (!hasSeeded) {
+  if (!hasInitializedDb) {
+    hasInitializedDb = true;
     try {
-      await seedDatabaseIfEmpty();
-      hasSeeded = true;
+      await ensureDatabaseSchema();
     } catch (e) {
-      console.error('Seed check failed:', e);
+      console.error('Database schema initialization failed:', e);
     }
   }
   next();
