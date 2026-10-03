@@ -40,7 +40,7 @@ export const ModelDetailPage: React.FC<ModelDetailPageProps> = ({ modelSlug }) =
   const [bookingModalOpen, setBookingModalOpen] = useState(false);
   const [customerName, setCustomerName] = useState('');
   const [customerMobile, setCustomerMobile] = useState('');
-  const [customerCity, setCustomerCity] = useState('');
+  const [customerCity, setCustomerCity] = useState('Mumbai');
   const [additionalNote, setAdditionalNote] = useState('');
   const [bookingSuccess, setBookingSuccess] = useState(false);
   const [submittingBooking, setSubmittingBooking] = useState(false);
@@ -605,7 +605,7 @@ export const ModelDetailPage: React.FC<ModelDetailPageProps> = ({ modelSlug }) =
                     type="text"
                     value={customerCity}
                     onChange={(e) => setCustomerCity(e.target.value)}
-                    placeholder="e.g. Mumbai, Navi Mumbai, Thane"
+                    placeholder="e.g. Mumbai"
                     className="w-full rounded-xl border border-slate-200 bg-slate-50 p-2.5 text-xs text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-white focus:border-[#00B2A2] focus:outline-none"
                   />
                 </div>

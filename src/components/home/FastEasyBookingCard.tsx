@@ -53,7 +53,7 @@ export const FastEasyBookingCard: React.FC<FastEasyBookingCardProps> = ({
     'Display Flicker & Color Distortion',
     'Other Display Problem',
   ];
-  const citiesList = ['Mumbai', 'Thane', 'Navi Mumbai', 'Pune', 'Other City'];
+  const citiesList = ['Mumbai'];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -225,17 +225,14 @@ export const FastEasyBookingCard: React.FC<FastEasyBookingCardProps> = ({
                 </select>
               </div>
 
-              {/* Row 4: Please Select Your City */}
+              {/* Row 4: Service Location (Mumbai Only) */}
               <div>
                 <select
                   value={formData.city}
                   onChange={(e) => setFormData({ ...formData, city: e.target.value })}
                   className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 px-4 py-3 text-sm text-slate-900 dark:text-white focus:border-[#00B2A2] focus:bg-white dark:focus:bg-slate-800 focus:outline-none transition-colors cursor-pointer"
                 >
-                  <option value="" disabled>Please Select Your City</option>
-                  {citiesList.map((c) => (
-                    <option key={c} value={c}>{c}</option>
-                  ))}
+                  <option value="Mumbai">Mumbai (Service Available Across Mumbai)</option>
                 </select>
               </div>
 

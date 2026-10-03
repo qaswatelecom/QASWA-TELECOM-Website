@@ -56,7 +56,7 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
     mobileNumber: '',
     whatsappNumber: '',
     email: '',
-    city: '',
+    city: 'Mumbai',
     address: '',
     preferredDate: '',
     preferredTime: '',
