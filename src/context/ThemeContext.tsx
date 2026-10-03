@@ -14,7 +14,7 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [theme, setThemeState] = useState<ThemeMode>(() => {
     try {
-      const saved = (localStorage.getItem('qaswa_theme') || localStorage.getItem('repairnex_theme')) as ThemeMode;
+      const saved = localStorage.getItem('qaswa_theme') as ThemeMode;
       if (saved === 'dark' || saved === 'light') return saved;
       return 'light'; // Default: The website should initially use Light Mode
     } catch (e) {
@@ -24,7 +24,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>(() => {
     try {
-      const saved = (localStorage.getItem('qaswa_theme') || localStorage.getItem('repairnex_theme')) as ThemeMode;
+      const saved = localStorage.getItem('qaswa_theme') as ThemeMode;
       return saved === 'dark' ? 'dark' : 'light';
     } catch (e) {
       return 'light';
@@ -57,7 +57,6 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     try {
       localStorage.setItem('qaswa_theme', theme);
-      localStorage.setItem('repairnex_theme', theme);
     } catch (e) {}
 
     const listener = () => {
@@ -71,7 +70,6 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setThemeState(mode);
     try {
       localStorage.setItem('qaswa_theme', mode);
-      localStorage.setItem('repairnex_theme', mode);
     } catch (e) {}
   };
 
@@ -86,7 +84,6 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
     try {
       localStorage.setItem('qaswa_theme', nextTheme);
-      localStorage.setItem('repairnex_theme', nextTheme);
     } catch (e) {}
     setThemeState(nextTheme);
     setResolvedTheme(nextTheme);

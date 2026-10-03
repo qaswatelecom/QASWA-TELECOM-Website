@@ -77,7 +77,7 @@ export const FastEasyBookingCard: React.FC<FastEasyBookingCardProps> = ({
         modelName: formData.model || `${formData.brand} Flagship`,
         serviceId: 1,
         serviceName: formData.fault,
-        additionalNote: `Buzzmeeh Fast Booking: City: ${formData.city}, Fault: ${formData.fault}`,
+        additionalNote: `QASWA TELECOM Fast Booking: City: ${formData.city}, Fault: ${formData.fault}`,
         preferredDate: new Date().toISOString().split('T')[0],
         preferredTime: '11:00 AM',
       };
@@ -239,7 +239,7 @@ export const FastEasyBookingCard: React.FC<FastEasyBookingCardProps> = ({
                 </select>
               </div>
 
-              {/* Big Bold Buzzmeeh-Style CTA Button */}
+              {/* Big Bold QASWA TELECOM CTA Button */}
               <div className="pt-2">
                 <button
                   type="submit"

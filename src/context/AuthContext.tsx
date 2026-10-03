@@ -23,7 +23,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<FirebaseUser | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState<boolean>(() => {
-    return localStorage.getItem('repairnex_admin_mode') === 'true';
+    return localStorage.getItem('qaswa_admin_mode') === 'true';
   });
   const [loading, setLoading] = useState(true);
 
@@ -35,7 +35,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const idToken = await currentUser.getIdToken();
           setToken(idToken);
           setIsAdmin(true);
-          localStorage.setItem('repairnex_admin_mode', 'true');
+          localStorage.setItem('qaswa_admin_mode', 'true');
         } catch (e) {
           console.error('Error fetching token:', e);
         }
@@ -52,7 +52,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const idToken = await cred.user.getIdToken();
       setToken(idToken);
       setIsAdmin(true);
-      localStorage.setItem('repairnex_admin_mode', 'true');
+      localStorage.setItem('qaswa_admin_mode', 'true');
     } catch (err: any) {
       console.error('Google Sign-In failed:', err);
       throw err;
@@ -62,7 +62,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const loginAsAdminDemo = async (passcode?: string): Promise<boolean> => {
     // Allows direct admin access
     setIsAdmin(true);
-    localStorage.setItem('repairnex_admin_mode', 'true');
+    localStorage.setItem('qaswa_admin_mode', 'true');
     return true;
   };
 
@@ -77,7 +77,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(null);
     setToken(null);
     setIsAdmin(false);
-    localStorage.removeItem('repairnex_admin_mode');
+    localStorage.removeItem('qaswa_admin_mode');
   };
 
   return (

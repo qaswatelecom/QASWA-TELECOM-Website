@@ -1,6 +1,6 @@
 {
-  "name": "REPAIRNEX - Mobile Repair Service & Lead Management",
-  "description": "Professional mobile phone repair booking and lead management platform. Dynamic brand, model, and service configuration with instant WhatsApp booking and full CMS admin panel.",
+  "name": "QASWA TELECOM - Display Repair Specialists for Flagship Devices",
+  "description": "QASWA TELECOM is a specialized mobile repair service focused exclusively on display repairs for high-end flagship devices: Apple iPhone, Samsung Galaxy S & Z, Google Pixel, OnePlus, Apple Watch, iPad, and premium tablets.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

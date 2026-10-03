@@ -3096,7 +3096,7 @@ apiRouter.get('/sitemap.xml', async (_req: Request, res: Response) => {
       db.select({ slug: customPages.slug }).from(customPages).where(eq(customPages.isPublished, true)),
     ]);
 
-    const baseUrl = process.env.APP_URL || 'https://repairnex.com';
+    const baseUrl = process.env.APP_URL || 'https://qaswatelecom.com';
     let xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
 
     const staticRoutes = ['', '/mobile-repair', '/brands', '/services', '/gallery', '/testimonials', '/service-centers', '/blogs', '/track-order'];
@@ -3127,7 +3127,7 @@ apiRouter.get('/sitemap.xml', async (_req: Request, res: Response) => {
 
 // Dynamic robots.txt
 apiRouter.get('/robots.txt', (_req: Request, res: Response) => {
-  const baseUrl = process.env.APP_URL || 'https://repairnex.com';
+  const baseUrl = process.env.APP_URL || 'https://qaswatelecom.com';
   const txt = `User-agent: *\nAllow: /\nDisallow: /admin\nSitemap: ${baseUrl}/api/sitemap.xml\n`;
   res.header('Content-Type', 'text/plain');
   res.send(txt);

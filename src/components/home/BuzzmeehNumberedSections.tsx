@@ -152,7 +152,7 @@ export const BuzzmeehNumberedSections: React.FC<BuzzmeehNumberedSectionsProps> =
             </div>
           </div>
 
-          {/* Buzzmeeh Signature 3-Column Interactive Button Grid */}
+          {/* QASWA TELECOM Signature 3-Column Interactive Button Grid */}
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-3.5">
             {smartphoneProblems.map((prob, idx) => (
               <button
@@ -236,7 +236,7 @@ export const BuzzmeehNumberedSections: React.FC<BuzzmeehNumberedSectionsProps> =
             </div>
           </div>
 
-          {/* Buzzmeeh Signature 3-Column Interactive Button Grid */}
+          {/* QASWA TELECOM Signature 3-Column Interactive Button Grid */}
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-3.5">
             {ipadProblems.map((prob, idx) => (
               <button
@@ -320,7 +320,7 @@ export const BuzzmeehNumberedSections: React.FC<BuzzmeehNumberedSectionsProps> =
             </div>
           </div>
 
-          {/* Buzzmeeh Signature 3-Column Interactive Button Grid */}
+          {/* QASWA TELECOM Signature 3-Column Interactive Button Grid */}
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-3.5">
             {watchProblems.map((prob, idx) => (
               <button
@@ -404,7 +404,7 @@ export const BuzzmeehNumberedSections: React.FC<BuzzmeehNumberedSectionsProps> =
             </div>
           </div>
 
-          {/* Buzzmeeh Signature 3-Column Interactive Button Grid */}
+          {/* QASWA TELECOM Signature 3-Column Interactive Button Grid */}
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-3.5">
             {galaxyProblems.map((prob, idx) => (
               <button

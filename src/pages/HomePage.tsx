@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BuzzmeehHero } from '../components/home/BuzzmeehHero.tsx';
+import { QaswaHero } from '../components/home/QaswaHero.tsx';
 import { FastEasyBookingCard } from '../components/home/FastEasyBookingCard.tsx';
 import { ExploreTopBrands } from '../components/home/ExploreTopBrands.tsx';
 import { BuzzmeehTrustCards } from '../components/home/BuzzmeehTrustCards.tsx';
@@ -65,9 +65,9 @@ export const HomePage: React.FC = () => {
         onSelectModel={handleSelectModelFromSearch}
       />
 
-      {/* 1. Buzzmeeh Hero: Search Bar + Carousel Banner + 6-Device Icon Grid */}
+      {/* 1. QASWA TELECOM Hero: Search Bar + Carousel Banner + Device Grid */}
       <section id="hero">
-        <BuzzmeehHero
+        <QaswaHero
           onSelectCategory={handleSelectCategory}
           onSearchFocus={() => setSearchModalOpen(true)}
         />
@@ -85,7 +85,7 @@ export const HomePage: React.FC = () => {
       {/* 3. One Trusted Place for All Your Flagship Display Repairs (Trust Cards) */}
       <BuzzmeehTrustCards />
 
-      {/* 4. Buzzmeeh Signature Numbered Showcases (01, 02, 03, 04) with Interactive Problem Grids */}
+      {/* 4. QASWA TELECOM Signature Numbered Showcases (01, 02, 03, 04) with Interactive Problem Grids */}
       <BuzzmeehNumberedSections
         onSelectProblem={handleSelectProblem}
       />

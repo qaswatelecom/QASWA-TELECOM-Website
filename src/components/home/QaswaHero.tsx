@@ -51,12 +51,12 @@ const DEFAULT_FOUR_CATEGORIES: Array<{
   },
 ];
 
-interface BuzzmeehHeroProps {
+interface QaswaHeroProps {
   onSelectCategory?: (categoryName: string) => void;
   onSearchFocus?: () => void;
 }
 
-export const BuzzmeehHero: React.FC<BuzzmeehHeroProps> = ({ onSelectCategory }) => {
+export const QaswaHero: React.FC<QaswaHeroProps> = ({ onSelectCategory }) => {
   const { content } = usePageContent<HomePageContent>('home');
   const { categories, navigate } = useApp();
   const [activeSlide, setActiveSlide] = useState(0);
@@ -259,4 +259,3 @@ export const BuzzmeehHero: React.FC<BuzzmeehHeroProps> = ({ onSelectCategory }) 
     </div>
   );
 };
-

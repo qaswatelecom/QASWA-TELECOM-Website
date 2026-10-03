@@ -13,5 +13,5 @@ app.use('/api', apiRouter);
 
 // Health check endpoint
 app.get('/api/health', (_req, res) => {
-  res.json({ status: 'ok', service: 'repairnex-api', timestamp: new Date() });
+  res.json({ status: 'ok', service: 'qaswa-telecom-api', timestamp: new Date() });
 });
