@@ -23,7 +23,7 @@ export interface RepairBrandItem {
   Component?: React.FC<{ className?: string }> | null;
 }
 
-// 10 requested smartphone manufacturer brands as baseline
+// 10 requested smartphone manufacturer brands as the core standard
 export const REPAIR_BRANDS: RepairBrandItem[] = [
   { id: 1, name: 'Apple', slug: 'apple', categorySlug: 'mobile', Component: AppleLogo },
   { id: 2, name: 'Samsung', slug: 'samsung', categorySlug: 'mobile', Component: SamsungLogo },
@@ -41,40 +41,45 @@ export const ExploreTopBrands: React.FC = () => {
   const { brands: allBrands, navigate } = useApp();
   const [hoveredBrandId, setHoveredBrandId] = useState<number | null>(null);
 
-  // STRICTLY filter active brands belonging to the 'mobile' category
-  const mobileBrandsFromDb = useMemo(() => {
-    return allBrands.filter(
-      (b) =>
-        (b.categorySlug === 'mobile' || (!b.categorySlug && (b as any).categoryId === 1)) &&
-        b.isActive !== false
-    );
-  }, [allBrands]);
+  // Blacklist to strictly prevent non-mobile categories from leaking into Brands We Repair
+  const EXCLUDED_KEYWORDS = ['tablet', 'tablets', 'ipad', 'watch', 'apple-watch', 'premium-tablets'];
 
-  // Combine database brands with matching high-fidelity SVG logos
+  // Start with the 10 smartphone manufacturer brands, then append any extra mobile brands from DB
   const displayBrands = useMemo<RepairBrandItem[]>(() => {
-    if (mobileBrandsFromDb.length > 0) {
-      return mobileBrandsFromDb.map((b) => {
-        const matchingPreset = REPAIR_BRANDS.find(
-          (p) =>
-            p.slug === b.slug ||
-            p.name.toLowerCase() === b.name.toLowerCase() ||
-            (b.slug === 'iphone' && p.slug === 'apple') ||
-            (b.slug.includes('samsung') && p.slug === 'samsung') ||
-            (b.slug.includes('pixel') && p.slug === 'google-pixel')
-        );
+    const extraMobileBrands: RepairBrandItem[] = [];
 
-        return {
+    allBrands.forEach((b) => {
+      const lowerSlug = (b.slug || '').toLowerCase();
+      const lowerName = (b.name || '').toLowerCase();
+
+      // Skip non-mobile categories (tablets, ipads, apple watches)
+      const isExcluded = EXCLUDED_KEYWORDS.some((kw) => lowerSlug.includes(kw) || lowerName.includes(kw));
+      if (isExcluded) return;
+
+      // Skip if this brand is already covered by the 10 baseline smartphone brands
+      const isAlreadyCovered = REPAIR_BRANDS.some(
+        (base) =>
+          base.slug === lowerSlug ||
+          base.name.toLowerCase() === lowerName ||
+          (base.slug === 'apple' && (lowerSlug === 'iphone' || lowerName.includes('iphone') || lowerName.includes('apple'))) ||
+          (base.slug === 'samsung' && (lowerSlug.includes('samsung') || lowerName.includes('samsung'))) ||
+          (base.slug === 'google-pixel' && (lowerSlug.includes('pixel') || lowerName.includes('pixel') || lowerSlug === 'google'))
+      );
+
+      if (!isAlreadyCovered && b.isActive !== false) {
+        extraMobileBrands.push({
           id: b.id,
           name: b.name,
           slug: b.slug,
           categorySlug: 'mobile',
           logoUrl: b.logoUrl,
-          Component: matchingPreset ? matchingPreset.Component : null,
-        };
-      });
-    }
-    return REPAIR_BRANDS;
-  }, [mobileBrandsFromDb]);
+          Component: null,
+        });
+      }
+    });
+
+    return [...REPAIR_BRANDS, ...extraMobileBrands];
+  }, [allBrands]);
 
   const handleBrandClick = (brand: RepairBrandItem) => {
     // Strictly route to the mobile category models page

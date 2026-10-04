@@ -172,26 +172,84 @@ apiRouter.get('/categories/:categorySlug/brands/:brandSlug', async (req: Request
   try {
     const categorySlug = req.params.categorySlug || 'mobile';
     const brandSlug = req.params.brandSlug;
+    const s = brandSlug.toLowerCase();
 
-    // Look up brand in this specific category, with alias flexibility (e.g. samsung / samsung-mobile, apple / iphone)
-    const brand = await db
+    // Prepare alias matching conditions
+    const aliasConditions = [
+      eq(brands.slug, brandSlug),
+      eq(brands.slug, `${brandSlug}-mobile`),
+      eq(brands.slug, `${brandSlug}-tablet`),
+      eq(brands.slug, brandSlug.replace('-mobile', '').replace('-tablet', '')),
+      ilike(brands.name, brandSlug),
+      ilike(brands.name, `%${brandSlug}%`),
+    ];
+
+    if (s === 'apple' || s === 'iphone') {
+      aliasConditions.push(
+        eq(brands.slug, 'apple'),
+        eq(brands.slug, 'iphone'),
+        ilike(brands.name, '%apple%'),
+        ilike(brands.name, '%iphone%')
+      );
+    }
+    if (s === 'samsung' || s === 'samsung-galaxy') {
+      aliasConditions.push(
+        eq(brands.slug, 'samsung'),
+        eq(brands.slug, 'samsung-galaxy'),
+        ilike(brands.name, '%samsung%')
+      );
+    }
+    if (s === 'google-pixel' || s === 'google' || s === 'pixel') {
+      aliasConditions.push(
+        eq(brands.slug, 'google-pixel'),
+        eq(brands.slug, 'google'),
+        ilike(brands.name, '%pixel%'),
+        ilike(brands.name, '%google%')
+      );
+    }
+
+    const categoryCondition =
+      categorySlug === 'tablet'
+        ? or(eq(brands.categorySlug, 'tablet'), ilike(brands.name, '%tablet%'))
+        : or(
+            eq(brands.categorySlug, categorySlug),
+            sql`${brands.categorySlug} IS NULL`,
+            sql`${brands.categorySlug} = ''`
+          );
+
+    let brand = await db
       .select()
       .from(brands)
-      .where(
-        and(
-          eq(brands.categorySlug, categorySlug),
-          or(
-            eq(brands.slug, brandSlug),
-            eq(brands.slug, `${brandSlug}-mobile`),
-            eq(brands.slug, `${brandSlug}-tablet`),
-            eq(brands.slug, brandSlug.replace('-mobile', '').replace('-tablet', '')),
-            ilike(brands.name, brandSlug)
-          )
-        )
-      )
+      .where(and(categoryCondition, or(...aliasConditions)))
       .limit(1);
 
+    if (!brand[0]) {
+      brand = await db
+        .select()
+        .from(brands)
+        .where(or(...aliasConditions))
+        .limit(1);
+    }
+
     if (!brand[0]) return res.status(404).json({ error: 'Brand not found' });
+
+    // Normalize brand display name for known aliases
+    const foundBrand = { ...brand[0] };
+    if (s === 'apple' && foundBrand.name.toLowerCase() === 'iphone') {
+      foundBrand.name = 'Apple';
+    }
+    if (s === 'samsung' && foundBrand.name.toLowerCase().includes('galaxy')) {
+      foundBrand.name = 'Samsung';
+    }
+
+    const modelCategoryCondition =
+      categorySlug === 'tablet'
+        ? or(eq(models.categorySlug, 'tablet'), ilike(models.name, '%tab%'))
+        : or(
+            eq(models.categorySlug, categorySlug),
+            sql`${models.categorySlug} IS NULL`,
+            sql`${models.categorySlug} = 'mobile'`
+          );
 
     // STRICTLY query models belonging to this brand AND this specific categorySlug
     const brandModels = await db
@@ -199,8 +257,8 @@ apiRouter.get('/categories/:categorySlug/brands/:brandSlug', async (req: Request
       .from(models)
       .where(
         and(
-          eq(models.brandId, brand[0].id),
-          eq(models.categorySlug, categorySlug),
+          eq(models.brandId, foundBrand.id),
+          modelCategoryCondition,
           eq(models.isActive, true)
         )
       )
@@ -212,7 +270,7 @@ apiRouter.get('/categories/:categorySlug/brands/:brandSlug', async (req: Request
       .where(eq(deviceCategories.slug, categorySlug))
       .limit(1);
 
-    res.json({ category: cat[0] || null, brand: brand[0], models: brandModels });
+    res.json({ category: cat[0] || null, brand: foundBrand, models: brandModels });
   } catch (error: any) {
     res.status(500).json({ error: 'Failed to fetch brand models' });
   }
@@ -238,41 +296,85 @@ apiRouter.get('/brands/:slug', async (req: Request, res: Response) => {
     const { categorySlug } = req.query;
     const catSlug = String(categorySlug || 'mobile');
     const brandSlug = req.params.slug;
+    const s = brandSlug.toLowerCase();
 
-    // Prioritize categorySlug (defaulting to mobile)
+    // Prepare alias matching conditions
+    const aliasConditions = [
+      eq(brands.slug, brandSlug),
+      eq(brands.slug, `${brandSlug}-mobile`),
+      eq(brands.slug, `${brandSlug}-tablet`),
+      eq(brands.slug, brandSlug.replace('-mobile', '').replace('-tablet', '')),
+      ilike(brands.name, brandSlug),
+      ilike(brands.name, `%${brandSlug}%`),
+    ];
+
+    if (s === 'apple' || s === 'iphone') {
+      aliasConditions.push(
+        eq(brands.slug, 'apple'),
+        eq(brands.slug, 'iphone'),
+        ilike(brands.name, '%apple%'),
+        ilike(brands.name, '%iphone%')
+      );
+    }
+    if (s === 'samsung' || s === 'samsung-galaxy') {
+      aliasConditions.push(
+        eq(brands.slug, 'samsung'),
+        eq(brands.slug, 'samsung-galaxy'),
+        ilike(brands.name, '%samsung%')
+      );
+    }
+    if (s === 'google-pixel' || s === 'google' || s === 'pixel') {
+      aliasConditions.push(
+        eq(brands.slug, 'google-pixel'),
+        eq(brands.slug, 'google'),
+        ilike(brands.name, '%pixel%'),
+        ilike(brands.name, '%google%')
+      );
+    }
+
+    const categoryCondition =
+      catSlug === 'tablet'
+        ? or(eq(brands.categorySlug, 'tablet'), ilike(brands.name, '%tablet%'))
+        : or(
+            eq(brands.categorySlug, catSlug),
+            sql`${brands.categorySlug} IS NULL`,
+            sql`${brands.categorySlug} = ''`
+          );
+
     let brand = await db
       .select()
       .from(brands)
-      .where(
-        and(
-          eq(brands.categorySlug, catSlug),
-          or(
-            eq(brands.slug, brandSlug),
-            eq(brands.slug, `${brandSlug}-mobile`),
-            eq(brands.slug, brandSlug.replace('-mobile', '')),
-            ilike(brands.name, brandSlug)
-          )
-        )
-      )
+      .where(and(categoryCondition, or(...aliasConditions)))
       .limit(1);
 
     if (!brand[0]) {
-      // Fallback: match without category
       brand = await db
         .select()
         .from(brands)
-        .where(
-          or(
-            eq(brands.slug, brandSlug),
-            ilike(brands.name, brandSlug)
-          )
-        )
+        .where(or(...aliasConditions))
         .limit(1);
     }
 
     if (!brand[0]) return res.status(404).json({ error: 'Brand not found' });
 
-    const targetCategorySlug = brand[0].categorySlug || catSlug;
+    const foundBrand = { ...brand[0] };
+    if (s === 'apple' && foundBrand.name.toLowerCase() === 'iphone') {
+      foundBrand.name = 'Apple';
+    }
+    if (s === 'samsung' && foundBrand.name.toLowerCase().includes('galaxy')) {
+      foundBrand.name = 'Samsung';
+    }
+
+    const targetCategorySlug = foundBrand.categorySlug || catSlug;
+
+    const modelCategoryCondition =
+      targetCategorySlug === 'tablet'
+        ? or(eq(models.categorySlug, 'tablet'), ilike(models.name, '%tab%'))
+        : or(
+            eq(models.categorySlug, targetCategorySlug),
+            sql`${models.categorySlug} IS NULL`,
+            sql`${models.categorySlug} = 'mobile'`
+          );
 
     // Strictly fetch models for this category
     const brandModels = await db
@@ -280,14 +382,14 @@ apiRouter.get('/brands/:slug', async (req: Request, res: Response) => {
       .from(models)
       .where(
         and(
-          eq(models.brandId, brand[0].id),
-          eq(models.categorySlug, targetCategorySlug),
+          eq(models.brandId, foundBrand.id),
+          modelCategoryCondition,
           eq(models.isActive, true)
         )
       )
       .orderBy(asc(models.sortOrder), asc(models.name));
 
-    res.json({ brand: brand[0], models: brandModels });
+    res.json({ brand: foundBrand, models: brandModels });
   } catch (error: any) {
     res.status(500).json({ error: 'Failed to fetch brand details' });
   }
