@@ -1,5 +1,6 @@
 import { createPool } from './index.ts';
 import { seedDatabaseIfEmpty } from './seed.ts';
+import { ensureCoreDeviceCategories } from './seedCategories.ts';
 
 export async function ensureDatabaseSchema() {
   const pool = createPool();
@@ -16,6 +17,7 @@ export async function ensureDatabaseSchema() {
     // to avoid "permission denied for schema public" on users without DDL privileges
     if (tableCount >= 2) {
       await seedDatabaseIfEmpty();
+      await ensureCoreDeviceCategories();
       return;
     }
 
@@ -305,6 +307,7 @@ export async function ensureDatabaseSchema() {
 
     // Seed default records if empty
     await seedDatabaseIfEmpty();
+    await ensureCoreDeviceCategories();
   } catch (err: any) {
     console.warn('Database bootstrap notice:', err?.message || err);
   }

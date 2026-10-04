@@ -25,6 +25,7 @@ import {
 import { eq, desc, asc, sql, and, like, or, ilike } from 'drizzle-orm';
 import { requireAuth, optionalAuth, AuthRequest } from '../middleware/auth.ts';
 import { ensureDatabaseSchema } from '../db/initDb.ts';
+import { ensureCoreDeviceCategories } from '../db/seedCategories.ts';
 import { DEFAULT_PAGE_SEO_MAP, getSchemaTemplate } from '../lib/seo.ts';
 import {
   DEFAULT_HOME_CONTENT,
@@ -79,9 +80,19 @@ apiRouter.get('/public/bootstrap', async (_req: Request, res: Response) => {
       settingsMap[s.key] = s.value;
     });
 
+    let resolvedCategories = allCategories;
+    if (resolvedCategories.length === 0) {
+      await ensureCoreDeviceCategories();
+      resolvedCategories = await db
+        .select()
+        .from(deviceCategories)
+        .where(eq(deviceCategories.isActive, true))
+        .orderBy(asc(deviceCategories.sortOrder), asc(deviceCategories.name));
+    }
+
     res.json({
       settings: settingsMap,
-      categories: allCategories,
+      categories: resolvedCategories,
       brands: allBrands,
       services: allServices,
       formFields: allFormFields,
@@ -96,11 +107,21 @@ apiRouter.get('/public/bootstrap', async (_req: Request, res: Response) => {
 // Device Categories
 apiRouter.get('/categories', async (_req: Request, res: Response) => {
   try {
-    const data = await db
+    let data = await db
       .select()
       .from(deviceCategories)
       .where(eq(deviceCategories.isActive, true))
       .orderBy(asc(deviceCategories.sortOrder), asc(deviceCategories.name));
+
+    if (data.length === 0) {
+      await ensureCoreDeviceCategories();
+      data = await db
+        .select()
+        .from(deviceCategories)
+        .where(eq(deviceCategories.isActive, true))
+        .orderBy(asc(deviceCategories.sortOrder), asc(deviceCategories.name));
+    }
+
     res.json(data);
   } catch (error: any) {
     res.status(500).json({ error: 'Failed to fetch categories' });
@@ -110,11 +131,22 @@ apiRouter.get('/categories', async (_req: Request, res: Response) => {
 // Category detail: returns category, brands (if category hasBrands), and models (if no brands or all category models)
 apiRouter.get('/categories/:slug', async (req: Request, res: Response) => {
   try {
-    const cat = await db
+    const slug = req.params.slug;
+    let cat = await db
       .select()
       .from(deviceCategories)
-      .where(eq(deviceCategories.slug, req.params.slug))
+      .where(eq(deviceCategories.slug, slug))
       .limit(1);
+
+    if (!cat[0]) {
+      // Auto-provision if missing
+      await ensureCoreDeviceCategories();
+      cat = await db
+        .select()
+        .from(deviceCategories)
+        .where(eq(deviceCategories.slug, slug))
+        .limit(1);
+    }
 
     if (!cat[0]) return res.status(404).json({ error: 'Device category not found' });
     const category = cat[0];
@@ -125,7 +157,13 @@ apiRouter.get('/categories/:slug', async (req: Request, res: Response) => {
       .from(brands)
       .where(
         and(
-          or(eq(brands.categorySlug, category.slug), eq(brands.categoryId, category.id)),
+          category.slug === 'mobile'
+            ? or(
+                eq(brands.categorySlug, 'mobile'),
+                sql`${brands.categorySlug} IS NULL`,
+                sql`${brands.categorySlug} = ''`
+              )
+            : or(eq(brands.categorySlug, category.slug), eq(brands.categoryId, category.id)),
           eq(brands.isActive, true)
         )
       )
@@ -137,7 +175,19 @@ apiRouter.get('/categories/:slug', async (req: Request, res: Response) => {
       .from(models)
       .where(
         and(
-          or(eq(models.categorySlug, category.slug), eq(models.categoryId, category.id)),
+          category.slug === 'mobile'
+            ? or(
+                eq(models.categorySlug, 'mobile'),
+                sql`${models.categorySlug} IS NULL`,
+                sql`${models.categorySlug} = ''`
+              )
+            : or(
+                eq(models.categorySlug, category.slug),
+                eq(models.categoryId, category.id),
+                category.slug === 'ipad' ? ilike(models.name, '%ipad%') : sql`false`,
+                category.slug === 'apple-watch' ? ilike(models.name, '%watch%') : sql`false`,
+                category.slug === 'tablet' ? ilike(models.name, '%tab%') : sql`false`
+              ),
           eq(models.isActive, true)
         )
       )
