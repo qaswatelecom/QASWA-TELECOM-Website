@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 68" fill="none">
+  <g transform="translate(90, 22)">
+    <path d="M0 -18 C-3 -10, -2 -4, 0 0 C2 -4, 3 -10, 0 -18Z" fill="#ED1C24" />
+    <path d="M0 -18 C-3 -10, -2 -4, 0 0 C2 -4, 3 -10, 0 -18Z" fill="#ED1C24" transform="rotate(25)" />
+    <path d="M0 -18 C-3 -10, -2 -4, 0 0 C2 -4, 3 -10, 0 -18Z" fill="#ED1C24" transform="rotate(-25)" />
+    <path d="M0 -18 C-3 -10, -2 -4, 0 0 C2 -4, 3 -10, 0 -18Z" fill="#ED1C24" transform="rotate(50)" />
+    <path d="M0 -18 C-3 -10, -2 -4, 0 0 C2 -4, 3 -10, 0 -18Z" fill="#ED1C24" transform="rotate(-50)" />
+    <path d="M0 -18 C-3 -10, -2 -4, 0 0 C2 -4, 3 -10, 0 -18Z" fill="#ED1C24" transform="rotate(75)" />
+    <path d="M0 -18 C-3 -10, -2 -4, 0 0 C2 -4, 3 -10, 0 -18Z" fill="#ED1C24" transform="rotate(-75)" />
+  </g>
+  <text
+    x="90"
+    y="56"
+    text-anchor="middle"
+    font-family="'Plus Jakarta Sans', system-ui, sans-serif"
+    font-size="17"
+    font-weight="900"
+    letter-spacing="3.5"
+    fill="#0f172a"
+  >
+    HUAWEI
+  </text>
+</svg>

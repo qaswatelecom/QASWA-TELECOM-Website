@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 60" fill="none">
+  <rect width="200" height="60" fill="#E2231A"/>
+  <text
+    x="100"
+    y="40"
+    text-anchor="middle"
+    font-family="'Plus Jakarta Sans', system-ui, sans-serif"
+    font-size="30"
+    font-weight="900"
+    letter-spacing="2"
+    fill="#FFFFFF"
+  >
+    lenovo
+  </text>
+</svg>

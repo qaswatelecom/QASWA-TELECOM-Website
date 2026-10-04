@@ -23,8 +23,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     SITE_NAME: 'Qaswa Telecom',
     SITE_TAGLINE: 'Certified Mobile Phone Repair Center',
     SITE_PHONE: '+91 9324316048',
-    SITE_EMAIL: 'support@qaswatelecom.com',
-    SITE_ADDRESS: 'Shop No. 4, Tech Plaza, Main Market',
+    SITE_EMAIL: 'telecomqaswa@gmail.com',
+    SITE_ADDRESS:
+      'Shop No-8, 1st Floor, Thakkar Shopping Centre, S.V Road, Borivali West, Mumbai, PIN-400092',
+    BUSINESS_HOURS: 'Everyday: 11:00 AM – 9:00 PM',
+    GOOGLE_MAPS_URL: 'https://share.google/JdvLGimvQe18jUJNp',
   });
   const [categories, setCategories] = useState<DeviceCategory[]>([]);
   const [brands, setBrands] = useState<Brand[]>([]);

@@ -50,7 +50,7 @@ const FAQS: FaqItem[] = [
     category: 'Contact & Consultation',
     question: 'How do I contact QASWA TELECOM to book a display diagnosis?',
     answer:
-      'You can reach us immediately on WhatsApp at +91 9324316048, call our service line directly at +91 9324316048, visit our repair facility at Shop No. 4, Tech Plaza, Main Market, or fill out our online repair booking inquiry form on this website.',
+      'You can reach us immediately on WhatsApp at +91 9324316048, call our service line directly at +91 9324316048, visit our repair facility at Shop No-8, 1st Floor, Thakkar Shopping Centre, S.V Road, Borivali West, Mumbai, PIN-400092, or fill out our online repair booking inquiry form on this website.',
   },
 ];
 

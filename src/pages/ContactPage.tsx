@@ -19,7 +19,9 @@ import {
 export const ContactPage: React.FC = () => {
   const { settings } = useApp();
   const siteName = settings.SITE_NAME || 'QASWA TELECOM';
-  const siteAddress = settings.SITE_ADDRESS || 'Shop No. 4, Tech Plaza, Main Market, Mumbai';
+  const siteAddress =
+    settings.SITE_ADDRESS ||
+    'Shop No-8, 1st Floor, Thakkar Shopping Centre, S.V Road, Borivali West, Mumbai, PIN-400092';
   const sitePhone = settings.SITE_PHONE || '+91 9324316048';
   const rawWhatsApp = settings.WHATSAPP_NUMBER || '9324316048';
   const siteEmail = settings.SITE_EMAIL || 'telecomqaswa@gmail.com';
@@ -31,9 +33,12 @@ export const ContactPage: React.FC = () => {
   const activeWhatsApp = contact.info?.whatsapp || rawWhatsApp;
   const cleanWhatsApp = activeWhatsApp.replace(/\D/g, '');
   const activeEmail = contact.info?.email || siteEmail;
-  const activeAddress = contact.info?.address || siteAddress;
-  const activeHours = contact.info?.operatingHours || 'Mon – Sat: 10:00 AM – 8:30 PM | Sun: 11:00 AM – 6:00 PM';
-  const activeMapsUrl = contact.info?.googleMapsUrl || 'https://maps.google.com/?q=Shop+No+4+Tech+Plaza+Main+Market+Mumbai';
+  const activeAddress =
+    contact.info?.address ||
+    settings.SITE_ADDRESS ||
+    'Shop No-8, 1st Floor, Thakkar Shopping Centre, S.V Road, Borivali West, Mumbai, PIN-400092';
+  const activeHours = contact.info?.operatingHours || settings.BUSINESS_HOURS || 'Everyday: 11:00 AM – 9:00 PM';
+  const activeMapsUrl = contact.info?.googleMapsUrl || settings.GOOGLE_MAPS_URL || 'https://share.google/JdvLGimvQe18jUJNp';
 
   usePageSeo(
     `Contact Us | Get in Touch With Our Display Lab | ${siteName}`,

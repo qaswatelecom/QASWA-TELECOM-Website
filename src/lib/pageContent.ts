@@ -309,7 +309,7 @@ export const DEFAULT_ABOUT_CONTENT: AboutPageContent = {
     badge: 'Background & Foundation',
     title: 'Our Story',
     paragraph1:
-      'Operating from our specialized service facility at Shop No. 4, Tech Plaza, Main Market, Mumbai, QASWA TELECOM was established to solve a critical gap in the device servicing industry: the lack of dedicated, focused expertise for delicate modern display hardware.',
+      'Operating from our specialized service facility at Shop No-8, 1st Floor, Thakkar Shopping Centre, S.V Road, Borivali West, Mumbai, PIN-400092, QASWA TELECOM was established to solve a critical gap in the device servicing industry: the lack of dedicated, focused expertise for delicate modern display hardware.',
     paragraph2:
       'While conventional mobile repair shops attempt broad repairs across batteries, charging ports, speakers, and logic boards, our team recognized that advanced displays—such as Super Retina XDR OLEDs, Dynamic AMOLED 2X, and tandem OLEDs—require surgical cleanroom equipment, micro-laser bonding stations, and optical autoclaves.',
     paragraph3:
@@ -405,10 +405,9 @@ export const DEFAULT_CONTACT_CONTENT: ContactPageContent = {
     phone: '+91 9324316048',
     whatsapp: '9324316048',
     email: 'telecomqaswa@gmail.com',
-    address: 'Shop No. 4, Tech Plaza, Main Market, Mumbai',
-    operatingHours: 'Mon – Sat: 10:00 AM – 8:30 PM | Sun: 11:00 AM – 6:00 PM',
-    googleMapsUrl:
-      'https://maps.google.com/?q=Shop+No+4+Tech+Plaza+Main+Market+Mumbai',
+    address: 'Shop No-8, 1st Floor, Thakkar Shopping Centre, S.V Road, Borivali West, Mumbai, PIN-400092',
+    operatingHours: 'Everyday: 11:00 AM – 9:00 PM',
+    googleMapsUrl: 'https://share.google/JdvLGimvQe18jUJNp',
   },
   noticeCard: {
     badge: 'SERVICE SPECIALIZATION NOTICE',
@@ -420,7 +419,7 @@ export const DEFAULT_CONTACT_CONTENT: ContactPageContent = {
   },
   storeShowcase: {
     title: 'Central Display Laboratory & Walk-in Desk',
-    subtitle: 'Shop No. 4, Tech Plaza, Main Market, Mumbai',
+    subtitle: 'Shop No-8, 1st Floor, Thakkar Shopping Centre, S.V Road, Borivali West, Mumbai, PIN-400092',
     imageUrl:
       'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=800&q=80',
     caption:

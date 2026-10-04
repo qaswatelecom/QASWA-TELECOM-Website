@@ -81,7 +81,7 @@ const FAQ_DATA: FaqEntry[] = [
     id: 9,
     question: 'How can I contact QASWA TELECOM?',
     answer:
-      'You can contact our display repair desk by calling +91 9324316048, messaging us directly on WhatsApp (+91 9324316048), submitting an inquiry through our Contact Us page form, or visiting our service lab at Shop No. 4, Tech Plaza, Main Market, Mumbai.',
+      'You can contact our display repair desk by calling +91 9324316048, messaging us directly on WhatsApp (+91 9324316048), submitting an inquiry through our Contact Us page form, or visiting our service lab at Shop No-8, 1st Floor, Thakkar Shopping Centre, S.V Road, Borivali West, Mumbai, PIN-400092.',
     category: 'General Questions',
   },
   {

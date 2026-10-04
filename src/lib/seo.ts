@@ -94,22 +94,27 @@ export function generateLocalBusinessSchema(params: LocalBusinessSchemaParams): 
     image: params.image || 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=1200&q=80',
     address: {
       '@type': 'PostalAddress',
-      streetAddress: params.address || 'Shop No. 4, Tech Plaza, Main Market',
+      streetAddress:
+        params.address ||
+        'Shop No-8, 1st Floor, Thakkar Shopping Centre, S.V Road, Borivali West, Mumbai, PIN-400092',
       addressLocality: params.city || 'Mumbai',
+      postalCode: '400092',
       addressCountry: 'IN',
     },
     openingHoursSpecification: [
       {
         '@type': 'OpeningHoursSpecification',
-        dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
-        opens: '10:00',
-        closes: '20:30',
-      },
-      {
-        '@type': 'OpeningHoursSpecification',
-        dayOfWeek: ['Sunday'],
+        dayOfWeek: [
+          'Monday',
+          'Tuesday',
+          'Wednesday',
+          'Thursday',
+          'Friday',
+          'Saturday',
+          'Sunday',
+        ],
         opens: '11:00',
-        closes: '18:00',
+        closes: '21:00',
       },
     ],
     potentialAction: {
@@ -232,29 +237,32 @@ export function getSchemaTemplate(
           priceRange: '₹₹',
           address: {
             '@type': 'PostalAddress',
-            streetAddress: 'Shop No. 4, Tech Plaza, Main Market',
+            streetAddress:
+              'Shop No-8, 1st Floor, Thakkar Shopping Centre, S.V Road, Borivali West, Mumbai, PIN-400092',
             addressLocality: 'Mumbai',
             addressRegion: 'MH',
-            postalCode: '400001',
+            postalCode: '400092',
             addressCountry: 'IN',
           },
           geo: {
             '@type': 'GeoCoordinates',
-            latitude: 19.076,
-            longitude: 72.8777,
+            latitude: 19.2288,
+            longitude: 72.8541,
           },
           openingHoursSpecification: [
             {
               '@type': 'OpeningHoursSpecification',
-              dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
-              opens: '10:00',
-              closes: '20:30',
-            },
-            {
-              '@type': 'OpeningHoursSpecification',
-              dayOfWeek: 'Sunday',
+              dayOfWeek: [
+                'Monday',
+                'Tuesday',
+                'Wednesday',
+                'Thursday',
+                'Friday',
+                'Saturday',
+                'Sunday',
+              ],
               opens: '11:00',
-              closes: '18:00',
+              closes: '21:00',
             },
           ],
         },

@@ -42,7 +42,9 @@ const AppContent: React.FC = () => {
       name: settings.SITE_NAME || 'QASWA TELECOM',
       telephone: settings.SITE_PHONE || '+91 9324316048',
       email: settings.SITE_EMAIL || 'telecomqaswa@gmail.com',
-      address: settings.SITE_ADDRESS || 'Shop No. 4, Tech Plaza, Main Market',
+      address:
+        settings.SITE_ADDRESS ||
+        'Shop No-8, 1st Floor, Thakkar Shopping Centre, S.V Road, Borivali West, Mumbai, PIN-400092',
       description: settings.SITE_TAGLINE || 'Display Repair Specialists for Flagship Devices',
     });
   }, [settings]);

@@ -278,6 +278,7 @@ export interface CustomerEnquiry {
   id: number;
   customerName?: string | null;
   customerPhone?: string | null;
+  customerCity?: string | null;
   deviceCategory: string;
   brand: string;
   model: string;

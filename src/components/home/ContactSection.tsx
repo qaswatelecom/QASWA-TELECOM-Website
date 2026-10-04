@@ -19,7 +19,9 @@ export const ContactSection: React.FC = () => {
   const rawPhone = settings.SITE_PHONE || '+91 9324316048';
   const rawWhatsApp = settings.WHATSAPP_NUMBER || '9324316048';
   const cleanWhatsApp = rawWhatsApp.replace(/\D/g, '');
-  const siteAddress = settings.SITE_ADDRESS || 'Shop No. 4, Tech Plaza, Main Market';
+  const siteAddress =
+    settings.SITE_ADDRESS ||
+    'Shop No-8, 1st Floor, Thakkar Shopping Centre, S.V Road, Borivali West, Mumbai, PIN-400092';
   const siteEmail = settings.SITE_EMAIL || 'telecomqaswa@gmail.com';
   const siteName = settings.SITE_NAME || 'QASWA TELECOM';
 
@@ -156,10 +158,10 @@ export const ContactSection: React.FC = () => {
                     Service Center Address
                   </span>
                   <p className="text-sm font-bold text-slate-900 dark:text-white mt-0.5">
-                    {siteAddress}
+                    Shop No-8, 1st Floor, Thakkar Shopping Centre,
                   </p>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                    Central Tech Market, Walk-In Laboratory
+                    S.V Road, Borivali West, Mumbai, PIN-400092
                   </p>
                 </div>
               </div>
@@ -220,10 +222,10 @@ export const ContactSection: React.FC = () => {
                     Laboratory Business Hours
                   </span>
                   <p className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white mt-0.5">
-                    Monday – Saturday: 10:00 AM – 8:30 PM
+                    Everyday: 11:00 AM – 9:00 PM
                   </p>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                    Sunday: 11:00 AM – 6:00 PM
+                    Monday to Sunday (11:00 AM – 9:00 PM)
                   </p>
                 </div>
               </div>
@@ -237,7 +239,7 @@ export const ContactSection: React.FC = () => {
                   Google Maps Location
                 </span>
                 <a
-                  href="https://maps.google.com/?q=Shop+No+4+Tech+Plaza+Main+Market"
+                  href="https://share.google/JdvLGimvQe18jUJNp"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-xs font-semibold text-[#00B2A2] hover:underline flex items-center gap-1"
@@ -251,7 +253,7 @@ export const ContactSection: React.FC = () => {
               <div className="relative h-56 w-full bg-slate-100 dark:bg-slate-800">
                 <iframe
                   title="QASWA TELECOM Location Map"
-                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d120638.12879555138!2d72.822296!3d19.0825223!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3be7c6306644edc1%3A0x5da4ed8f8d648c69!2sMumbai%2C%20Maharashtra!5e0!3m2!1sen!2sin!4v1700000000000!5m2!1sen!2sin"
+                  src="https://maps.google.com/maps?q=Shop+No-8+1st+Floor+Thakkar+Shopping+Centre+S.V+Road+Borivali+West+Mumbai+400092&t=&z=16&ie=UTF8&iwloc=&output=embed"
                   width="100%"
                   height="100%"
                   style={{ border: 0 }}

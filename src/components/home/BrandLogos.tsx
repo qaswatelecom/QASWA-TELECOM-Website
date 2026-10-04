@@ -94,3 +94,138 @@ export const TecnoLogo: React.FC<{ className?: string }> = ({ className = "h-7 w
     </g>
   </svg>
 );
+
+export const XiaomiLogo: React.FC<{ className?: string }> = ({ className = "h-9 w-auto" }) => (
+  <svg viewBox="0 0 60 60" className={className} fill="none">
+    <rect width="60" height="60" rx="14" fill="#FF6900" />
+    <g fill="#FFFFFF">
+      {/* Outer 'm' and inner pillar */}
+      <path d="M16 18h7v13c0 1.5 1 2.5 2.5 2.5s2.5-1 2.5-2.5V18h7v13c0 1.5 1 2.5 2.5 2.5s2.5-1 2.5-2.5V18h7v13.5c0 5-4 9-9 9-3.2 0-6-1.7-7.5-4.2-1.5 2.5-4.3 4.2-7.5 4.2-5 0-9-4-9-9V18z" />
+      {/* 'i' */}
+      <rect x="42" y="25" width="4.5" height="15.5" rx="1.5" />
+      <circle cx="44.25" cy="19.5" r="2.5" />
+    </g>
+  </svg>
+);
+
+export const IQOOLogo: React.FC<{ className?: string }> = ({ className = "h-8 w-auto" }) => (
+  <svg viewBox="0 0 170 50" className={className} fill="none">
+    <g transform="skewX(-8)">
+      <text
+        x="85"
+        y="36"
+        textAnchor="middle"
+        fontFamily="'Montserrat', 'Arial Black', Impact, sans-serif"
+        fontSize="34"
+        fontWeight="900"
+        letterSpacing="2"
+        fill="#FFB800"
+      >
+        iQOO
+      </text>
+    </g>
+  </svg>
+);
+
+export const NothingLogo: React.FC<{ className?: string }> = ({ className = "h-6 w-auto" }) => (
+  <svg viewBox="0 0 190 40" className={className} fill="none">
+    <g className="fill-slate-900 dark:fill-white">
+      {/* N */}
+      <circle cx="20" cy="12" r="2.5" /><circle cx="20" cy="20" r="2.5" /><circle cx="20" cy="28" r="2.5" />
+      <circle cx="26" cy="16" r="2.5" /><circle cx="32" cy="24" r="2.5" />
+      <circle cx="38" cy="12" r="2.5" /><circle cx="38" cy="20" r="2.5" /><circle cx="38" cy="28" r="2.5" />
+      {/* O */}
+      <circle cx="50" cy="12" r="2.5" /><circle cx="56" cy="12" r="2.5" /><circle cx="62" cy="12" r="2.5" />
+      <circle cx="50" cy="20" r="2.5" /><circle cx="62" cy="20" r="2.5" />
+      <circle cx="50" cy="28" r="2.5" /><circle cx="56" cy="28" r="2.5" /><circle cx="62" cy="28" r="2.5" />
+      {/* T */}
+      <circle cx="72" cy="12" r="2.5" /><circle cx="78" cy="12" r="2.5" /><circle cx="84" cy="12" r="2.5" />
+      <circle cx="78" cy="20" r="2.5" /><circle cx="78" cy="28" r="2.5" />
+      {/* H */}
+      <circle cx="94" cy="12" r="2.5" /><circle cx="94" cy="20" r="2.5" /><circle cx="94" cy="28" r="2.5" />
+      <circle cx="100" cy="20" r="2.5" />
+      <circle cx="106" cy="12" r="2.5" /><circle cx="106" cy="20" r="2.5" /><circle cx="106" cy="28" r="2.5" />
+      {/* I */}
+      <circle cx="116" cy="12" r="2.5" /><circle cx="122" cy="12" r="2.5" /><circle cx="128" cy="12" r="2.5" />
+      <circle cx="122" cy="20" r="2.5" />
+      <circle cx="116" cy="28" r="2.5" /><circle cx="122" cy="28" r="2.5" /><circle cx="128" cy="28" r="2.5" />
+      {/* N */}
+      <circle cx="138" cy="12" r="2.5" /><circle cx="138" cy="20" r="2.5" /><circle cx="138" cy="28" r="2.5" />
+      <circle cx="144" cy="16" r="2.5" /><circle cx="150" cy="24" r="2.5" />
+      <circle cx="156" cy="12" r="2.5" /><circle cx="156" cy="20" r="2.5" /><circle cx="156" cy="28" r="2.5" />
+      {/* G */}
+      <circle cx="166" cy="12" r="2.5" /><circle cx="172" cy="12" r="2.5" /><circle cx="178" cy="12" r="2.5" />
+      <circle cx="166" cy="20" r="2.5" /><circle cx="178" cy="20" r="2.5" />
+      <circle cx="166" cy="28" r="2.5" /><circle cx="172" cy="28" r="2.5" /><circle cx="178" cy="28" r="2.5" />
+      <circle cx="178" cy="24" r="2.5" /><circle cx="174" cy="24" r="2.5" />
+    </g>
+  </svg>
+);
+
+export const HonorLogo: React.FC<{ className?: string }> = ({ className = "h-7 w-auto" }) => (
+  <svg viewBox="0 0 180 40" className={className} fill="none">
+    <text
+      x="90"
+      y="28"
+      textAnchor="middle"
+      fontFamily="'Plus Jakarta Sans', system-ui, sans-serif"
+      fontSize="24"
+      fontWeight="900"
+      letterSpacing="6"
+      className="fill-slate-900 dark:fill-white"
+    >
+      HONOR
+    </text>
+  </svg>
+);
+
+export const HuaweiLogo: React.FC<{ className?: string }> = ({ className = "h-10 w-auto" }) => (
+  <svg viewBox="0 0 180 68" className={className} fill="none">
+    {/* Red radiating petals fan */}
+    <g transform="translate(90, 22)">
+      <path d="M0 -18 C-3 -10, -2 -4, 0 0 C2 -4, 3 -10, 0 -18Z" fill="#ED1C24" />
+      <path d="M0 -18 C-3 -10, -2 -4, 0 0 C2 -4, 3 -10, 0 -18Z" fill="#ED1C24" transform="rotate(25)" />
+      <path d="M0 -18 C-3 -10, -2 -4, 0 0 C2 -4, 3 -10, 0 -18Z" fill="#ED1C24" transform="rotate(-25)" />
+      <path d="M0 -18 C-3 -10, -2 -4, 0 0 C2 -4, 3 -10, 0 -18Z" fill="#ED1C24" transform="rotate(50)" />
+      <path d="M0 -18 C-3 -10, -2 -4, 0 0 C2 -4, 3 -10, 0 -18Z" fill="#ED1C24" transform="rotate(-50)" />
+      <path d="M0 -18 C-3 -10, -2 -4, 0 0 C2 -4, 3 -10, 0 -18Z" fill="#ED1C24" transform="rotate(75)" />
+      <path d="M0 -18 C-3 -10, -2 -4, 0 0 C2 -4, 3 -10, 0 -18Z" fill="#ED1C24" transform="rotate(-75)" />
+    </g>
+    <text
+      x="90"
+      y="56"
+      textAnchor="middle"
+      fontFamily="'Plus Jakarta Sans', system-ui, sans-serif"
+      fontSize="17"
+      fontWeight="900"
+      letterSpacing="3.5"
+      className="fill-slate-900 dark:fill-white"
+    >
+      HUAWEI
+    </text>
+  </svg>
+);
+
+export const BRAND_SVG_MAP: Record<string, React.FC<{ className?: string }>> = {
+  apple: AppleLogo,
+  iphone: AppleLogo,
+  samsung: SamsungLogo,
+  'google-pixel': GooglePixelLogo,
+  pixel: GooglePixelLogo,
+  google: GooglePixelLogo,
+  oneplus: OnePlusLogo,
+  vivo: VivoLogo,
+  oppo: OppoLogo,
+  poco: PocoLogo,
+  realme: RealmeLogo,
+  motorola: MotorolaLogo,
+  moto: MotorolaLogo,
+  tecno: TecnoLogo,
+  xiaomi: XiaomiLogo,
+  'xiaomi-mobile': XiaomiLogo,
+  mi: XiaomiLogo,
+  iqoo: IQOOLogo,
+  nothing: NothingLogo,
+  honor: HonorLogo,
+  huawei: HuaweiLogo,
+};

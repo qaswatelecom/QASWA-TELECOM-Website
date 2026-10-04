@@ -210,7 +210,19 @@ export async function seedDatabaseIfEmpty() {
       { key: 'SITE_TAGLINE', value: 'Display Repair Specialists for Flagship Devices' },
       { key: 'SITE_PHONE', value: '+91 9324316048' },
       { key: 'SITE_EMAIL', value: 'telecomqaswa@gmail.com' },
-      { key: 'SITE_ADDRESS', value: 'Shop No. 4, Tech Plaza, Main Market' },
+      {
+        key: 'SITE_ADDRESS',
+        value:
+          'Shop No-8, 1st Floor, Thakkar Shopping Centre, S.V Road, Borivali West, Mumbai, PIN-400092',
+      },
+      {
+        key: 'BUSINESS_HOURS',
+        value: 'Everyday: 11:00 AM – 9:00 PM',
+      },
+      {
+        key: 'GOOGLE_MAPS_URL',
+        value: 'https://share.google/JdvLGimvQe18jUJNp',
+      },
       {
         key: 'HEADER_CONFIG',
         value: JSON.stringify({
@@ -235,7 +247,8 @@ export async function seedDatabaseIfEmpty() {
             'QASWA TELECOM is a specialized mobile repair service focused exclusively on display repairs for high-end flagship devices: Apple iPhone, Samsung Galaxy S and Z series, Google Pixel, OnePlus, Apple Watch, iPad, and premium tablets.',
           phone: '+91 9324316048',
           email: 'telecomqaswa@gmail.com',
-          address: 'Shop No. 4, Tech Plaza, Main Market',
+          address:
+            'Shop No-8, 1st Floor, Thakkar Shopping Centre, S.V Road, Borivali West, Mumbai, PIN-400092',
           whatsappNumber: '9324316048',
           copyright: '© 2026 QASWA TELECOM. All Rights Reserved. Display Repair Specialists for Flagship Devices.',
           socialLinks: {
@@ -390,7 +403,7 @@ export async function seedDatabaseIfEmpty() {
       {
         name: 'iPhone',
         slug: 'iphone',
-        logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg',
+        logoUrl: '/brands/apple.svg',
         description: 'Specialized display repairs for Apple iPhone Super Retina XDR OLED panels, Ceramic Shield glass, and TrueTone calibration.',
         seoTitle: 'iPhone Display Repair Specialists | QASWA TELECOM',
         seoDescription: 'Expert display repairs for iPhone 15 Pro Max, 14 Pro, 13 Pro and all flagship Apple models. Green screen fix, touch glass and OLED restoration.',
@@ -400,7 +413,7 @@ export async function seedDatabaseIfEmpty() {
       {
         name: 'Samsung Galaxy',
         slug: 'samsung-galaxy',
-        logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/2/24/Samsung_Logo.svg',
+        logoUrl: '/brands/samsung.svg',
         description: 'Specialized display solutions for Samsung Galaxy S-Series Dynamic AMOLED 2X, Z Fold, and Z Flip foldable panels.',
         seoTitle: 'Samsung Galaxy Display Repair Specialists | QASWA TELECOM',
         seoDescription: 'Expert display repairs for Samsung Galaxy S24 Ultra, S23 Ultra, Z Fold 5, and Z Flip 5. Green line repair and OLED glass replacement.',
@@ -410,7 +423,7 @@ export async function seedDatabaseIfEmpty() {
       {
         name: 'Google Pixel',
         slug: 'google-pixel',
-        logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/2/2f/Google_2015_logo.svg',
+        logoUrl: '/brands/google-pixel.svg',
         description: 'Precision display repair for Google Pixel Actua & Super Actua OLED screens, under-display fingerprint alignment, and touch glass.',
         seoTitle: 'Google Pixel Display Repair Specialists | QASWA TELECOM',
         seoDescription: 'Specialized display repairs for Google Pixel 8 Pro, 8, Fold, 7 Pro. Digitizer calibration and pristine OLED restoration.',
@@ -420,7 +433,7 @@ export async function seedDatabaseIfEmpty() {
       {
         name: 'OnePlus',
         slug: 'oneplus',
-        logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/f/f8/OP_LU_Reg_1_Line_RGB_RED_copy.svg',
+        logoUrl: '/brands/oneplus.svg',
         description: 'Specialized vertical green line elimination, 120Hz LTPO Fluid AMOLED restoration, and touch glass replacement for OnePlus flagships.',
         seoTitle: 'OnePlus Display Repair Specialists | QASWA TELECOM',
         seoDescription: 'Expert display repairs for OnePlus 12, 11, Open, 10 Pro. Green line laser repair and original AMOLED touch glass refurbishing.',
@@ -430,7 +443,7 @@ export async function seedDatabaseIfEmpty() {
       {
         name: 'Apple Watch',
         slug: 'apple-watch',
-        logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg',
+        logoUrl: '/brands/apple.svg',
         description: 'Micro-precision sapphire crystal touch glass refurbishing and OLED display repair for Apple Watch Ultra, Series 9, and Series 8.',
         seoTitle: 'Apple Watch Display Repair Specialists | QASWA TELECOM',
         seoDescription: 'Dedicated display and sapphire glass repair for Apple Watch Ultra 2, Series 9, 8, 7. Preserving Force Touch and display sensors.',
@@ -440,7 +453,7 @@ export async function seedDatabaseIfEmpty() {
       {
         name: 'iPad',
         slug: 'ipad',
-        logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg',
+        logoUrl: '/brands/apple.svg',
         description: 'Liquid Retina XDR and Ultra Retina Tandem OLED display repairs, laminated digitizer replacement, and Apple Pencil sensitivity preservation.',
         seoTitle: 'iPad Display Repair Specialists | QASWA TELECOM',
         seoDescription: 'Specialized display repair for iPad Pro M4/M2, iPad Air, and iPad Mini. TrueTone programming and seamless glass restoration.',
@@ -450,7 +463,7 @@ export async function seedDatabaseIfEmpty() {
       {
         name: 'Premium Tablets',
         slug: 'premium-tablets',
-        logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/2/24/Samsung_Logo.svg',
+        logoUrl: '/brands/samsung.svg',
         description: 'High-end display repairs for Samsung Galaxy Tab S9 Ultra, Microsoft Surface Pro, and other flagship tablet AMOLED panels.',
         seoTitle: 'Premium Tablet Display Repair Specialists | QASWA TELECOM',
         seoDescription: 'Specialized large-screen display repairs for Samsung Galaxy Tab S9 Ultra, Surface Pro, and flagship high-refresh rate tablet displays.',
@@ -514,11 +527,12 @@ export async function seedDatabaseIfEmpty() {
     await db.insert(serviceCenters).values({
       name: 'QASWA TELECOM - Flagship Display Repair Center',
       city: 'Mumbai',
-      address: 'Shop No. 4, Tech Plaza, Main Market',
+      address:
+        'Shop No-8, 1st Floor, Thakkar Shopping Centre, S.V Road, Borivali West, Mumbai, PIN-400092',
       phone: '+91 9324316048',
       whatsapp: '9324316048',
-      mapUrl: 'https://maps.google.com/?q=Shop+No+4+Tech+Plaza+Main+Market',
-      timing: 'Mon - Sat: 10:00 AM - 8:30 PM | Sun: 11:00 AM - 6:00 PM',
+      mapUrl: 'https://share.google/JdvLGimvQe18jUJNp',
+      timing: 'Everyday: 11:00 AM – 9:00 PM',
       isActive: true,
     });
 

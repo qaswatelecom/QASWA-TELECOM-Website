@@ -283,6 +283,7 @@ export async function ensureDatabaseSchema() {
         id SERIAL PRIMARY KEY,
         customer_name TEXT,
         customer_phone TEXT,
+        customer_city TEXT,
         device_category TEXT NOT NULL DEFAULT 'Mobile',
         brand TEXT NOT NULL,
         model TEXT NOT NULL,
@@ -295,6 +296,7 @@ export async function ensureDatabaseSchema() {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
+      ALTER TABLE customer_enquiries ADD COLUMN IF NOT EXISTS customer_city TEXT;
     `);
       console.log('PostgreSQL database tables verified successfully.');
     } catch (ddlError: any) {

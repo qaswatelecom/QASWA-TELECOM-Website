@@ -21,8 +21,11 @@ export const Footer: React.FC = () => {
   const rawPhone = settings.SITE_PHONE || '+91 9324316048';
   const rawWhatsApp = settings.WHATSAPP_NUMBER || '9324316048';
   const cleanWhatsApp = rawWhatsApp.replace(/\D/g, '');
-  const siteAddress = settings.SITE_ADDRESS || 'Shop No. 4, Tech Plaza, Main Market';
+  const siteAddress =
+    settings.SITE_ADDRESS ||
+    'Shop No-8, 1st Floor, Thakkar Shopping Centre, S.V Road, Borivali West, Mumbai, PIN-400092';
   const siteEmail = settings.SITE_EMAIL || 'telecomqaswa@gmail.com';
+  const businessHours = settings.BUSINESS_HOURS || 'Everyday: 11:00 AM – 9:00 PM';
 
   const quickLinks = [
     { label: 'Home', path: '/' },
@@ -104,7 +107,7 @@ export const Footer: React.FC = () => {
               </div>
               <div className="flex items-center gap-2">
                 <Clock className="h-4 w-4 text-[#00B2A2] shrink-0" />
-                <span>Mon – Sat: 10:00 AM – 8:30 PM | Sun: 11:00 AM – 6:00 PM</span>
+                <span>{businessHours}</span>
               </div>
             </div>
           </div>

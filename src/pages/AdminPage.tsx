@@ -1287,7 +1287,10 @@ export const AdminPage: React.FC = () => {
                         <label className="block text-xs font-semibold mb-1">Central Store Address</label>
                         <input
                           type="text"
-                          value={settingsMap.SITE_ADDRESS ?? 'Shop No. 4, Tech Plaza, Main Market, Mumbai'}
+                          value={
+                            settingsMap.SITE_ADDRESS ??
+                            'Shop No-8, 1st Floor, Thakkar Shopping Centre, S.V Road, Borivali West, Mumbai, PIN-400092'
+                          }
                           onChange={(e) =>
                             setSettingsMap((prev) => ({ ...prev, SITE_ADDRESS: e.target.value }))
                           }
@@ -1298,7 +1301,7 @@ export const AdminPage: React.FC = () => {
                         <label className="block text-xs font-semibold mb-1">Business Operating Hours</label>
                         <input
                           type="text"
-                          value={settingsMap.BUSINESS_HOURS ?? 'Mon – Sat: 10:00 AM – 8:30 PM | Sun: 11:00 AM – 6:00 PM'}
+                          value={settingsMap.BUSINESS_HOURS ?? 'Everyday: 11:00 AM – 9:00 PM'}
                           onChange={(e) =>
                             setSettingsMap((prev) => ({ ...prev, BUSINESS_HOURS: e.target.value }))
                           }
@@ -1312,11 +1315,11 @@ export const AdminPage: React.FC = () => {
                       <label className="block text-xs font-semibold mb-1">Google Maps Embed / Link URL</label>
                       <input
                         type="text"
-                        value={settingsMap.GOOGLE_MAPS_URL ?? 'https://maps.google.com/?q=Shop+No+4+Tech+Plaza+Main+Market+Mumbai'}
+                        value={settingsMap.GOOGLE_MAPS_URL ?? 'https://share.google/JdvLGimvQe18jUJNp'}
                         onChange={(e) =>
                           setSettingsMap((prev) => ({ ...prev, GOOGLE_MAPS_URL: e.target.value }))
                         }
-                        placeholder="https://maps.google.com/..."
+                        placeholder="https://share.google/..."
                         className="w-full rounded-xl border border-slate-200 bg-slate-50 p-2.5 text-xs text-slate-900 focus:border-[#00B2A2] focus:bg-white focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white font-mono text-[11px]"
                       />
                     </div>

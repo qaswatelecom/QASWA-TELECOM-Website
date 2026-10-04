@@ -16,7 +16,9 @@ import {
 export const TermsPage: React.FC = () => {
   const { settings } = useApp();
   const siteName = settings.SITE_NAME || 'QASWA TELECOM';
-  const siteAddress = settings.SITE_ADDRESS || 'Shop No. 4, Tech Plaza, Main Market, Mumbai';
+  const siteAddress =
+    settings.SITE_ADDRESS ||
+    'Shop No-8, 1st Floor, Thakkar Shopping Centre, S.V Road, Borivali West, Mumbai, PIN-400092';
   const siteEmail = settings.SITE_EMAIL || 'telecomqaswa@gmail.com';
   const sitePhone = settings.SITE_PHONE || '+91 9324316048';
 

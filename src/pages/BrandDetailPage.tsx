@@ -12,6 +12,7 @@ import {
   Layers,
 } from 'lucide-react';
 import { generateBrandSchema, generateBreadcrumbSchema, useJsonLd } from '../lib/seo.ts';
+import { BRAND_SVG_MAP } from '../components/home/BrandLogos.tsx';
 
 interface BrandDetailPageProps {
   brandSlug: string;
@@ -45,9 +46,14 @@ export const BrandDetailPage: React.FC<BrandDetailPageProps> = ({ brandSlug, cat
       .then((data) => {
         setBrand(data.brand);
         // Strictly ensure only models for this targetCategorySlug are stored
-        const validModels = (data.models || []).filter(
-          (m: Model) => !m.categorySlug || m.categorySlug === targetCategorySlug
-        );
+        const validModels = (data.models || []).filter((m: Model) => {
+          if (targetCategorySlug === 'mobile') {
+            const mCat = (m.categorySlug || '').toLowerCase();
+            if (mCat === 'ipad' || mCat === 'apple-watch' || mCat === 'tablet') return false;
+            return !mCat || mCat === 'mobile';
+          }
+          return m.categorySlug === targetCategorySlug;
+        });
         setModels(validModels);
         if (data.category) {
           setCategory(data.category);
@@ -78,9 +84,14 @@ export const BrandDetailPage: React.FC<BrandDetailPageProps> = ({ brandSlug, cat
           fetch(`/api/models?brandId=${found.id}&categorySlug=${targetCategorySlug}`)
             .then((res) => (res.ok ? res.json() : []))
             .then((data: Model[]) => {
-              const validModels = data.filter(
-                (m) => !m.categorySlug || m.categorySlug === targetCategorySlug
-              );
+              const validModels = data.filter((m) => {
+                if (targetCategorySlug === 'mobile') {
+                  const mCat = (m.categorySlug || '').toLowerCase();
+                  if (mCat === 'ipad' || mCat === 'apple-watch' || mCat === 'tablet') return false;
+                  return !mCat || mCat === 'mobile';
+                }
+                return m.categorySlug === targetCategorySlug;
+              });
               setModels(validModels);
             })
             .catch(() => setModels([]));
@@ -189,15 +200,32 @@ export const BrandDetailPage: React.FC<BrandDetailPageProps> = ({ brandSlug, cat
           <div className="relative z-10 flex flex-col md:flex-row md:items-center gap-6 justify-between">
             <div className="flex items-start gap-4 sm:gap-6">
               <div className="flex h-16 w-16 sm:h-20 sm:w-20 items-center justify-center rounded-2xl bg-slate-100 p-3 dark:bg-slate-800 shrink-0 shadow-xs border border-slate-200 dark:border-slate-700">
-                {brand.logoUrl ? (
-                  <img
-                    src={brand.logoUrl}
-                    alt={`${brand.name} logo`}
-                    className="max-h-full max-w-full object-contain filter dark:brightness-110"
-                  />
-                ) : (
-                  <BrandIcon className="h-8 w-8 text-[#00B2A2]" />
-                )}
+                {(() => {
+                  const SvgComp =
+                    BRAND_SVG_MAP[brand.slug.toLowerCase()] ||
+                    BRAND_SVG_MAP[brand.name.toLowerCase()] ||
+                    BRAND_SVG_MAP[brand.slug.toLowerCase().replace('-mobile', '')];
+
+                  if (brand.logoUrl) {
+                    return (
+                      <img
+                        src={brand.logoUrl}
+                        alt={`${brand.name} logo`}
+                        className="max-h-full max-w-full object-contain filter dark:brightness-110"
+                        referrerPolicy="no-referrer"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
+                    );
+                  }
+
+                  if (SvgComp) {
+                    return <SvgComp className="max-h-full max-w-full" />;
+                  }
+
+                  return <BrandIcon className="h-8 w-8 text-[#00B2A2]" />;
+                })()}
               </div>
 
               <div>

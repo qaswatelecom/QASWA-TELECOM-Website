@@ -953,9 +953,51 @@ apiRouter.post('/enquiries', async (req: Request, res: Response) => {
       displayIssues,
       customerName,
       customerPhone,
+      customerCity,
       customerMessage,
     } = req.body;
 
+    // 1. Mandatory customer details validation
+    const nameStr = customerName ? String(customerName).trim() : '';
+    if (!nameStr) {
+      return res.status(400).json({
+        success: false,
+        error: 'Full Name is required.',
+      });
+    }
+
+    const rawPhone = customerPhone ? String(customerPhone).trim() : '';
+    if (!rawPhone) {
+      return res.status(400).json({
+        success: false,
+        error: 'Phone Number is required.',
+      });
+    }
+
+    // Validate Indian mobile number format: 10 digits starting with 6, 7, 8, 9
+    let digits = rawPhone.replace(/\D/g, '');
+    if (digits.startsWith('91') && digits.length === 12) {
+      digits = digits.substring(2);
+    } else if (digits.startsWith('0') && digits.length === 11) {
+      digits = digits.substring(1);
+    }
+
+    if (digits.length !== 10 || !/^[6-9]/.test(digits)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Please enter a valid 10-digit Indian mobile number (starts with 6, 7, 8, or 9).',
+      });
+    }
+
+    const cityStr = customerCity ? String(customerCity).trim() : '';
+    if (!cityStr) {
+      return res.status(400).json({
+        success: false,
+        error: 'City is required.',
+      });
+    }
+
+    // 2. Mandatory device & issue selection
     if (!deviceCategory || !brand || !model || (!displayIssue && (!displayIssues || displayIssues.length === 0))) {
       return res.status(400).json({
         success: false,
@@ -995,20 +1037,21 @@ apiRouter.post('/enquiries', async (req: Request, res: Response) => {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
-    }); // e.g. "3 Oct 2026"
+    }); // e.g. "4 Oct 2026"
 
     const enquiryTime = now.toLocaleTimeString('en-US', {
       timeZone: 'Asia/Kolkata',
       hour: '2-digit',
       minute: '2-digit',
       hour12: true,
-    }); // e.g. "07:30 PM"
+    }); // e.g. "03:30 PM"
 
     const [inserted] = await db
       .insert(customerEnquiries)
       .values({
-        customerName: customerName ? String(customerName).trim() : null,
-        customerPhone: customerPhone ? String(customerPhone).trim() : null,
+        customerName: nameStr,
+        customerPhone: digits,
+        customerCity: cityStr,
         deviceCategory: String(deviceCategory).trim(),
         brand: String(brand).trim(),
         model: String(model).trim(),
@@ -1029,36 +1072,37 @@ apiRouter.post('/enquiries', async (req: Request, res: Response) => {
     const businessWhatsApp = await getSetting('WHATSAPP_NUMBER', '9324316048');
     const cleanDestinationNumber = businessWhatsApp.replace(/\D/g, '');
 
-    // Format WhatsApp message strictly per requirement:
-    // If multiple issues:
-    // "Display Issues:
-    // • Display Damaged
-    // • Touch Not Responding Issue
-    // • Green & Pink Line Issue"
-    let issuesBlock = '';
-    if (issuesList.length > 1) {
-      issuesBlock = `Display Issues:\n` + issuesList.map((iss) => `• ${iss}`).join('\n') + `\n`;
-    } else {
-      issuesBlock = `Display Issue: ${issuesList[0]}\n`;
-    }
+    // Format WhatsApp message strictly per customer requirement:
+    // Hello QASWA TELECOM,
+    //
+    // I would like to enquire about a display repair.
+    //
+    // Name: [Customer Name]
+    // Phone: [Customer Phone]
+    // City: [Customer City]
+    //
+    // Device: [Device Category]
+    // Brand: [Brand]
+    // Model: [Model]
+    //
+    // Display Issue(s):
+    // - [Issue 1]
+    // - [Issue 2]
+    //
+    // Please contact me regarding this enquiry.
+    const issuesListFormatted = issuesList.map((iss) => `- ${iss}`).join('\n');
 
-    let msg = `Hello QASWA TELECOM, I would like to enquire about a display repair.\n\n` +
-      `Device Category: ${inserted.deviceCategory}\n` +
+    let msg = `Hello QASWA TELECOM,\n\n` +
+      `I would like to enquire about a display repair.\n\n` +
+      `Name: ${inserted.customerName}\n` +
+      `Phone: ${inserted.customerPhone}\n` +
+      `City: ${inserted.customerCity}\n\n` +
+      `Device: ${inserted.deviceCategory}\n` +
       `Brand: ${inserted.brand}\n` +
-      `Model: ${inserted.model}\n` +
-      issuesBlock;
-
-    if (inserted.customerName) {
-      msg += `Customer Name: ${inserted.customerName}\n`;
-    }
-    if (inserted.customerPhone) {
-      msg += `Contact: ${inserted.customerPhone}\n`;
-    }
-    if (inserted.customerMessage) {
-      msg += `Note: ${inserted.customerMessage}\n`;
-    }
-
-    msg += `\nPlease let me know the next steps.`;
+      `Model: ${inserted.model}\n\n` +
+      `Display Issue(s):\n` +
+      `${issuesListFormatted}\n\n` +
+      `Please contact me regarding this enquiry.`;
 
     const whatsappUrl = `https://wa.me/${cleanDestinationNumber}?text=${encodeURIComponent(msg)}`;
 
@@ -1070,14 +1114,14 @@ apiRouter.post('/enquiries', async (req: Request, res: Response) => {
     });
   } catch (error: any) {
     console.error('Error creating customer enquiry:', error);
-    res.status(500).json({ success: false, error: 'Failed to record customer enquiry' });
+    res.status(500).json({ success: false, error: error.message || 'Failed to record customer enquiry' });
   }
 });
 
 // Admin endpoints for Customer Enquiries
 apiRouter.get('/admin/enquiries', optionalAuth, async (req: Request, res: Response) => {
   try {
-    const { search, deviceCategory, brand, displayIssue, status, date } = req.query;
+    const { search, deviceCategory, brand, displayIssue, status, date, city } = req.query;
 
     let query = db.select().from(customerEnquiries);
     const conditions = [];
@@ -1094,6 +1138,9 @@ apiRouter.get('/admin/enquiries', optionalAuth, async (req: Request, res: Respon
     if (status && status !== 'all') {
       conditions.push(eq(customerEnquiries.status, String(status)));
     }
+    if (city && city !== 'all') {
+      conditions.push(like(customerEnquiries.customerCity, `%${city}%`));
+    }
     if (date && date !== 'all') {
       conditions.push(like(customerEnquiries.enquiryDate, `%${date}%`));
     }
@@ -1103,6 +1150,7 @@ apiRouter.get('/admin/enquiries', optionalAuth, async (req: Request, res: Respon
         or(
           like(customerEnquiries.customerName, term),
           like(customerEnquiries.customerPhone, term),
+          like(customerEnquiries.customerCity, term),
           like(customerEnquiries.brand, term),
           like(customerEnquiries.model, term),
           like(customerEnquiries.displayIssue, term)
@@ -1124,12 +1172,13 @@ apiRouter.get('/admin/enquiries', optionalAuth, async (req: Request, res: Respon
 apiRouter.patch('/admin/enquiries/:id', optionalAuth, async (req: Request, res: Response) => {
   try {
     const id = Number(req.params.id);
-    const { status, customerName, customerPhone, customerMessage } = req.body;
+    const { status, customerName, customerPhone, customerCity, customerMessage } = req.body;
     const updateData: any = { updatedAt: new Date() };
 
     if (status) updateData.status = status;
     if (customerName !== undefined) updateData.customerName = customerName;
     if (customerPhone !== undefined) updateData.customerPhone = customerPhone;
+    if (customerCity !== undefined) updateData.customerCity = customerCity;
     if (customerMessage !== undefined) updateData.customerMessage = customerMessage;
 
     const [updated] = await db

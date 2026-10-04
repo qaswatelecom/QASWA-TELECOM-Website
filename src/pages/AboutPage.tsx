@@ -23,7 +23,9 @@ export const AboutPage: React.FC = () => {
   const rawWhatsApp = settings.WHATSAPP_NUMBER || '9324316048';
   const cleanWhatsApp = rawWhatsApp.replace(/\D/g, '');
   const sitePhone = settings.SITE_PHONE || '+91 9324316048';
-  const siteAddress = settings.SITE_ADDRESS || 'Shop No. 4, Tech Plaza, Main Market, Mumbai';
+  const siteAddress =
+    settings.SITE_ADDRESS ||
+    'Shop No-8, 1st Floor, Thakkar Shopping Centre, S.V Road, Borivali West, Mumbai, PIN-400092';
 
   const { content } = usePageContent<AboutPageContent>('about');
   const about = content || DEFAULT_ABOUT_CONTENT;

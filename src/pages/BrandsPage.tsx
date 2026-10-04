@@ -16,6 +16,7 @@ export const BrandsPage: React.FC = () => {
   const { categories, brands, navigate } = useApp();
   const [search, setSearch] = useState('');
   const [activeCategoryFilter, setActiveCategoryFilter] = useState<string>('All');
+  const [imageErrors, setImageErrors] = useState<Record<number, boolean>>({});
 
   const origin = typeof window !== 'undefined' ? window.location.origin : 'https://qaswatelecom.com';
   const breadcrumbSchema = React.useMemo(() => {
@@ -185,10 +186,14 @@ export const BrandsPage: React.FC = () => {
                 >
                   <div>
                     <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-50 dark:bg-slate-800 mx-auto mb-3.5 p-3 group-hover:scale-105 transition-transform border border-slate-100 dark:border-slate-800">
-                      {b.logoUrl ? (
+                      {b.logoUrl && !imageErrors[b.id] ? (
                         <img
                           src={b.logoUrl}
                           alt={b.name}
+                          referrerPolicy="no-referrer"
+                          onError={() =>
+                            setImageErrors((prev) => ({ ...prev, [b.id]: true }))
+                          }
                           className="max-h-full max-w-full object-contain filter dark:brightness-110"
                         />
                       ) : (

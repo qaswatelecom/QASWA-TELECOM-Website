@@ -321,6 +321,7 @@ export const customerEnquiries = pgTable('customer_enquiries', {
   id: serial('id').primaryKey(),
   customerName: text('customer_name'),
   customerPhone: text('customer_phone'),
+  customerCity: text('customer_city'),
   deviceCategory: text('device_category').notNull().default('Mobile'),
   brand: text('brand').notNull(),
   model: text('model').notNull(),

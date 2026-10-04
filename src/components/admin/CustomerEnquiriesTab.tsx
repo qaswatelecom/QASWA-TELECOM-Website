@@ -125,10 +125,11 @@ export const CustomerEnquiriesTab: React.FC = () => {
         const q = search.toLowerCase();
         const matchName = e.customerName?.toLowerCase().includes(q);
         const matchPhone = e.customerPhone?.toLowerCase().includes(q);
+        const matchCity = e.customerCity?.toLowerCase().includes(q);
         const matchBrand = e.brand?.toLowerCase().includes(q);
         const matchModel = e.model?.toLowerCase().includes(q);
         const matchIssue = e.displayIssue?.toLowerCase().includes(q);
-        if (!matchName && !matchPhone && !matchBrand && !matchModel && !matchIssue) {
+        if (!matchName && !matchPhone && !matchCity && !matchBrand && !matchModel && !matchIssue) {
           return false;
         }
       }
@@ -172,17 +173,18 @@ export const CustomerEnquiriesTab: React.FC = () => {
 
   const handleExportCSV = () => {
     if (filteredEnquiries.length === 0) return;
-    const headers = ['ID', 'Date', 'Time', 'Device', 'Brand', 'Model', 'Display Issue', 'Customer Name', 'Phone', 'Status', 'Timestamp'];
+    const headers = ['ID', 'Date', 'Time', 'Name', 'Phone', 'City', 'Device Category', 'Brand', 'Model', 'Display Issue(s)', 'Status', 'Timestamp'];
     const rows = filteredEnquiries.map((e) => [
       e.id,
       `"${e.enquiryDate || ''}"`,
       `"${e.enquiryTime || ''}"`,
+      `"${e.customerName || ''}"`,
+      `"${e.customerPhone || ''}"`,
+      `"${e.customerCity || ''}"`,
       `"${e.deviceCategory}"`,
       `"${e.brand}"`,
       `"${e.model}"`,
       `"${e.displayIssue}"`,
-      `"${e.customerName || ''}"`,
-      `"${e.customerPhone || ''}"`,
       `"${e.status}"`,
       `"${e.createdAt}"`,
     ]);
@@ -394,27 +396,29 @@ export const CustomerEnquiriesTab: React.FC = () => {
           <table className="w-full text-left text-xs border-collapse">
             <thead>
               <tr className="border-b border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-800/50 text-[11px] uppercase tracking-wider text-slate-500 dark:text-slate-400 font-extrabold">
-                <th className="py-3.5 px-4">Date & Time</th>
-                <th className="py-3.5 px-4">Device</th>
-                <th className="py-3.5 px-4">Brand</th>
-                <th className="py-3.5 px-4">Model</th>
-                <th className="py-3.5 px-4">Display Issue</th>
-                <th className="py-3.5 px-4">Customer</th>
-                <th className="py-3.5 px-4">Status</th>
-                <th className="py-3.5 px-4 text-right">Actions</th>
+                <th className="py-3.5 px-4 whitespace-nowrap">Date & Time</th>
+                <th className="py-3.5 px-4 whitespace-nowrap">Name</th>
+                <th className="py-3.5 px-4 whitespace-nowrap">Phone Number</th>
+                <th className="py-3.5 px-4 whitespace-nowrap">City</th>
+                <th className="py-3.5 px-4 whitespace-nowrap">Device Category</th>
+                <th className="py-3.5 px-4 whitespace-nowrap">Brand</th>
+                <th className="py-3.5 px-4 whitespace-nowrap">Model</th>
+                <th className="py-3.5 px-4 min-w-[200px]">Display Issue(s)</th>
+                <th className="py-3.5 px-4 whitespace-nowrap">Status</th>
+                <th className="py-3.5 px-4 whitespace-nowrap text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {loading ? (
                 <tr>
-                  <td colSpan={8} className="py-12 text-center text-slate-400">
+                  <td colSpan={10} className="py-12 text-center text-slate-400">
                     <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2 text-[#00B2A2]" />
                     <span>Loading customer enquiries...</span>
                   </td>
                 </tr>
               ) : filteredEnquiries.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="py-12 text-center text-slate-400">
+                  <td colSpan={10} className="py-12 text-center text-slate-400">
                     <MessageSquare className="h-8 w-8 mx-auto mb-2 text-slate-300 dark:text-slate-700" />
                     <span className="font-semibold block">No customer enquiries found</span>
                     <span className="text-[11px] text-slate-400 mt-1 block">
@@ -428,19 +432,55 @@ export const CustomerEnquiriesTab: React.FC = () => {
                     key={enquiry.id}
                     className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors"
                   >
-                    {/* Date & Time */}
+                    {/* 1. Date & Time */}
                     <td className="py-3.5 px-4 whitespace-nowrap">
                       <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
                         <Calendar className="h-3.5 w-3.5 text-[#00B2A2]" />
-                        <span>{enquiry.enquiryDate || enquiry.createdAt.split('T')[0]}</span>
+                        <span>{enquiry.enquiryDate || (enquiry.createdAt ? enquiry.createdAt.split('T')[0] : '—')}</span>
                       </div>
                       <div className="text-[11px] text-slate-400 flex items-center gap-1 mt-0.5">
                         <Clock className="h-3 w-3" />
-                        <span>{enquiry.enquiryTime || enquiry.createdAt.split('T')[1]?.substring(0, 5) || '—'}</span>
+                        <span>{enquiry.enquiryTime || (enquiry.createdAt ? enquiry.createdAt.split('T')[1]?.substring(0, 5) : '—')}</span>
                       </div>
                     </td>
 
-                    {/* Device Category */}
+                    {/* 2. Name */}
+                    <td className="py-3.5 px-4 whitespace-nowrap font-bold text-slate-900 dark:text-white">
+                      {enquiry.customerName ? (
+                        <span>{enquiry.customerName}</span>
+                      ) : (
+                        <span className="text-slate-400 italic font-normal">Not Provided</span>
+                      )}
+                    </td>
+
+                    {/* 3. Phone Number */}
+                    <td className="py-3.5 px-4 whitespace-nowrap">
+                      {enquiry.customerPhone ? (
+                        <a
+                          href={`https://wa.me/${enquiry.customerPhone.replace(/\D/g, '')}?text=${encodeURIComponent(
+                            `Hello ${enquiry.customerName || ''}, thank you for contacting QASWA TELECOM regarding your ${enquiry.brand} ${enquiry.model} display repair.`
+                          )}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-[#00B2A2] hover:text-[#009e90] font-semibold hover:underline"
+                          title="Message customer on WhatsApp"
+                        >
+                          <Phone className="h-3 w-3" />
+                          <span>{enquiry.customerPhone}</span>
+                        </a>
+                      ) : (
+                        <span className="text-slate-400">—</span>
+                      )}
+                    </td>
+
+                    {/* 4. City */}
+                    <td className="py-3.5 px-4 whitespace-nowrap">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-md font-semibold text-slate-800 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 text-[11px]">
+                        {enquiry.customerCity || '—'}
+                      </span>
+                    </td>
+
+                    {/* 5. Device Category */}
                     <td className="py-3.5 px-4 whitespace-nowrap">
                       <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
                         <Smartphone className="h-3 w-3 text-[#00B2A2]" />
@@ -448,19 +488,19 @@ export const CustomerEnquiriesTab: React.FC = () => {
                       </span>
                     </td>
 
-                    {/* Brand */}
+                    {/* 6. Brand */}
                     <td className="py-3.5 px-4 whitespace-nowrap font-bold text-slate-900 dark:text-white">
                       {enquiry.brand}
                     </td>
 
-                    {/* Model */}
+                    {/* 7. Model */}
                     <td className="py-3.5 px-4 whitespace-nowrap">
                       <span className="font-semibold text-slate-800 dark:text-slate-200">
                         {enquiry.model}
                       </span>
                     </td>
 
-                    {/* Display Issue */}
+                    {/* 8. Display Issue(s) */}
                     <td className="py-3.5 px-4">
                       <div className="flex flex-wrap gap-1 max-w-sm">
                         {enquiry.displayIssue.split(',').map((iss, i) => (
@@ -475,25 +515,7 @@ export const CustomerEnquiriesTab: React.FC = () => {
                       </div>
                     </td>
 
-                    {/* Customer */}
-                    <td className="py-3.5 px-4 whitespace-nowrap">
-                      {enquiry.customerName || enquiry.customerPhone ? (
-                        <div>
-                          <span className="font-bold text-slate-900 dark:text-white block">
-                            {enquiry.customerName || 'Anonymous Customer'}
-                          </span>
-                          {enquiry.customerPhone && (
-                            <span className="text-[11px] text-slate-400 block mt-0.5">
-                              {enquiry.customerPhone}
-                            </span>
-                          )}
-                        </div>
-                      ) : (
-                        <span className="text-slate-400 italic">WhatsApp Direct Query</span>
-                      )}
-                    </td>
-
-                    {/* Status Dropdown */}
+                    {/* 9. Status */}
                     <td className="py-3.5 px-4 whitespace-nowrap">
                       <select
                         value={enquiry.status}
@@ -510,7 +532,7 @@ export const CustomerEnquiriesTab: React.FC = () => {
                       </select>
                     </td>
 
-                    {/* Actions */}
+                    {/* 10. Actions */}
                     <td className="py-3.5 px-4 whitespace-nowrap text-right">
                       <div className="inline-flex items-center gap-1.5 justify-end">
                         {/* Direct WhatsApp Customer */}
@@ -642,22 +664,28 @@ export const CustomerEnquiriesTab: React.FC = () => {
                 </div>
               </div>
 
-              {/* Customer Info (if collected) */}
+              {/* Customer Info */}
               <div className="space-y-2 p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
                 <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
                   Customer Contact Information
                 </span>
-                <div className="grid grid-cols-2 gap-2 pt-1">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
                   <div>
-                    <span className="text-slate-400 block text-[11px]">Customer Name:</span>
+                    <span className="text-slate-400 block text-[11px]">Full Name:</span>
                     <span className="font-semibold text-slate-900 dark:text-white">
-                      {selectedEnquiry.customerName || 'Direct WhatsApp Visitor'}
+                      {selectedEnquiry.customerName || '—'}
                     </span>
                   </div>
                   <div>
-                    <span className="text-slate-400 block text-[11px]">Contact Number:</span>
+                    <span className="text-slate-400 block text-[11px]">Phone Number:</span>
                     <span className="font-semibold text-slate-900 dark:text-white">
-                      {selectedEnquiry.customerPhone || 'Captured via WhatsApp Chat'}
+                      {selectedEnquiry.customerPhone || '—'}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400 block text-[11px]">City:</span>
+                    <span className="font-semibold text-slate-900 dark:text-white">
+                      {selectedEnquiry.customerCity || '—'}
                     </span>
                   </div>
                 </div>
