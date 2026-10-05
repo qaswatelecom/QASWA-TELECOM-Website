@@ -11,7 +11,7 @@ import {
   Sparkles,
   Layers,
 } from 'lucide-react';
-import { generateServiceSchema, useJsonLd } from '../lib/seo.ts';
+import { generateServiceSchema, useJsonLd, usePageSeo } from '../lib/seo.ts';
 
 interface ServiceDetailPageProps {
   serviceSlug: string;
@@ -53,6 +53,12 @@ export const ServiceDetailPage: React.FC<ServiceDetailPageProps> = ({ serviceSlu
   }, [service, siteName]);
 
   useJsonLd(`service-${serviceSlug}`, serviceSchema);
+
+  const serviceTitle = `${service?.name || 'Display Repair'} in Mumbai | ${siteName}`;
+  const serviceDesc =
+    service?.description ||
+    `Specialized ${service?.name || 'display repair'} service at ${siteName} in Borivali West, Mumbai. Original display restoration and cleanroom precision diagnosis.`;
+  usePageSeo(serviceTitle, serviceDesc);
 
   if (loading) {
     return (

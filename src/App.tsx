@@ -45,7 +45,9 @@ const AppContent: React.FC = () => {
       address:
         settings.SITE_ADDRESS ||
         'Shop No-8, 1st Floor, Thakkar Shopping Centre, S.V Road, Borivali West, Mumbai, PIN-400092',
-      description: settings.SITE_TAGLINE || 'Display Repair Specialists for Flagship Devices',
+      description:
+        settings.SITE_TAGLINE ||
+        'Display Repair Specialists for flagship smartphones, iPads, Apple Watches, and tablets in Borivali West, Mumbai.',
     });
   }, [settings]);
 

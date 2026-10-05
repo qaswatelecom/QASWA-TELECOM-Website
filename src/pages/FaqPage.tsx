@@ -114,8 +114,8 @@ export const FaqPage: React.FC = () => {
   const cleanWhatsApp = rawWhatsApp.replace(/\D/g, '');
 
   usePageSeo(
-    `Frequently Asked Questions | Display Repair Q&A | ${siteName}`,
-    `Find answers to common questions about flagship smartphone, Apple Watch, and iPad display repairs, green screen laser bonding, touch glass refurbishing, and diagnostic procedures at ${siteName}.`
+    `Display Repair FAQs | ${siteName} Borivali West, Mumbai`,
+    `Frequently asked questions about smartphone, iPad, Apple Watch, and tablet display repair, cracked touch glass replacement, green line fixes, and OLED restoration in Mumbai.`
   );
 
   const [faqsList, setFaqsList] = useState<FaqEntry[]>(FAQ_DATA);

@@ -12,7 +12,7 @@ import {
   ArrowRight,
   SlidersHorizontal,
 } from 'lucide-react';
-import { generateBreadcrumbSchema, useJsonLd } from '../lib/seo.ts';
+import { generateBreadcrumbSchema, useJsonLd, usePageSeo } from '../lib/seo.ts';
 
 interface CategoryDetailPageProps {
   categorySlug: string;
@@ -291,6 +291,31 @@ export const CategoryDetailPage: React.FC<CategoryDetailPageProps> = ({ category
 
   const breadcrumbSchema = React.useMemo(() => generateBreadcrumbSchema(breadcrumbItems), [breadcrumbItems]);
   useJsonLd(`breadcrumb-cat-${categorySlug}`, breadcrumbSchema);
+
+  // Dynamic SEO Title and Meta Description for category
+  const categorySeoTitle =
+    cleanCatSlug === 'mobile'
+      ? 'Smartphone Display Repair in Mumbai | QASWA TELECOM Borivali West'
+      : cleanCatSlug === 'ipad'
+      ? 'iPad Display Repair in Mumbai | Ultra Retina & Liquid Retina | QASWA TELECOM'
+      : cleanCatSlug === 'apple-watch'
+      ? 'Apple Watch Display Repair in Mumbai | Sapphire Crystal & OLED | QASWA TELECOM'
+      : cleanCatSlug === 'tablet'
+      ? 'Tablet Display Repair in Mumbai | Flagship AMOLED & Glass | QASWA TELECOM'
+      : `${category?.name || 'Device'} Display Repair in Mumbai | QASWA TELECOM`;
+
+  const categorySeoDesc =
+    cleanCatSlug === 'mobile'
+      ? 'Specialized mobile display repair in Borivali West, Mumbai. Original OLED panel restoration, cracked touch glass replacement, and green line laser bonding for flagship phones.'
+      : cleanCatSlug === 'ipad'
+      ? 'Specialized iPad display repair in Borivali West, Mumbai. Tandem OLED & Liquid Retina XDR screen restoration, touch digitizer glass replacement, and Apple Pencil sensitivity preservation.'
+      : cleanCatSlug === 'apple-watch'
+      ? 'Precision Apple Watch display repair in Borivali West, Mumbai. Sapphire crystal touch glass refurbishing, OLED screen replacement, and Force Touch sensor calibration for Ultra, Series & SE.'
+      : cleanCatSlug === 'tablet'
+      ? 'Specialized large-screen display repairs for Samsung Galaxy Tab, OnePlus Pad, Xiaomi Pad, and Lenovo Tab AMOLED panels in Borivali West, Mumbai.'
+      : (category?.description || `Specialized ${category?.name} display repair in Borivali West, Mumbai.`);
+
+  usePageSeo(categorySeoTitle, categorySeoDesc);
 
   if (loading) {
     return (

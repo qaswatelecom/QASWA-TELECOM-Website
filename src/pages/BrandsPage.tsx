@@ -10,13 +10,18 @@ import {
   ArrowRight,
   Layers,
 } from 'lucide-react';
-import { generateBreadcrumbSchema, useJsonLd } from '../lib/seo.ts';
+import { generateBreadcrumbSchema, useJsonLd, usePageSeo } from '../lib/seo.ts';
 
 export const BrandsPage: React.FC = () => {
   const { categories, brands, navigate } = useApp();
   const [search, setSearch] = useState('');
   const [activeCategoryFilter, setActiveCategoryFilter] = useState<string>('All');
   const [imageErrors, setImageErrors] = useState<Record<number, boolean>>({});
+
+  usePageSeo(
+    'Mobile Brands We Repair | Display Repair Specialists in Mumbai | QASWA TELECOM',
+    'Explore supported smartphone brands for precision display repair in Mumbai: Apple iPhone, Samsung Galaxy, OnePlus, Google Pixel, Vivo, Oppo, Xiaomi, and more.'
+  );
 
   const origin = typeof window !== 'undefined' ? window.location.origin : 'https://qaswatelecom.com';
   const breadcrumbSchema = React.useMemo(() => {

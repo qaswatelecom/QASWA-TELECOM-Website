@@ -331,9 +331,14 @@ export const ContentManagementTab: React.FC<ContentManagementTabProps> = ({
 
             {/* Slides Editor */}
             <div className="space-y-3 pt-2">
-              <label className="block text-xs font-bold text-slate-900 dark:text-white">
-                Slideshow Banner Slides ({homeContent.hero?.slides?.length || 0})
-              </label>
+              <div className="flex items-center justify-between">
+                <label className="block text-xs font-bold text-slate-900 dark:text-white">
+                  Top Slideshow Banner Slides ({homeContent.hero?.slides?.length || 0})
+                </label>
+                <span className="text-[11px] font-semibold text-[#00B2A2] bg-[#00B2A2]/10 border border-[#00B2A2]/30 px-2 py-0.5 rounded">
+                  Desktop View Size: 2070 × 600 px
+                </span>
+              </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {homeContent.hero?.slides?.map((slide, idx) => (

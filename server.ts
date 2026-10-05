@@ -32,7 +32,11 @@ async function startServer() {
 
     // Fallback all non-API GET requests to index.html for client-side routing
     app.get('*', (req, res, next) => {
-      if (req.path.startsWith('/api')) {
+      if (
+        req.path.startsWith('/api') ||
+        req.path === '/sitemap.xml' ||
+        req.path === '/robots.txt'
+      ) {
         return next();
       }
       res.sendFile(path.join(distPath, 'index.html'));

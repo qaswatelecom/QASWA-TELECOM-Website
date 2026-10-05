@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext.tsx';
-import { usePageSeo } from '../lib/seo.ts';
+import { usePageSeo, generateBreadcrumbSchema, useJsonLd } from '../lib/seo.ts';
 import { DISPLAY_ARTICLES, DisplayArticle } from '../data/displayBlogs.ts';
 import {
   ChevronLeft,
@@ -60,6 +60,40 @@ export const BlogDetailPage: React.FC<BlogDetailPageProps> = ({ slug }) => {
     `${article.title} | ${siteName}`,
     article.excerpt
   );
+
+  const articleSchema = React.useMemo(() => {
+    return {
+      '@context': 'https://schema.org',
+      '@type': 'Article',
+      headline: article.title,
+      description: article.excerpt,
+      image: article.featuredImage,
+      datePublished: article.publishedDate,
+      author: {
+        '@type': 'Organization',
+        name: article.author || siteName,
+      },
+      publisher: {
+        '@type': 'Organization',
+        name: siteName,
+        logo: {
+          '@type': 'ImageObject',
+          url: `${typeof window !== 'undefined' ? window.location.origin : 'https://qaswatelecom.com'}/qaswa-logo.svg`,
+        },
+      },
+    };
+  }, [article, siteName]);
+  useJsonLd(`blog-${slug}`, articleSchema);
+
+  const breadcrumbs = React.useMemo(() => {
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://qaswatelecom.com';
+    return generateBreadcrumbSchema([
+      { name: 'Home', url: `${origin}/` },
+      { name: 'Blogs & Articles', url: `${origin}/blogs` },
+      { name: article.title, url: `${origin}/blogs/${slug}` },
+    ]);
+  }, [article.title, slug]);
+  useJsonLd(`breadcrumb-blog-${slug}`, breadcrumbs);
 
   // Related articles (articles in same category or adjacent)
   const relatedArticles = DISPLAY_ARTICLES.filter((a) => a.slug !== article.slug).slice(0, 3);

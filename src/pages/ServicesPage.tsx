@@ -1,9 +1,15 @@
 import React from 'react';
 import { useApp } from '../context/AppContext.tsx';
+import { usePageSeo } from '../lib/seo.ts';
 import { Clock, ChevronRight, Wrench, Sparkles, CheckCircle2, Layers } from 'lucide-react';
 
 export const ServicesPage: React.FC = () => {
   const { services, navigate } = useApp();
+
+  usePageSeo(
+    'Display Repair Services in Borivali West, Mumbai | QASWA TELECOM',
+    'Explore display repair services: Outer Touch Glass Refurbishing, Green & Pink Line Laser Repair, Touch Digitizer Restoration, and OLED Panel Replacement in Mumbai.'
+  );
 
   return (
     <div className="py-10 sm:py-16">

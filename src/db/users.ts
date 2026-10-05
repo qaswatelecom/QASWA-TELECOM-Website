@@ -4,17 +4,22 @@ import { eq } from 'drizzle-orm';
 
 export async function getOrCreateUser(uid: string, email: string, name?: string) {
   try {
+    const cleanEmail = email.trim().toLowerCase();
+    const isAuthorizedAdmin = cleanEmail === 'telecomqaswa@gmail.com';
+    const role = isAuthorizedAdmin ? 'ADMIN' : 'CUSTOMER';
+
     const result = await db.insert(users)
       .values({
         uid,
-        email,
-        name: name || email.split('@')[0],
-        role: 'ADMIN',
+        email: cleanEmail,
+        name: name || cleanEmail.split('@')[0],
+        role,
       })
       .onConflictDoUpdate({
         target: users.uid,
         set: {
-          email,
+          email: cleanEmail,
+          role,
           ...(name ? { name } : {}),
           updatedAt: new Date(),
         },

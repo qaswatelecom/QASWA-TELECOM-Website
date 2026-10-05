@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronRight, ChevronLeft, Sparkles, Smartphone, Tablet, Watch, ArrowRight } from 'lucide-react';
+import { Smartphone, Tablet, Watch, ArrowRight } from 'lucide-react';
 import { usePageContent, HomePageContent, DEFAULT_HOME_CONTENT } from '../../lib/pageContent.ts';
 import { useApp } from '../../context/AppContext.tsx';
 import { DeviceCategory } from '../../types/index.ts';
@@ -86,16 +86,6 @@ export const QaswaHero: React.FC<QaswaHeroProps> = ({ onSelectCategory }) => {
     return () => clearInterval(timer);
   }, [isPaused, heroSlides.length]);
 
-  const handlePrevSlide = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setActiveSlide((prev) => (prev === 0 ? heroSlides.length - 1 : prev - 1));
-  };
-
-  const handleNextSlide = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setActiveSlide((prev) => (prev + 1) % heroSlides.length);
-  };
-
   const handleCategoryClick = (cat: { slug: string; name: string }) => {
     if (onSelectCategory) {
       onSelectCategory(cat.name);
@@ -107,86 +97,35 @@ export const QaswaHero: React.FC<QaswaHeroProps> = ({ onSelectCategory }) => {
   return (
     <div className="w-full pt-3 pb-6">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-6">
-        {/* 1. Slideshow Banner (Uniform height, full width, with crossfade & arrows) */}
+        {/* 1. Slideshow Banner (Only banner image, full width, crossfade, no text/overlay) */}
         <div
-          className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-r from-teal-950 via-slate-900 to-slate-950 text-white border border-slate-200/20 dark:border-white/10 shadow-xl h-[210px] sm:h-[250px] md:h-[280px] select-none"
+          className="relative overflow-hidden rounded-2xl sm:rounded-3xl border border-slate-200/50 dark:border-white/10 shadow-xl h-[210px] sm:h-[250px] md:h-[280px] select-none bg-slate-900"
           onMouseEnter={() => setIsPaused(true)}
           onMouseLeave={() => setIsPaused(false)}
         >
           {heroSlides.map((slide, idx) => (
             <div
               key={idx}
-              className={`absolute inset-0 flex items-center transition-opacity duration-700 ease-in-out ${
+              className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${
                 idx === activeSlide ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'
               }`}
             >
-              {/* Background Image & Seamless Gradient Overlay */}
-              <div className="absolute inset-0 overflow-hidden">
-                <img
-                  src={slide.image}
-                  alt={slide.title}
-                  className="h-full w-full object-cover object-right md:object-center filter brightness-90 sm:brightness-95"
-                />
-                <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/85 sm:via-slate-950/75 to-slate-950/30 dark:from-[#0B1110] dark:via-[#0B1110]/85 dark:to-transparent" />
-              </div>
-
-              {/* Slide Content */}
-              <div className="relative z-20 max-w-2xl px-6 sm:px-10 lg:px-12 py-4 space-y-2 sm:space-y-3">
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-[#00B2A2]/20 border border-[#00B2A2]/40 px-3 py-1 text-[10px] sm:text-[11px] font-bold text-[#00B2A2]">
-                  <Sparkles className="h-3 w-3" />
-                  <span>{slide.badge}</span>
-                </span>
-
-                <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black tracking-tight text-white leading-tight line-clamp-2">
-                  {slide.title}
-                </h1>
-
-                <p className="text-xs sm:text-sm md:text-base font-medium text-slate-300 line-clamp-2 max-w-xl">
-                  {slide.subtitle}
-                </p>
-
-                {/* Indicator Dots */}
-                <div className="flex items-center gap-1.5 pt-2">
-                  {heroSlides.map((_, dotIdx) => (
-                    <button
-                      key={dotIdx}
-                      onClick={() => setActiveSlide(dotIdx)}
-                      className={`h-2 rounded-full transition-all cursor-pointer ${
-                        dotIdx === activeSlide
-                          ? 'w-6 bg-[#00B2A2]'
-                          : 'w-2 bg-white/40 hover:bg-white/70'
-                      }`}
-                      aria-label={`Go to slide ${dotIdx + 1}`}
-                    />
-                  ))}
-                </div>
-              </div>
+              <img
+                src={slide.image}
+                alt={slide.title || `Banner slide ${idx + 1}`}
+                className="h-full w-full object-cover object-center"
+              />
             </div>
           ))}
-
-          {/* Left Arrow Button */}
-          <button
-            onClick={handlePrevSlide}
-            className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-30 flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-full bg-black/40 text-white hover:bg-black/70 backdrop-blur-sm transition-all cursor-pointer"
-            aria-label="Previous slide"
-          >
-            <ChevronLeft className="h-5 w-5" />
-          </button>
-
-          {/* Right Arrow Button */}
-          <button
-            onClick={handleNextSlide}
-            className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-30 flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-full bg-black/40 text-white hover:bg-black/70 backdrop-blur-sm transition-all cursor-pointer"
-            aria-label="Next slide"
-          >
-            <ChevronRight className="h-5 w-5" />
-          </button>
         </div>
 
         {/* 2. Device Categories Section (Four Main Categories: Mobile, iPad, Apple Watch, Tablet) */}
         <div>
-          <div className="flex items-center justify-end mb-3 px-1">
-            <span className="text-xs font-semibold text-[#00B2A2] hover:underline cursor-pointer" onClick={() => navigate('/brands')}>
+          <div className="flex items-center justify-between mb-3 px-1">
+            <h1 className="text-sm sm:text-base md:text-lg font-black text-slate-900 dark:text-white tracking-tight">
+              Display Repair Specialists in Borivali West, Mumbai
+            </h1>
+            <span className="text-xs font-semibold text-[#00B2A2] hover:underline cursor-pointer shrink-0 ml-2" onClick={() => navigate('/brands')}>
               View All Devices →
             </span>
           </div>

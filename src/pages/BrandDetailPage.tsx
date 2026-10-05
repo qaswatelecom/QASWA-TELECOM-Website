@@ -11,7 +11,7 @@ import {
   ArrowRight,
   Layers,
 } from 'lucide-react';
-import { generateBrandSchema, generateBreadcrumbSchema, useJsonLd } from '../lib/seo.ts';
+import { generateBrandSchema, generateBreadcrumbSchema, useJsonLd, usePageSeo } from '../lib/seo.ts';
 import { BRAND_SVG_MAP } from '../components/home/BrandLogos.tsx';
 
 interface BrandDetailPageProps {
@@ -125,6 +125,16 @@ export const BrandDetailPage: React.FC<BrandDetailPageProps> = ({ brandSlug, cat
     });
   }, [brand]);
   useJsonLd(`brand-${brandSlug}`, brandSchema);
+
+  // Dynamic Brand SEO Metadata
+  const brandPageTitle =
+    brand?.seoTitle ||
+    `${brand?.name || 'Brand'} ${targetCategorySlug === 'tablet' ? 'Tablet' : 'Mobile'} Display Repair in Mumbai | QASWA TELECOM`;
+  const brandPageDesc =
+    brand?.seoDescription ||
+    `Specialized display repairs for ${brand?.name || 'smartphone'} in Borivali West, Mumbai. Original OLED panel restoration, cracked touch glass replacement, and green line fix.`;
+
+  usePageSeo(brandPageTitle, brandPageDesc);
 
   if (loading) {
     return (

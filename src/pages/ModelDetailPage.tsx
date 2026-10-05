@@ -30,7 +30,7 @@ import {
   AlertCircle,
   RefreshCw,
 } from 'lucide-react';
-import { generateBreadcrumbSchema, useJsonLd } from '../lib/seo.ts';
+import { generateBreadcrumbSchema, generateServiceSchema, useJsonLd, usePageSeo } from '../lib/seo.ts';
 
 const getIssueMeta = (issue: string) => {
   const lower = issue.toLowerCase();
@@ -256,6 +256,29 @@ export const ModelDetailPage: React.FC<ModelDetailPageProps> = ({ modelSlug }) =
 
   const breadcrumbSchema = React.useMemo(() => generateBreadcrumbSchema(breadcrumbItems), [breadcrumbItems]);
   useJsonLd(`breadcrumb-model-${modelSlug}`, breadcrumbSchema);
+
+  // Dynamic Model Page SEO & Service Schema
+  const modelPageTitle =
+    model?.seoTitle || `${model?.name || 'Device'} Display Repair in Mumbai | QASWA TELECOM`;
+  const modelPageDesc =
+    model?.seoDescription ||
+    `Dedicated display repair solutions for ${model?.name || 'device'} in Borivali West, Mumbai. Screen replacement, cracked touch glass refurbishing, and green line laser fix.`;
+
+  usePageSeo(modelPageTitle, modelPageDesc);
+
+  const modelServiceSchema = React.useMemo(() => {
+    if (!model) return null;
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://qaswatelecom.com';
+    return generateServiceSchema({
+      name: `${model.name} Display Repair Service`,
+      description: modelPageDesc,
+      serviceType: 'Display Repair & Screen Replacement',
+      url: `${origin}/models/${model.slug}`,
+      providerName: 'QASWA TELECOM',
+      providerUrl: origin,
+    });
+  }, [model, modelPageDesc]);
+  useJsonLd(`service-model-${modelSlug}`, modelServiceSchema);
 
   // WhatsApp click handler
   const handleWhatsAppConsult = (issueName?: string) => {

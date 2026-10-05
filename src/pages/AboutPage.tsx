@@ -31,8 +31,8 @@ export const AboutPage: React.FC = () => {
   const about = content || DEFAULT_ABOUT_CONTENT;
 
   usePageSeo(
-    `About Us | Dedicated Flagship Display Specialists | ${siteName}`,
-    `Learn about ${siteName}, a dedicated display repair facility focused exclusively on optical glass refurbishment, laser bonding, and display diagnosis for high-end flagship devices.`
+    `About ${siteName} | Display Repair Specialists in Borivali West, Mumbai`,
+    `Learn about ${siteName}, leading display repair specialists in Borivali West, Mumbai. Dedicated cleanroom technology for flagship smartphones, iPads, Apple Watches & tablets.`
   );
 
   const displayExpertise = about.specialization?.items?.length

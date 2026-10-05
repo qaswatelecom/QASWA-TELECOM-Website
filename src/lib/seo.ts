@@ -26,6 +26,11 @@ export interface FaqItem {
   answer: string;
 }
 
+export interface BreadcrumbItem {
+  name: string;
+  url: string;
+}
+
 /**
  * Injects or updates a JSON-LD schema script inside document <head>.
  */
@@ -82,25 +87,33 @@ export function generateLocalBusinessSchema(params: LocalBusinessSchemaParams): 
 
   return {
     '@context': 'https://schema.org',
-    '@type': 'LocalBusiness',
+    '@type': ['LocalBusiness', 'ElectronicsRepairShop'],
     '@id': `${params.url || currentOrigin}/#localbusiness`,
     name: params.name || 'QASWA TELECOM',
     description:
       params.description ||
-      'Display repair specialists for flagship devices: Apple iPhone, Samsung Galaxy, Google Pixel, OnePlus, Apple Watch, iPad, and premium tablets. Specialized cleanroom optical lamination and laser bonding.',
+      'Display repair specialists for flagship smartphones, iPads, Apple Watches, and tablets in Borivali West, Mumbai. Specialized cleanroom optical lamination and laser bonding.',
     telephone: params.telephone || '+91 9324316048',
     email: params.email || 'telecomqaswa@gmail.com',
     url: params.url || currentOrigin,
     image: params.image || 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=1200&q=80',
+    logo: `${currentOrigin}/qaswa-logo.svg`,
     address: {
       '@type': 'PostalAddress',
       streetAddress:
         params.address ||
-        'Shop No-8, 1st Floor, Thakkar Shopping Centre, S.V Road, Borivali West, Mumbai, PIN-400092',
+        'Shop No-8, 1st Floor, Thakkar Shopping Centre, S.V Road, Borivali West',
       addressLocality: params.city || 'Mumbai',
+      addressRegion: 'Maharashtra',
       postalCode: '400092',
       addressCountry: 'IN',
     },
+    geo: {
+      '@type': 'GeoCoordinates',
+      latitude: 19.2288,
+      longitude: 72.8541,
+    },
+    hasMap: 'https://share.google/JdvLGimvQe18jUJNp',
     openingHoursSpecification: [
       {
         '@type': 'OpeningHoursSpecification',
@@ -117,21 +130,77 @@ export function generateLocalBusinessSchema(params: LocalBusinessSchemaParams): 
         closes: '21:00',
       },
     ],
-    potentialAction: {
-      '@type': 'ReserveAction',
-      target: {
-        '@type': 'EntryPoint',
-        urlTemplate: `${params.url || currentOrigin}/#contact-section`,
-        inLanguage: 'en',
-        actionPlatform: [
-          'http://schema.org/DesktopWebPlatform',
-          'http://schema.org/MobileWebPlatform',
-        ],
+    areaServed: [
+      {
+        '@type': 'AdministrativeArea',
+        name: 'Borivali West, Mumbai',
       },
-      result: {
-        '@type': 'Reservation',
-        name: 'Display Repair Diagnosis Appointment',
+      {
+        '@type': 'City',
+        name: 'Mumbai',
       },
+    ],
+    hasOfferCatalog: {
+      '@type': 'OfferCatalog',
+      name: 'Flagship Display Repair Services',
+      itemListElement: [
+        {
+          '@type': 'Offer',
+          itemOffered: {
+            '@type': 'Service',
+            name: 'Display Damaged (Broken / Cracked Screen)',
+            description: 'Original display assembly restoration for cracked and broken smartphone screens in Borivali West, Mumbai.',
+          },
+        },
+        {
+          '@type': 'Offer',
+          itemOffered: {
+            '@type': 'Service',
+            name: 'Touch Glass Broken (Touch Glass Replacement)',
+            description: 'Preserve original factory OLED panel with precision cleanroom optical OCA lamination.',
+          },
+        },
+        {
+          '@type': 'Offer',
+          itemOffered: {
+            '@type': 'Service',
+            name: 'Green & Pink Vertical Lines Laser Repair',
+            description: 'Advanced laser flex bonding to eliminate vertical green and pink lines on OLED displays.',
+          },
+        },
+        {
+          '@type': 'Offer',
+          itemOffered: {
+            '@type': 'Service',
+            name: 'Green Screen & White Screen Recovery',
+            description: 'Panel controller and flex bonding restoration for blank, white, or green screen malfunctions.',
+          },
+        },
+        {
+          '@type': 'Offer',
+          itemOffered: {
+            '@type': 'Service',
+            name: 'Touch Digitizer Not Responding & Ghost Touch Fix',
+            description: 'Touch layer digitizer restoration and calibration for responsive touch interaction.',
+          },
+        },
+        {
+          '@type': 'Offer',
+          itemOffered: {
+            '@type': 'Service',
+            name: 'Display Flickering & Tint Malfunction Fix',
+            description: 'Restore stable display illumination and eliminate flickering, color tint, or brightness fluctuation.',
+          },
+        },
+        {
+          '@type': 'Offer',
+          itemOffered: {
+            '@type': 'Service',
+            name: 'Foldable Phone Hinge & Flex Cable Display Issue',
+            description: 'Ultra-thin glass (UTG) alignment and internal flex cable bonding for foldable smartphones.',
+          },
+        },
+      ],
     },
   };
 }
@@ -147,12 +216,25 @@ export function generateServiceSchema(params: ServiceSchemaParams): Record<strin
     '@type': 'Service',
     serviceType: params.serviceType || 'Display Repair Service',
     name: params.name,
-    description: params.description || `Specialized ${params.name} service for flagship devices at QASWA TELECOM.`,
+    description: params.description || `Specialized ${params.name} service for flagship devices at QASWA TELECOM in Borivali West, Mumbai.`,
     url: params.url || (typeof window !== 'undefined' ? window.location.href : currentOrigin),
     provider: {
-      '@type': 'LocalBusiness',
+      '@type': ['LocalBusiness', 'ElectronicsRepairShop'],
       name: params.providerName || 'QASWA TELECOM',
       url: params.providerUrl || currentOrigin,
+      telephone: '+91 9324316048',
+      address: {
+        '@type': 'PostalAddress',
+        streetAddress: 'Shop No-8, 1st Floor, Thakkar Shopping Centre, S.V Road, Borivali West',
+        addressLocality: 'Mumbai',
+        addressRegion: 'Maharashtra',
+        postalCode: '400092',
+        addressCountry: 'IN',
+      },
+    },
+    areaServed: {
+      '@type': 'City',
+      name: 'Mumbai',
     },
   };
 }
@@ -188,11 +270,6 @@ export function generateBrandSchema(params: { name: string; description?: string
   };
 }
 
-export interface BreadcrumbItem {
-  name: string;
-  url: string;
-}
-
 /**
  * Generates Schema.org BreadcrumbList structured data
  */
@@ -218,193 +295,67 @@ export function getSchemaTemplate(
 ): string {
   const siteName = pageData?.siteName || 'QASWA TELECOM';
   const path = pageData?.path || '/';
-  const title = pageData?.title || `${siteName} | Flagship Display Repair`;
-  const desc = pageData?.description || 'Display repair specialists for flagship devices.';
+  const title = pageData?.title || `${siteName} | Display Repair Specialists in Borivali West, Mumbai`;
+  const desc =
+    pageData?.description ||
+    'Display repair specialists for flagship smartphones, iPads, Apple Watches, and tablets in Borivali West, Mumbai.';
   const origin = typeof window !== 'undefined' ? window.location.origin : 'https://qaswatelecom.com';
   const url = `${origin}${path}`;
 
   switch (type) {
     case 'LocalBusiness':
       return JSON.stringify(
-        {
-          '@context': 'https://schema.org',
-          '@type': 'LocalBusiness',
+        generateLocalBusinessSchema({
           name: siteName,
-          image: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=1200&q=80',
-          '@id': `${origin}/#localbusiness`,
-          url: origin,
-          telephone: '+91 9324316048',
-          priceRange: '₹₹',
-          address: {
-            '@type': 'PostalAddress',
-            streetAddress:
-              'Shop No-8, 1st Floor, Thakkar Shopping Centre, S.V Road, Borivali West, Mumbai, PIN-400092',
-            addressLocality: 'Mumbai',
-            addressRegion: 'MH',
-            postalCode: '400092',
-            addressCountry: 'IN',
-          },
-          geo: {
-            '@type': 'GeoCoordinates',
-            latitude: 19.2288,
-            longitude: 72.8541,
-          },
-          openingHoursSpecification: [
-            {
-              '@type': 'OpeningHoursSpecification',
-              dayOfWeek: [
-                'Monday',
-                'Tuesday',
-                'Wednesday',
-                'Thursday',
-                'Friday',
-                'Saturday',
-                'Sunday',
-              ],
-              opens: '11:00',
-              closes: '21:00',
-            },
-          ],
-        },
+          description: desc,
+          url,
+        }),
         null,
         2
       );
 
     case 'Service':
       return JSON.stringify(
-        {
-          '@context': 'https://schema.org',
-          '@type': 'Service',
-          serviceType: 'Display Repair & Screen Replacement',
+        generateServiceSchema({
           name: title,
           description: desc,
           url,
-          provider: {
-            '@type': 'LocalBusiness',
-            name: siteName,
-            url: origin,
-            telephone: '+91 9324316048',
-          },
-          areaServed: {
-            '@type': 'Country',
-            name: 'India',
-          },
-          hasOfferCatalog: {
-            '@type': 'OfferCatalog',
-            name: 'Display Repair Services',
-            itemListElement: [
-              {
-                '@type': 'Offer',
-                itemOffered: {
-                  '@type': 'Service',
-                  name: 'Laser Screen Line Repair',
-                },
-              },
-              {
-                '@type': 'Offer',
-                itemOffered: {
-                  '@type': 'Service',
-                  name: 'Glass Only OCA Replacement',
-                },
-              },
-            ],
-          },
-        },
+          providerName: siteName,
+          providerUrl: origin,
+        }),
         null,
         2
       );
 
     case 'FAQPage':
       return JSON.stringify(
-        {
-          '@context': 'https://schema.org',
-          '@type': 'FAQPage',
-          mainEntity: [
-            {
-              '@type': 'Question',
-              name: 'Can you fix green and white vertical lines without replacing the entire screen?',
-              acceptedAnswer: {
-                '@type': 'Answer',
-                text: 'Yes! Using our advanced cleanroom pulse laser bonding machine, we can repair disconnected ITO traces in OLED panels without costly full screen replacement.',
-              },
-            },
-            {
-              '@type': 'Question',
-              name: 'Do you offer a warranty on display repairs?',
-              acceptedAnswer: {
-                '@type': 'Answer',
-                text: 'All display repairs and touch glass refurbishing at QASWA TELECOM include up to a 6-month certified testing warranty covering optical clarity and touch digitizer function.',
-              },
-            },
-          ],
-        },
-        null,
-        2
-      );
-
-    case 'WebPage':
-      return JSON.stringify(
-        {
-          '@context': 'https://schema.org',
-          '@type': 'WebPage',
-          name: title,
-          description: desc,
-          url,
-          isPartOf: {
-            '@type': 'WebSite',
-            name: siteName,
-            url: origin,
+        generateFaqSchema([
+          {
+            question: 'Can you fix green and white vertical lines without replacing the entire screen?',
+            answer:
+              'Yes! Using advanced cleanroom pulse laser bonding, we can restore disconnected ITO traces in OLED panels without replacing the original screen assembly.',
           },
-        },
-        null,
-        2
-      );
-
-    case 'Organization':
-      return JSON.stringify(
-        {
-          '@context': 'https://schema.org',
-          '@type': 'Organization',
-          name: siteName,
-          url: origin,
-          logo: `${origin}/qaswa-logo.svg`,
-          contactPoint: {
-            '@type': 'ContactPoint',
-            telephone: '+91 9324316048',
-            contactType: 'customer service',
-            areaServed: 'IN',
-            availableLanguage: ['English', 'Hindi'],
+          {
+            question: 'What is the difference between cracked glass and a damaged display?',
+            answer:
+              'If the outer glass is broken but the AMOLED/Retina picture is completely clear and touch functions normally, only the outer glass needs replacement. If there are lines, black spots, flickering, or no picture, the display panel requires repair.',
           },
-          sameAs: [
-            'https://instagram.com/qaswatelecom',
-            'https://facebook.com/qaswatelecom',
-            'https://youtube.com/@qaswatelecom',
-          ],
-        },
+          {
+            question: 'Where is QASWA TELECOM located in Mumbai?',
+            answer:
+              'QASWA TELECOM is located at Shop No-8, 1st Floor, Thakkar Shopping Centre, S.V Road, Borivali West, Mumbai, PIN-400092. Open everyday from 11:00 AM to 9:00 PM.',
+          },
+        ]),
         null,
         2
       );
 
     case 'BreadcrumbList':
       return JSON.stringify(
-        {
-          '@context': 'https://schema.org',
-          '@type': 'BreadcrumbList',
-          itemListElement: [
-            {
-              '@type': 'ListItem',
-              position: 1,
-              name: 'Home',
-              item: origin,
-            },
-            {
-              '@type': 'ListItem',
-              position: 2,
-              name: title,
-              item: url,
-            },
-          ],
-        },
+        generateBreadcrumbSchema([
+          { name: 'Home', url: origin },
+          { name: title, url },
+        ]),
         null,
         2
       );
@@ -457,11 +408,11 @@ export const DEFAULT_PAGE_SEO_MAP: Record<string, PageSeoConfig> = {
     path: '/',
     pageName: 'Home',
     category: 'Core',
-    title: 'QASWA TELECOM | Flagship Display Repair Specialists & Laser Bonding',
+    title: 'QASWA TELECOM | Display Repair Specialists in Borivali West, Mumbai',
     description:
-      'Certified display repair specialists for Apple iPhone, Samsung Galaxy S/Z Fold, Google Pixel, OnePlus, Apple Watch & iPad. Cleanroom optical lamination and laser flex bonding.',
+      'Specialized display repair in Borivali West, Mumbai for Apple iPhone, Samsung Galaxy, Google Pixel, OnePlus, iPad, Apple Watch & tablets. Precision OCA lamination & laser bonding.',
     keywords:
-      'display repair, screen replacement, touch glass repair, green screen fix, iPhone display repair, Samsung AMOLED repair, Qaswa Telecom Mumbai',
+      'display repair, mobile display repair, smartphone display repair, iPhone display repair, Samsung display repair, display repair specialist, display repair in Mumbai, display repair in Borivali West',
     ogImage: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=1200&q=80',
     ogType: 'website',
     canonicalUrl: '',
@@ -471,38 +422,98 @@ export const DEFAULT_PAGE_SEO_MAP: Record<string, PageSeoConfig> = {
     schemaType: 'LocalBusiness',
     schemaJson: getSchemaTemplate('LocalBusiness', {
       path: '/',
-      title: 'QASWA TELECOM | Flagship Display Repair Specialists',
+      title: 'QASWA TELECOM | Display Repair Specialists in Borivali West, Mumbai',
     }),
   },
-  '/mobile-repair': {
-    path: '/mobile-repair',
-    pageName: 'Mobile Repair Booking',
+  '/categories/mobile': {
+    path: '/categories/mobile',
+    pageName: 'Mobile Display Repair',
     category: 'Core',
-    title: 'Book Flagship Display Repair & Screen Replacement | QASWA TELECOM',
+    title: 'Smartphone Display Repair in Mumbai | QASWA TELECOM Borivali West',
     description:
-      'Instant online diagnostic booking for smartphone display issues, line issues, blank screens, and cracked touch glass. Transparent pricing, express walk-in, and warranty.',
+      'Specialized mobile display repair in Borivali West, Mumbai. Original OLED panel restoration, cracked touch glass replacement, and green line laser bonding for flagship phones.',
     keywords:
-      'book mobile repair, screen replacement booking, iPhone repair appointment, Samsung screen repair price, display diagnostic',
-    ogImage: 'https://images.unsplash.com/photo-1598327105666-5b89351aff97?w=1200&q=80',
+      'mobile display repair, smartphone display repair in Mumbai, OLED screen repair, cracked touch glass fix Borivali, iPhone screen repair Mumbai',
+    ogImage: 'https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=1200&q=80',
     ogType: 'website',
     canonicalUrl: '',
     robots: 'index, follow',
     twitterCard: 'summary_large_image',
     schemaType: 'Service',
     schemaJson: getSchemaTemplate('Service', {
-      path: '/mobile-repair',
-      title: 'Book Flagship Display Repair & Screen Replacement',
+      path: '/categories/mobile',
+      title: 'Smartphone Display Repair in Mumbai',
+    }),
+  },
+  '/categories/ipad': {
+    path: '/categories/ipad',
+    pageName: 'iPad Display Repair',
+    category: 'Core',
+    title: 'iPad Display Repair in Mumbai | Ultra Retina & Liquid Retina | QASWA TELECOM',
+    description:
+      'Specialized iPad display repair in Borivali West, Mumbai. Tandem OLED & Liquid Retina XDR screen restoration, touch digitizer glass replacement, and Apple Pencil sensitivity preservation.',
+    keywords:
+      'iPad display repair, iPad screen replacement Mumbai, iPad Pro screen repair Borivali, Liquid Retina display repair, iPad mini touch glass',
+    ogImage: 'https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?w=1200&q=80',
+    ogType: 'website',
+    canonicalUrl: '',
+    robots: 'index, follow',
+    twitterCard: 'summary_large_image',
+    schemaType: 'Service',
+    schemaJson: getSchemaTemplate('Service', {
+      path: '/categories/ipad',
+      title: 'iPad Display Repair in Mumbai',
+    }),
+  },
+  '/categories/apple-watch': {
+    path: '/categories/apple-watch',
+    pageName: 'Apple Watch Display Repair',
+    category: 'Core',
+    title: 'Apple Watch Display Repair in Mumbai | Sapphire Crystal & OLED | QASWA TELECOM',
+    description:
+      'Precision Apple Watch display repair in Borivali West, Mumbai. Sapphire crystal touch glass refurbishing, OLED screen replacement, and Force Touch sensor calibration for Ultra, Series & SE.',
+    keywords:
+      'Apple Watch display repair, Apple Watch screen repair Mumbai, Apple Watch Ultra glass replacement, Apple Watch Series OLED fix Borivali',
+    ogImage: 'https://images.unsplash.com/photo-1508685096489-7aacd43bd3b1?w=1200&q=80',
+    ogType: 'website',
+    canonicalUrl: '',
+    robots: 'index, follow',
+    twitterCard: 'summary_large_image',
+    schemaType: 'Service',
+    schemaJson: getSchemaTemplate('Service', {
+      path: '/categories/apple-watch',
+      title: 'Apple Watch Display Repair in Mumbai',
+    }),
+  },
+  '/categories/tablet': {
+    path: '/categories/tablet',
+    pageName: 'Tablet Display Repair',
+    category: 'Core',
+    title: 'Tablet Display Repair in Mumbai | Flagship AMOLED & Glass | QASWA TELECOM',
+    description:
+      'Specialized large-screen display repairs for Samsung Galaxy Tab, OnePlus Pad, Xiaomi Pad, and Lenovo Tab AMOLED panels in Borivali West, Mumbai.',
+    keywords:
+      'tablet display repair, tablet screen replacement Mumbai, Samsung Galaxy Tab screen repair, Android tablet display glass Borivali',
+    ogImage: 'https://images.unsplash.com/photo-1561154464-82e9adf32764?w=1200&q=80',
+    ogType: 'website',
+    canonicalUrl: '',
+    robots: 'index, follow',
+    twitterCard: 'summary_large_image',
+    schemaType: 'Service',
+    schemaJson: getSchemaTemplate('Service', {
+      path: '/categories/tablet',
+      title: 'Tablet Display Repair in Mumbai',
     }),
   },
   '/brands': {
     path: '/brands',
-    pageName: 'Supported Brands',
+    pageName: 'Brands We Repair',
     category: 'Brands',
-    title: 'Supported Device Brands | Flagship Display Repair | QASWA TELECOM',
+    title: 'Mobile Brands We Repair | Display Repair Specialists in Mumbai | QASWA TELECOM',
     description:
-      'Specialized screen repair and laser bonding for Apple, Samsung, Google Pixel, OnePlus, and smart devices. Original quality displays, OCA bonding & testing warranty.',
+      'Explore supported smartphone brands for precision display repair in Mumbai: Apple iPhone, Samsung Galaxy, OnePlus, Google Pixel, Vivo, Oppo, Xiaomi, and more.',
     keywords:
-      'iPhone screen repair, Samsung display repair, Pixel screen replacement, OnePlus display repair, Apple Watch repair',
+      'iPhone display repair Mumbai, Samsung screen repair, OnePlus display repair, Pixel screen replacement, Vivo display repair Borivali',
     ogImage: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=1200&q=80',
     ogType: 'website',
     canonicalUrl: '',
@@ -511,56 +522,18 @@ export const DEFAULT_PAGE_SEO_MAP: Record<string, PageSeoConfig> = {
     schemaType: 'WebPage',
     schemaJson: getSchemaTemplate('WebPage', {
       path: '/brands',
-      title: 'Supported Device Brands | Flagship Display Repair',
-    }),
-  },
-  '/brands/apple': {
-    path: '/brands/apple',
-    pageName: 'Apple iPhone & Watch Repairs',
-    category: 'Brands',
-    title: 'Apple iPhone, iPad & Apple Watch Display Repair | QASWA TELECOM',
-    description:
-      'Specialized OLED screen replacement, touch glass refurbishing, and True Tone transfer for iPhone 11 to 16 Pro Max, iPad Pro, and Apple Watch Ultra.',
-    keywords: 'iPhone screen repair, iPhone glass replacement, Apple Watch screen repair, iPad display fix',
-    ogImage: 'https://images.unsplash.com/photo-1510557880182-3d4d3cba35a5?w=1200&q=80',
-    ogType: 'website',
-    canonicalUrl: '',
-    robots: 'index, follow',
-    twitterCard: 'summary_large_image',
-    schemaType: 'Service',
-    schemaJson: getSchemaTemplate('Service', {
-      path: '/brands/apple',
-      title: 'Apple iPhone, iPad & Apple Watch Display Repair',
-    }),
-  },
-  '/brands/samsung': {
-    path: '/brands/samsung',
-    pageName: 'Samsung Galaxy & Fold Repairs',
-    category: 'Brands',
-    title: 'Samsung Galaxy S, Note & Z Fold Display Repair | QASWA TELECOM',
-    description:
-      'Laser line repair and ultra-thin glass lamination for Samsung Galaxy S21 to S24 Ultra, Z Fold, and Z Flip series. Preserve original Dynamic AMOLED panels.',
-    keywords: 'Samsung screen repair, Galaxy S23 Ultra display, Z Fold screen repair, Samsung green line fix',
-    ogImage: 'https://images.unsplash.com/photo-1610945415295-d9bbf067e59c?w=1200&q=80',
-    ogType: 'website',
-    canonicalUrl: '',
-    robots: 'index, follow',
-    twitterCard: 'summary_large_image',
-    schemaType: 'Service',
-    schemaJson: getSchemaTemplate('Service', {
-      path: '/brands/samsung',
-      title: 'Samsung Galaxy S, Note & Z Fold Display Repair',
+      title: 'Mobile Brands We Repair | Display Repair Specialists',
     }),
   },
   '/services': {
     path: '/services',
     pageName: 'Display Repair Services',
     category: 'Services',
-    title: 'Display Repair Services | Glass Replacement & Laser Bonding | QASWA TELECOM',
+    title: 'Display Repair Services in Borivali West, Mumbai | QASWA TELECOM',
     description:
-      'Explore precision display services: Outer Glass Refurbishing, Green Line Laser Repair, Touch Digitizer Fix, and Complete AMOLED Assembly Replacement.',
+      'Explore display repair services: Outer Touch Glass Refurbishing, Green & Pink Line Laser Repair, Touch Digitizer Restoration, and OLED Panel Replacement in Mumbai.',
     keywords:
-      'screen replacement service, green line repair, laser flex bonding, touch digitizer replacement, OCA lamination',
+      'display repair services Mumbai, touch glass replacement, green line laser repair, AMOLED screen replacement Borivali West',
     ogImage: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=1200&q=80',
     ogType: 'website',
     canonicalUrl: '',
@@ -569,17 +542,18 @@ export const DEFAULT_PAGE_SEO_MAP: Record<string, PageSeoConfig> = {
     schemaType: 'Service',
     schemaJson: getSchemaTemplate('Service', {
       path: '/services',
-      title: 'Display Repair Services | Glass Replacement & Laser Bonding',
+      title: 'Display Repair Services in Borivali West, Mumbai',
     }),
   },
   '/services/line-issue': {
     path: '/services/line-issue',
-    pageName: 'Green / White Line Laser Repair',
+    pageName: 'Green & Pink Line Laser Repair',
     category: 'Services',
-    title: 'Green & White Line Display Laser Repair Service | QASWA TELECOM',
+    title: 'Green & Pink Line Display Laser Repair in Mumbai | QASWA TELECOM',
     description:
-      'Micro-laser flex bonding to repair vertical green, pink, or white lines on Samsung, OnePlus, and iPhone OLED screens without changing the original display panel.',
-    keywords: 'green line fix, vertical line screen repair, laser bonding mobile display, AMOLED line issue',
+      'Micro-laser flex bonding to repair vertical green, pink, or white lines on Samsung, OnePlus, and iPhone OLED screens without replacing the original display panel in Mumbai.',
+    keywords:
+      'green line screen repair, pink line display fix, laser bonding mobile display Mumbai, AMOLED line issue repair Borivali',
     ogImage: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=1200&q=80',
     ogType: 'website',
     canonicalUrl: '',
@@ -588,17 +562,18 @@ export const DEFAULT_PAGE_SEO_MAP: Record<string, PageSeoConfig> = {
     schemaType: 'Service',
     schemaJson: getSchemaTemplate('Service', {
       path: '/services/line-issue',
-      title: 'Green & White Line Display Laser Repair Service',
+      title: 'Green & Pink Line Display Laser Repair in Mumbai',
     }),
   },
   '/services/glass-replacement': {
     path: '/services/glass-replacement',
-    pageName: 'Outer Glass Replacement (OCA)',
+    pageName: 'Outer Touch Glass Replacement',
     category: 'Services',
-    title: 'Outer Touch Glass Replacement & OCA Lamination | QASWA TELECOM',
+    title: 'Outer Touch Glass Replacement & OCA Lamination | QASWA TELECOM Mumbai',
     description:
-      'Cracked glass but touch and display still working? Keep your original factory OLED panel and save up to 70% with our precision cleanroom OCA glass replacement.',
-    keywords: 'glass only repair, touch glass replacement, OCA lamination mobile, cracked screen glass fix',
+      'Cracked glass but touch and OLED display still working? Keep your original factory panel with precision cleanroom OCA glass replacement in Borivali West, Mumbai.',
+    keywords:
+      'touch glass replacement Mumbai, OCA lamination screen, cracked glass repair Borivali, original OLED glass replacement',
     ogImage: 'https://images.unsplash.com/photo-1598327105666-5b89351aff97?w=1200&q=80',
     ogType: 'website',
     canonicalUrl: '',
@@ -610,72 +585,95 @@ export const DEFAULT_PAGE_SEO_MAP: Record<string, PageSeoConfig> = {
       title: 'Outer Touch Glass Replacement & OCA Lamination',
     }),
   },
-  '/service-centers': {
-    path: '/service-centers',
-    pageName: 'Service Centers & Labs',
-    category: 'Core',
-    title: 'Service Centers & Cleanroom Labs | QASWA TELECOM',
+  '/about': {
+    path: '/about',
+    pageName: 'About Us',
+    category: 'Legal',
+    title: 'About QASWA TELECOM | Display Repair Specialists in Borivali West, Mumbai',
     description:
-      'Visit our certified walk-in display repair service centers and cleanroom laboratories. Express diagnosis, genuine parts, and post-repair quality testing.',
+      'Learn about QASWA TELECOM, leading display repair specialists in Borivali West, Mumbai. Dedicated cleanroom technology for flagship smartphones, iPads, Apple Watches & tablets.',
     keywords:
-      'phone repair shop near me, mobile service center Mumbai, display repair lab walk-in, screen repair center',
+      'about Qaswa Telecom, display repair specialists Mumbai, mobile screen repair Borivali West, flagship phone display lab',
     ogImage: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=1200&q=80',
+    ogType: 'website',
+    canonicalUrl: '',
+    robots: 'index, follow',
+    twitterCard: 'summary_large_image',
+    schemaType: 'Organization',
+    schemaJson: getSchemaTemplate('Organization', {
+      path: '/about',
+      title: 'About QASWA TELECOM | Display Repair Specialists in Borivali West, Mumbai',
+    }),
+  },
+  '/contact': {
+    path: '/contact',
+    pageName: 'Contact Us',
+    category: 'Legal',
+    title: 'Contact QASWA TELECOM | Display Repair Center in Borivali West, Mumbai',
+    description:
+      'Visit QASWA TELECOM at Shop No-8, 1st Floor, Thakkar Shopping Centre, S.V Road, Borivali West, Mumbai 400092. Open everyday 11:00 AM – 9:00 PM for display repair enquiries.',
+    keywords:
+      'contact Qaswa Telecom, display repair shop Borivali West, mobile screen repair address Mumbai, Thakkar shopping centre phone repair',
+    ogImage: 'https://images.unsplash.com/photo-1534536281715-e28d76689b4d?w=1200&q=80',
     ogType: 'website',
     canonicalUrl: '',
     robots: 'index, follow',
     twitterCard: 'summary_large_image',
     schemaType: 'LocalBusiness',
     schemaJson: getSchemaTemplate('LocalBusiness', {
-      path: '/service-centers',
-      title: 'Service Centers & Cleanroom Labs',
+      path: '/contact',
+      title: 'Contact QASWA TELECOM | Display Repair Center in Borivali West, Mumbai',
     }),
   },
-  '/track-order': {
-    path: '/track-order',
-    pageName: 'Track Order',
-    category: 'Core',
-    title: 'Track Repair Status | Live Job Sheet Tracker | QASWA TELECOM',
+  '/faqs': {
+    path: '/faqs',
+    pageName: 'FAQs',
+    category: 'Legal',
+    title: 'Display Repair FAQs | QASWA TELECOM Borivali West, Mumbai',
     description:
-      'Track real-time status of your display repair device using your Order ID or registered mobile number. Monitor diagnostics, bonding, testing, and dispatch.',
-    keywords: 'track repair order, check repair status, mobile repair job sheet tracking, Qaswa repair status',
-    ogImage: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=1200&q=80',
+      'Frequently asked questions about smartphone, iPad, Apple Watch, and tablet display repair, cracked touch glass replacement, green line fixes, and OLED restoration in Mumbai.',
+    keywords:
+      'display repair FAQ, screen replacement questions Mumbai, green line fix FAQ, OLED vs touch glass repair',
+    ogImage: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?w=1200&q=80',
     ogType: 'website',
     canonicalUrl: '',
-    robots: 'noindex, follow',
+    robots: 'index, follow',
     twitterCard: 'summary',
-    schemaType: 'WebPage',
-    schemaJson: getSchemaTemplate('WebPage', {
-      path: '/track-order',
-      title: 'Track Repair Status | Live Job Sheet Tracker',
+    schemaType: 'FAQPage',
+    schemaJson: getSchemaTemplate('FAQPage', {
+      path: '/faqs',
+      title: 'Display Repair FAQs | QASWA TELECOM Borivali West, Mumbai',
     }),
   },
-  '/blogs': {
-    path: '/blogs',
-    pageName: 'Blogs & Articles',
+  '/gallery': {
+    path: '/gallery',
+    pageName: 'Repair Gallery',
     category: 'Content',
-    title: 'Display Repair Insights & Technical Blogs | QASWA TELECOM',
+    title: 'Cleanroom Repair Gallery | QASWA TELECOM Borivali West, Mumbai',
     description:
-      'Expert articles on smartphone screen technology, OLED green line fixes, glass-only refurbishing, and display maintenance tips from certified technicians.',
-    keywords: 'display repair blog, green line fix tutorial, OLED vs AMOLED, phone screen replacement guide',
-    ogImage: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=1200&q=80',
+      'View high-precision cleanroom optical lamination, laser bonding, and display repair work at QASWA TELECOM in Borivali West, Mumbai.',
+    keywords:
+      'display repair gallery, screen repair photos Mumbai, laser bonding cleanroom, mobile repair laboratory Borivali',
+    ogImage: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=1200&q=80',
     ogType: 'website',
     canonicalUrl: '',
     robots: 'index, follow',
     twitterCard: 'summary_large_image',
     schemaType: 'WebPage',
     schemaJson: getSchemaTemplate('WebPage', {
-      path: '/blogs',
-      title: 'Display Repair Insights & Technical Blogs',
+      path: '/gallery',
+      title: 'Cleanroom Repair Gallery | QASWA TELECOM Borivali West, Mumbai',
     }),
   },
   '/testimonials': {
     path: '/testimonials',
-    pageName: 'Testimonials & Reviews',
+    pageName: 'Customer Reviews',
     category: 'Content',
-    title: 'Customer Reviews & Display Repair Testimonials | QASWA TELECOM',
+    title: 'Customer Reviews & Display Repair Testimonials | QASWA TELECOM Mumbai',
     description:
-      'Read real verified customer reviews and display repair experiences for iPhone, Galaxy Ultra, and foldable screens repaired at QASWA TELECOM.',
-    keywords: 'Qaswa Telecom reviews, display repair feedback, customer testimonials screen repair, verified reviews',
+      'Read verified customer feedback and display repair experiences for iPhone, Galaxy Ultra, and foldable screens repaired at QASWA TELECOM in Borivali West, Mumbai.',
+    keywords:
+      'Qaswa Telecom customer reviews, display repair feedback Mumbai, screen replacement reviews Borivali West',
     ogImage: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1200&q=80',
     ogType: 'website',
     canonicalUrl: '',
@@ -687,52 +685,34 @@ export const DEFAULT_PAGE_SEO_MAP: Record<string, PageSeoConfig> = {
       title: 'Customer Reviews & Display Repair Testimonials',
     }),
   },
-  '/about': {
-    path: '/about',
-    pageName: 'About Us',
-    category: 'Legal',
-    title: 'About QASWA TELECOM | Flagship Display Repair Specialists',
+  '/blogs': {
+    path: '/blogs',
+    pageName: 'Blogs & Articles',
+    category: 'Content',
+    title: 'Display Repair Articles & Technical Guides | QASWA TELECOM Mumbai',
     description:
-      'Learn about QASWA TELECOM’s mission, certified cleanroom facility, micro-soldering and laser bonding technology for smartphone and smartwatch displays.',
-    keywords: 'about Qaswa Telecom, flagship screen repair company, certified mobile technicians, Mumbai display lab',
-    ogImage: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=1200&q=80',
+      'Expert technical guides on OLED display repairs, vertical line issues, touchscreen digitizer troubleshooting, and front glass refurbishing in Mumbai.',
+    keywords:
+      'display repair blog, OLED green line guide, touch glass replacement article, smartphone display troubleshooting',
+    ogImage: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=1200&q=80',
     ogType: 'website',
     canonicalUrl: '',
     robots: 'index, follow',
     twitterCard: 'summary_large_image',
-    schemaType: 'Organization',
-    schemaJson: getSchemaTemplate('Organization', {
-      path: '/about',
-      title: 'About QASWA TELECOM | Flagship Display Repair Specialists',
-    }),
-  },
-  '/contact': {
-    path: '/contact',
-    pageName: 'Contact Us',
-    category: 'Legal',
-    title: 'Contact QASWA TELECOM | Support, Enquiries & WhatsApp Dispatch',
-    description:
-      'Get in touch with QASWA TELECOM technicians for display repair advice, instant quotation, corporate bulk repair, and pickup-drop service across Mumbai.',
-    keywords: 'contact Qaswa Telecom, mobile repair helpline, display repair WhatsApp number, phone repair inquiry',
-    ogImage: 'https://images.unsplash.com/photo-1534536281715-e28d76689b4d?w=1200&q=80',
-    ogType: 'website',
-    canonicalUrl: '',
-    robots: 'index, follow',
-    twitterCard: 'summary_large_image',
-    schemaType: 'LocalBusiness',
-    schemaJson: getSchemaTemplate('LocalBusiness', {
-      path: '/contact',
-      title: 'Contact QASWA TELECOM | Support & Enquiries',
+    schemaType: 'WebPage',
+    schemaJson: getSchemaTemplate('WebPage', {
+      path: '/blogs',
+      title: 'Display Repair Articles & Technical Guides',
     }),
   },
   '/terms': {
     path: '/terms',
     pageName: 'Terms & Conditions',
     category: 'Legal',
-    title: 'Terms & Conditions & Repair Warranty Policy | QASWA TELECOM',
+    title: 'Terms & Conditions | QASWA TELECOM Mumbai',
     description:
-      'Official repair terms, warranty coverage guidelines, diagnostic policies, and customer privacy details at QASWA TELECOM.',
-    keywords: 'repair terms, screen repair warranty, display replacement policy, service terms',
+      'Terms of service, customer intake guidelines, and diagnostic policies for display repair services at QASWA TELECOM in Borivali West, Mumbai.',
+    keywords: 'repair terms, service policies, customer intake conditions, Qaswa Telecom Mumbai',
     ogImage: 'https://images.unsplash.com/photo-1450133064473-71024230f91b?w=1200&q=80',
     ogType: 'website',
     canonicalUrl: '',
@@ -741,34 +721,177 @@ export const DEFAULT_PAGE_SEO_MAP: Record<string, PageSeoConfig> = {
     schemaType: 'WebPage',
     schemaJson: getSchemaTemplate('WebPage', {
       path: '/terms',
-      title: 'Terms & Conditions & Repair Warranty Policy',
-    }),
-  },
-  '/faqs': {
-    path: '/faqs',
-    pageName: 'FAQs',
-    category: 'Legal',
-    title: 'Frequently Asked Questions (FAQs) | Display Repair | QASWA TELECOM',
-    description:
-      'Got questions about display repairs, costs, warranty, repair turnaround time, or data safety? Find answers to commonly asked questions.',
-    keywords: 'display repair FAQ, screen replacement questions, phone repair guarantee, display repair cost',
-    ogImage: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?w=1200&q=80',
-    ogType: 'website',
-    canonicalUrl: '',
-    robots: 'index, follow',
-    twitterCard: 'summary',
-    schemaType: 'FAQPage',
-    schemaJson: getSchemaTemplate('FAQPage', {
-      path: '/faqs',
-      title: 'Frequently Asked Questions (FAQs) | Display Repair',
+      title: 'Terms & Conditions | QASWA TELECOM Mumbai',
     }),
   },
 };
 
 /**
+ * Resolves dynamic fallback SEO metadata for parameterized routes like /models/:slug or /categories/:cat/:brand
+ */
+export function resolveDynamicSeo(
+  path: string,
+  siteName: string = 'QASWA TELECOM'
+): Partial<PageSeoConfig> | null {
+  const cleanPath = path.replace(/\/$/, '') || '/';
+
+  // 1. Direct match in static map
+  if (DEFAULT_PAGE_SEO_MAP[cleanPath]) {
+    return DEFAULT_PAGE_SEO_MAP[cleanPath];
+  }
+
+  // 2. Admin routes: Strictly noindex, nofollow
+  if (cleanPath.startsWith('/admin')) {
+    return {
+      path: cleanPath,
+      pageName: 'Admin',
+      category: 'Admin',
+      title: `Admin Portal | ${siteName}`,
+      description: 'Administrative access area for QASWA TELECOM management.',
+      robots: 'noindex, nofollow',
+      canonicalUrl: '',
+    };
+  }
+
+  // 3. Category alias /mobile, /ipad, /apple-watch, /tablet
+  if (cleanPath === '/mobile') return DEFAULT_PAGE_SEO_MAP['/categories/mobile'];
+  if (cleanPath === '/ipad') return DEFAULT_PAGE_SEO_MAP['/categories/ipad'];
+  if (cleanPath === '/apple-watch') return DEFAULT_PAGE_SEO_MAP['/categories/apple-watch'];
+  if (cleanPath === '/tablet') return DEFAULT_PAGE_SEO_MAP['/categories/tablet'];
+
+  // 4. Model route: /models/:slug
+  if (cleanPath.startsWith('/models/')) {
+    const slug = cleanPath.replace('/models/', '');
+    const modelName = slug
+      .split('-')
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ')
+      .replace(/Iphone/g, 'iPhone')
+      .replace(/Ipad/g, 'iPad')
+      .replace(/Pro Max/g, 'Pro Max')
+      .replace(/5g/gi, '5G');
+
+    return {
+      path: cleanPath,
+      pageName: `${modelName} Display Repair`,
+      category: 'Models',
+      title: `${modelName} Display Repair in Mumbai | ${siteName}`,
+      description: `Specialized display repair solutions for ${modelName} in Borivali West, Mumbai. Screen replacement, cracked touch glass refurbishing, and OLED panel restoration.`,
+      keywords: `${modelName} display repair, ${modelName} screen repair Mumbai, ${modelName} glass replacement, ${modelName} green line fix Borivali`,
+      ogType: 'website',
+      robots: 'index, follow',
+      schemaType: 'Service',
+      schemaJson: getSchemaTemplate('Service', {
+        path: cleanPath,
+        title: `${modelName} Display Repair in Mumbai`,
+        description: `Dedicated display repair services for ${modelName} in Borivali West, Mumbai.`,
+        siteName,
+      }),
+    };
+  }
+
+  // 5. Category Brand route: /categories/mobile/:brandSlug or /categories/tablet/:brandSlug
+  if (cleanPath.startsWith('/categories/')) {
+    const parts = cleanPath.replace('/categories/', '').split('/');
+    if (parts.length >= 2) {
+      const catSlug = parts[0];
+      const secondPart = parts[1];
+
+      // iPad or Apple Watch direct model
+      if (catSlug === 'ipad' || catSlug === 'apple-watch') {
+        const itemTitle = secondPart
+          .split('-')
+          .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+          .join(' ')
+          .replace(/Ipad/g, 'iPad');
+
+        return {
+          path: cleanPath,
+          pageName: itemTitle,
+          category: 'Models',
+          title: `${itemTitle} Display Repair in Mumbai | ${siteName}`,
+          description: `Specialized display repair for ${itemTitle} in Borivali West, Mumbai. Screen replacement, touch glass refurbishing, and optical lamination.`,
+          robots: 'index, follow',
+          schemaType: 'Service',
+        };
+      }
+
+      // Brand route (e.g. /categories/mobile/apple)
+      const brandName = secondPart.charAt(0).toUpperCase() + secondPart.slice(1);
+      return {
+        path: cleanPath,
+        pageName: `${brandName} Display Repair`,
+        category: 'Brands',
+        title: `${brandName} Mobile Display Repair in Mumbai | ${siteName}`,
+        description: `Specialized display repair for ${brandName} smartphones in Borivali West, Mumbai. Original OLED panel restoration, cracked touch glass replacement, and green line fix.`,
+        keywords: `${brandName} display repair Mumbai, ${brandName} screen replacement, ${brandName} touch glass repair Borivali West`,
+        robots: 'index, follow',
+        schemaType: 'Service',
+      };
+    }
+  }
+
+  // 6. Brand alias route: /brands/:brandSlug
+  if (cleanPath.startsWith('/brands/')) {
+    const slug = cleanPath.replace('/brands/', '');
+    const brandName = slug.charAt(0).toUpperCase() + slug.slice(1);
+    return {
+      path: cleanPath,
+      pageName: `${brandName} Display Repair`,
+      category: 'Brands',
+      title: `${brandName} Mobile Display Repair in Mumbai | ${siteName}`,
+      description: `Specialized display repair for ${brandName} smartphones in Borivali West, Mumbai. Original OLED panel restoration, cracked touch glass replacement, and green line fix.`,
+      robots: 'index, follow',
+      schemaType: 'Service',
+    };
+  }
+
+  // 7. Service route: /services/:serviceSlug
+  if (cleanPath.startsWith('/services/')) {
+    const slug = cleanPath.replace('/services/', '');
+    const serviceName = slug
+      .split('-')
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(' ');
+    return {
+      path: cleanPath,
+      pageName: serviceName,
+      category: 'Services',
+      title: `${serviceName} in Mumbai | ${siteName}`,
+      description: `Specialized ${serviceName} in Borivali West, Mumbai. Original display restoration, cleanroom OCA bonding, and precision diagnosis at ${siteName}.`,
+      robots: 'index, follow',
+      schemaType: 'Service',
+    };
+  }
+
+  // 8. Blog route: /blogs/:slug
+  if (cleanPath.startsWith('/blogs/')) {
+    const slug = cleanPath.replace('/blogs/', '');
+    const blogTitle = slug
+      .split('-')
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(' ');
+    return {
+      path: cleanPath,
+      pageName: blogTitle,
+      category: 'Blogs',
+      title: `${blogTitle} | ${siteName} Mumbai`,
+      description: `Read technical insights and guides on ${blogTitle} by the display engineering specialists at ${siteName} in Mumbai.`,
+      robots: 'index, follow',
+      schemaType: 'Article',
+    };
+  }
+
+  return null;
+}
+
+/**
  * Applies dynamic SEO metadata to document head
  */
-export function applyDynamicSeo(seo: Partial<PageSeoConfig>, siteName: string = 'QASWA TELECOM'): void {
+export function applyDynamicSeo(
+  seo: Partial<PageSeoConfig>,
+  siteName: string = 'QASWA TELECOM'
+): void {
   if (typeof document === 'undefined') return;
 
   const origin = typeof window !== 'undefined' ? window.location.origin : 'https://qaswatelecom.com';
@@ -805,7 +928,8 @@ export function applyDynamicSeo(seo: Partial<PageSeoConfig>, siteName: string = 
   }
 
   // 6. Canonical URL
-  const canonicalUrl = seo.canonicalUrl || (typeof window !== 'undefined' ? `${origin}${window.location.pathname}` : '');
+  const canonicalUrl =
+    seo.canonicalUrl || (typeof window !== 'undefined' ? `${origin}${window.location.pathname}` : '');
   if (canonicalUrl) {
     let link = document.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
     if (!link) {
@@ -866,7 +990,52 @@ function setMetaProperty(property: string, content: string): void {
 }
 
 /**
- * Hook to set page title and meta description for SEO (backwards-compatible)
+ * Initializes Google Analytics 4 (if configured) and Google Search Console verification
+ */
+export function initAnalyticsAndVerification(
+  siteSettingsMap?: Record<string, string | undefined>
+): void {
+  if (typeof document === 'undefined') return;
+
+  // 1. Google Search Console Verification Meta Tag
+  const gscCode =
+    siteSettingsMap?.GSC_VERIFICATION ||
+    (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_GSC_VERIFICATION);
+
+  if (gscCode && typeof gscCode === 'string' && gscCode.trim()) {
+    setMetaName('google-site-verification', gscCode.trim());
+  }
+
+  // 2. Google Analytics 4 Measurement Tag (Only loaded if configured)
+  const gaId =
+    siteSettingsMap?.GA_MEASUREMENT_ID ||
+    (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_GA_MEASUREMENT_ID);
+
+  if (gaId && typeof gaId === 'string' && gaId.trim().startsWith('G-')) {
+    const cleanId = gaId.trim();
+    const scriptId = 'ga4-gtag-script';
+    if (!document.getElementById(scriptId)) {
+      const script = document.createElement('script');
+      script.id = scriptId;
+      script.async = true;
+      script.src = `https://www.googletagmanager.com/gtag/js?id=${cleanId}`;
+      document.head.appendChild(script);
+
+      const inlineScript = document.createElement('script');
+      inlineScript.id = 'ga4-inline-init';
+      inlineScript.textContent = `
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', '${cleanId}', { send_page_view: true });
+      `;
+      document.head.appendChild(inlineScript);
+    }
+  }
+}
+
+/**
+ * Hook to set page title and meta description for SEO
  */
 export function usePageSeo(title: string, description?: string): void {
   useEffect(() => {
@@ -883,11 +1052,23 @@ export function usePageSeo(title: string, description?: string): void {
 
     setMetaProperty('og:title', fullTitle);
     setMetaName('twitter:title', fullTitle);
+
+    const origin = window.location.origin;
+    const currentUrl = `${origin}${window.location.pathname}`;
+    setMetaProperty('og:url', currentUrl);
+
+    let link = document.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
+    if (!link) {
+      link = document.createElement('link');
+      link.setAttribute('rel', 'canonical');
+      document.head.appendChild(link);
+    }
+    link.setAttribute('href', currentUrl);
   }, [title, description]);
 }
 
 /**
- * Hook for pages to automatically consume dynamic page SEO from settings
+ * Hook for pages to automatically consume dynamic page SEO from settings and routes
  */
 export function useDynamicPageSeo(
   path?: string,
@@ -896,6 +1077,9 @@ export function useDynamicPageSeo(
 ): void {
   useEffect(() => {
     const currentPath = path || (typeof window !== 'undefined' ? window.location.pathname : '/');
+
+    // Run Analytics and Search Console check
+    initAnalyticsAndVerification(siteSettingsMap);
 
     // Try to load any custom configs stored in settings
     let savedConfigs: Record<string, PageSeoConfig> = {};
@@ -907,12 +1091,16 @@ export function useDynamicPageSeo(
       }
     }
 
-    // Lookup matching config or baseline default
-    const baseline = DEFAULT_PAGE_SEO_MAP[currentPath] || DEFAULT_PAGE_SEO_MAP['/'];
+    // Lookup matching config from saved, static map, dynamic resolver, or fallback
     const saved = savedConfigs[currentPath];
+    const staticBaseline = DEFAULT_PAGE_SEO_MAP[currentPath];
+    const resolvedDynamic = resolveDynamicSeo(currentPath, siteSettingsMap?.SITE_NAME || 'QASWA TELECOM');
+    const fallbackBaseline = DEFAULT_PAGE_SEO_MAP['/'];
 
-    const finalConfig: PageSeoConfig = {
-      ...baseline,
+    const finalConfig: Partial<PageSeoConfig> = {
+      ...fallbackBaseline,
+      ...resolvedDynamic,
+      ...staticBaseline,
       ...saved,
       ...customOverride,
       path: currentPath,
@@ -921,7 +1109,6 @@ export function useDynamicPageSeo(
     applyDynamicSeo(finalConfig, siteSettingsMap?.SITE_NAME || 'QASWA TELECOM');
 
     return () => {
-      // Cleanup custom dynamic schema when unmounting page
       removeJsonLd('page-dynamic-schema');
     };
   }, [path, customOverride, siteSettingsMap]);

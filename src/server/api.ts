@@ -24,6 +24,8 @@ import {
 } from '../db/schema.ts';
 import { eq, desc, asc, sql, and, like, or, ilike } from 'drizzle-orm';
 import { requireAuth, optionalAuth, AuthRequest } from '../middleware/auth.ts';
+import { adminAuthRouter } from './adminAuthRouter.ts';
+import { requireAuthorizedAdmin } from './adminSecurity.ts';
 import { ensureDatabaseSchema } from '../db/initDb.ts';
 import { ensureCoreDeviceCategories } from '../db/seedCategories.ts';
 import { DEFAULT_PAGE_SEO_MAP, getSchemaTemplate } from '../lib/seo.ts';
@@ -48,6 +50,15 @@ apiRouter.use(async (_req, _res, next) => {
   }
   next();
 });
+
+// ==========================================
+// ADMIN AUTHENTICATION & SECURITY GATEWAY
+// ==========================================
+// 1. Mount public admin auth router (/api/admin/auth/*: login, forgot-password, verify-otp, reset-password, session, logout)
+apiRouter.use('/admin/auth', adminAuthRouter);
+
+// 2. Strict server-side security middleware protecting ALL remaining /api/admin/* endpoints
+apiRouter.use('/admin', requireAuthorizedAdmin);
 
 // Helper to get site setting
 async function getSetting(key: string, defaultValue: string = ''): Promise<string> {
@@ -3583,50 +3594,7 @@ apiRouter.post('/admin/page-content/reset', async (req: Request, res: Response) 
   }
 });
 
-// Dynamic sitemap.xml generator
-apiRouter.get('/sitemap.xml', async (_req: Request, res: Response) => {
-  try {
-    const [allBrands, allModels, allServices, allBlogs, allPages] = await Promise.all([
-      db.select({ slug: brands.slug }).from(brands).where(eq(brands.isActive, true)),
-      db.select({ slug: models.slug }).from(models).where(eq(models.isActive, true)),
-      db.select({ slug: services.slug }).from(services).where(eq(services.isActive, true)),
-      db.select({ slug: blogs.slug }).from(blogs).where(eq(blogs.status, 'published')),
-      db.select({ slug: customPages.slug }).from(customPages).where(eq(customPages.isPublished, true)),
-    ]);
-
-    const baseUrl = process.env.APP_URL || 'https://qaswatelecom.com';
-    let xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
-
-    const staticRoutes = ['', '/mobile-repair', '/brands', '/services', '/gallery', '/testimonials', '/service-centers', '/blogs', '/track-order'];
-    staticRoutes.forEach((r) => {
-      xml += `  <url><loc>${baseUrl}${r}</loc><priority>0.8</priority></url>\n`;
-    });
-
-    allBrands.forEach((b) => {
-      xml += `  <url><loc>${baseUrl}/brands/${b.slug}</loc><priority>0.7</priority></url>\n`;
-    });
-    allServices.forEach((s) => {
-      xml += `  <url><loc>${baseUrl}/services/${s.slug}</loc><priority>0.7</priority></url>\n`;
-    });
-    allBlogs.forEach((b) => {
-      xml += `  <url><loc>${baseUrl}/blogs/${b.slug}</loc><priority>0.6</priority></url>\n`;
-    });
-    allPages.forEach((p) => {
-      xml += `  <url><loc>${baseUrl}/${p.slug}</loc><priority>0.5</priority></url>\n`;
-    });
-
-    xml += `</urlset>`;
-    res.header('Content-Type', 'application/xml');
-    res.send(xml);
-  } catch (error) {
-    res.status(500).send('Error generating sitemap');
-  }
-});
-
-// Dynamic robots.txt
-apiRouter.get('/robots.txt', (_req: Request, res: Response) => {
-  const baseUrl = process.env.APP_URL || 'https://qaswatelecom.com';
-  const txt = `User-agent: *\nAllow: /\nDisallow: /admin\nSitemap: ${baseUrl}/api/sitemap.xml\n`;
-  res.header('Content-Type', 'text/plain');
-  res.send(txt);
-});
+// Dynamic sitemap.xml & robots.txt endpoints (also available at root /sitemap.xml and /robots.txt)
+import { handleSitemapXml, handleRobotsTxt } from './seoHandlers.ts';
+apiRouter.get('/sitemap.xml', handleSitemapXml);
+apiRouter.get('/robots.txt', handleRobotsTxt);

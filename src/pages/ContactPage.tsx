@@ -41,8 +41,8 @@ export const ContactPage: React.FC = () => {
   const activeMapsUrl = contact.info?.googleMapsUrl || settings.GOOGLE_MAPS_URL || 'https://share.google/JdvLGimvQe18jUJNp';
 
   usePageSeo(
-    `Contact Us | Get in Touch With Our Display Lab | ${siteName}`,
-    `Contact ${siteName} display repair specialists. Get expert diagnosis for cracked touch glass, green screen issues, display lines, and touch digitizers on flagship phones, Apple Watch, and tablets.`
+    `Contact ${siteName} | Display Repair Center in Borivali West, Mumbai`,
+    `Visit ${siteName} at Shop No-8, 1st Floor, Thakkar Shopping Centre, S.V Road, Borivali West, Mumbai 400092. Open everyday 11:00 AM – 9:00 PM for display repair enquiries.`
   );
 
   // Form State
