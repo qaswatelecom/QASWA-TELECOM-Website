@@ -36,6 +36,7 @@ export const Header: React.FC = () => {
 
   const siteName = settings.SITE_NAME || 'QASWA TELECOM';
   const siteLogo = settings.SITE_LOGO || '/qaswa-logo.svg';
+  const logoScale = Math.min(2.0, Math.max(0.8, Number(settings.SITE_LOGO_SCALE) || 1.25));
   const isDark = resolvedTheme === 'dark';
 
   const handleNavClick = (path: string) => {
@@ -62,13 +63,14 @@ export const Header: React.FC = () => {
         {/* Brand Logo - Enhanced size, perfectly proportioned */}
         <div
           onClick={() => handleNavClick('/')}
-          className="flex cursor-pointer items-center transition-opacity hover:opacity-95 shrink-0 py-1"
+          className="flex cursor-pointer items-center transition-opacity hover:opacity-95 shrink-0 py-1 overflow-visible"
           title={siteName}
         >
           <img
             src={siteLogo}
             alt={siteName}
-            className="h-13 sm:h-15 md:h-16 lg:h-18 w-auto max-w-[200px] sm:max-w-[240px] md:max-w-[270px] lg:max-w-[300px] object-contain drop-shadow-xs transition-transform hover:scale-102"
+            style={{ transform: `scale(${logoScale})`, transformOrigin: 'left center' }}
+            className="h-13 sm:h-15 md:h-16 lg:h-18 w-auto max-w-[210px] sm:max-w-[250px] md:max-w-[280px] lg:max-w-[310px] object-contain drop-shadow-xs transition-transform hover:scale-105"
           />
         </div>
 

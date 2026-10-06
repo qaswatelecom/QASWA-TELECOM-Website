@@ -18,16 +18,28 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [settings, setSettings] = useState<SiteSettings>({
-    WHATSAPP_NUMBER: '9324316048',
-    SITE_NAME: 'Qaswa Telecom',
-    SITE_TAGLINE: 'Certified Mobile Phone Repair Center',
-    SITE_PHONE: '+91 9324316048',
-    SITE_EMAIL: 'telecomqaswa@gmail.com',
-    SITE_ADDRESS:
-      'Shop No-8, 1st Floor, Thakkar Shopping Centre, S.V Road, Borivali West, Mumbai, PIN-400092',
-    BUSINESS_HOURS: 'Everyday: 11:00 AM – 9:00 PM',
-    GOOGLE_MAPS_URL: 'https://share.google/JdvLGimvQe18jUJNp',
+  const [settings, setSettings] = useState<SiteSettings>(() => {
+    try {
+      if (typeof window !== 'undefined') {
+        const cached = localStorage.getItem('qaswa_site_settings');
+        if (cached) {
+          return JSON.parse(cached);
+        }
+      }
+    } catch {}
+    return {
+      WHATSAPP_NUMBER: '9324316048',
+      SITE_NAME: 'Qaswa Telecom',
+      SITE_TAGLINE: 'Certified Mobile Phone Repair Center',
+      SITE_PHONE: '+91 9324316048',
+      SITE_EMAIL: 'telecomqaswa@gmail.com',
+      SITE_ADDRESS:
+        'Shop No-8, 1st Floor, Thakkar Shopping Centre, S.V Road, Borivali West, Mumbai, PIN-400092',
+      BUSINESS_HOURS: 'Everyday: 11:00 AM – 9:00 PM',
+      GOOGLE_MAPS_URL: 'https://share.google/JdvLGimvQe18jUJNp',
+      SITE_LOGO: '/qaswa-logo.svg',
+      SITE_LOGO_SCALE: '1.25',
+    };
   });
   const [categories, setCategories] = useState<DeviceCategory[]>([]);
   const [brands, setBrands] = useState<Brand[]>([]);
@@ -65,7 +77,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const res = await fetch('/api/public/bootstrap');
       if (!res.ok) throw new Error('Failed to load site configuration');
       const data = await res.json();
-      if (data.settings) setSettings(data.settings);
+      if (data.settings) {
+        setSettings(data.settings);
+        try {
+          localStorage.setItem('qaswa_site_settings', JSON.stringify(data.settings));
+        } catch {}
+      }
       if (data.categories) setCategories(data.categories);
       if (data.brands) setBrands(data.brands);
       if (data.services) setServices(data.services);

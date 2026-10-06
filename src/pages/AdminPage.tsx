@@ -127,17 +127,89 @@ export const AdminPage: React.FC = () => {
   // Website Logo Media Picker State
   const [logoMediaPickerOpen, setLogoMediaPickerOpen] = useState(false);
 
-  // Quick save for Website Logo
+  // Helper to trim empty transparent/white whitespace around logos
+  const trimImageWhitespace = (dataUrl: string): Promise<string> => {
+    return new Promise((resolve) => {
+      if (!dataUrl || dataUrl.startsWith('/')) return resolve(dataUrl);
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        try {
+          const canvas = document.createElement('canvas');
+          canvas.width = img.width;
+          canvas.height = img.height;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) return resolve(dataUrl);
+          ctx.drawImage(img, 0, 0);
+          const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          const { data, width, height } = imgData;
+
+          let minX = width, minY = height, maxX = 0, maxY = 0;
+          let hasPixels = false;
+
+          for (let y = 0; y < height; y++) {
+            for (let x = 0; x < width; x++) {
+              const idx = (y * width + x) * 4;
+              const r = data[idx];
+              const g = data[idx + 1];
+              const b = data[idx + 2];
+              const a = data[idx + 3];
+
+              const isTransparent = a < 25;
+              const isPureWhite = r > 245 && g > 245 && b > 245 && a > 200;
+
+              if (!isTransparent && !isPureWhite) {
+                hasPixels = true;
+                if (x < minX) minX = x;
+                if (x > maxX) maxX = x;
+                if (y < minY) minY = y;
+                if (y > maxY) maxY = y;
+              }
+            }
+          }
+
+          if (!hasPixels || maxX <= minX || maxY <= minY) {
+            return resolve(dataUrl);
+          }
+
+          const pad = 6;
+          const cropX = Math.max(0, minX - pad);
+          const cropY = Math.max(0, minY - pad);
+          const cropW = Math.min(width - cropX, maxX - minX + pad * 2);
+          const cropH = Math.min(height - cropY, maxY - minY + pad * 2);
+
+          const trimmedCanvas = document.createElement('canvas');
+          trimmedCanvas.width = cropW;
+          trimmedCanvas.height = cropH;
+          const trimmedCtx = trimmedCanvas.getContext('2d');
+          if (!trimmedCtx) return resolve(dataUrl);
+          trimmedCtx.drawImage(canvas, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH);
+
+          resolve(trimmedCanvas.toDataURL('image/png'));
+        } catch {
+          resolve(dataUrl);
+        }
+      };
+      img.onerror = () => resolve(dataUrl);
+      img.src = dataUrl;
+    });
+  };
+
+  // Quick save for Website Logo & Scale
   const handleSaveLogoOnly = async () => {
     try {
       const logoToSave = settingsMap.SITE_LOGO || '/qaswa-logo.svg';
+      const scaleToSave = settingsMap.SITE_LOGO_SCALE || '1.25';
       const res = await fetch('/api/admin/settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ SITE_LOGO: logoToSave }),
+        body: JSON.stringify({
+          SITE_LOGO: logoToSave,
+          SITE_LOGO_SCALE: scaleToSave,
+        }),
       });
       if (res.ok) {
-        showToast('Website logo updated successfully! Header and footer updated.');
+        showToast('Website logo & size updated successfully! Header updated.');
         await refreshConfig();
       } else {
         showToast('Failed to save website logo.');
@@ -1216,7 +1288,7 @@ export const AdminPage: React.FC = () => {
                         <div className="flex flex-col sm:flex-row gap-2.5">
                           <label className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 border-dashed border-[#00B2A2]/40 bg-[#00B2A2]/5 dark:bg-[#00B2A2]/10 hover:border-[#00B2A2] cursor-pointer transition-colors text-xs font-bold text-[#00B2A2]">
                             <Upload className="h-4 w-4" />
-                            <span>Upload Logo from PC (SVG, PNG, WEBP, JPG)</span>
+                            <span>Upload Logo from PC (Auto-crops whitespace)</span>
                             <input
                               type="file"
                               accept="image/*"
@@ -1224,10 +1296,11 @@ export const AdminPage: React.FC = () => {
                                 const file = e.target.files?.[0];
                                 if (!file) return;
                                 const reader = new FileReader();
-                                reader.onload = (ev) => {
-                                  const dataUrl = ev.target?.result as string;
-                                  setSettingsMap((prev) => ({ ...prev, SITE_LOGO: dataUrl }));
-                                  showToast('New logo loaded! Click "Save Logo Changes" to update the live website.');
+                                reader.onload = async (ev) => {
+                                  const rawUrl = ev.target?.result as string;
+                                  const trimmedUrl = await trimImageWhitespace(rawUrl);
+                                  setSettingsMap((prev) => ({ ...prev, SITE_LOGO: trimmedUrl }));
+                                  showToast('Logo loaded & auto-cropped! Click "Save Logo Changes" to update live website.');
                                 };
                                 reader.readAsDataURL(file);
                               }}
@@ -1246,12 +1319,12 @@ export const AdminPage: React.FC = () => {
                           </button>
                         </div>
 
-                        {/* URL Input */}
+                        {/* URL Input & Quick Tools */}
                         <div>
                           <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                            Or Logo Image URL / Path:
+                            Logo Image URL / Path:
                           </label>
-                          <div className="flex gap-2">
+                          <div className="flex flex-wrap sm:flex-nowrap gap-2">
                             <input
                               type="text"
                               value={settingsMap.SITE_LOGO ?? '/qaswa-logo.svg'}
@@ -1259,13 +1332,29 @@ export const AdminPage: React.FC = () => {
                                 setSettingsMap((prev) => ({ ...prev, SITE_LOGO: e.target.value }))
                               }
                               placeholder="/qaswa-logo.svg or https://..."
-                              className="flex-1 rounded-xl border border-slate-200 bg-slate-50 p-2.5 text-xs text-slate-900 focus:border-[#00B2A2] focus:bg-white focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white font-mono"
+                              className="flex-1 min-w-[200px] rounded-xl border border-slate-200 bg-slate-50 p-2.5 text-xs text-slate-900 focus:border-[#00B2A2] focus:bg-white focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white font-mono"
                             />
+
+                            <button
+                              type="button"
+                              onClick={async () => {
+                                if (settingsMap.SITE_LOGO) {
+                                  const cropped = await trimImageWhitespace(settingsMap.SITE_LOGO);
+                                  setSettingsMap((prev) => ({ ...prev, SITE_LOGO: cropped }));
+                                  showToast('Whitespace trimmed from logo! Click "Save Logo Changes".');
+                                }
+                              }}
+                              className="rounded-xl border border-teal-200 dark:border-teal-800 bg-teal-50 dark:bg-teal-950/40 px-3 py-2 text-xs font-bold text-[#00B2A2] hover:bg-teal-100 transition-colors cursor-pointer whitespace-nowrap"
+                              title="Crop transparent and white borders around logo"
+                            >
+                              ✂️ Auto-Crop
+                            </button>
+
                             <button
                               type="button"
                               onClick={() => {
                                 setSettingsMap((prev) => ({ ...prev, SITE_LOGO: '/qaswa-logo.svg' }));
-                                showToast('Reset to default logo: /qaswa-logo.svg');
+                                showToast('Reset to crisp official vector logo: /qaswa-logo.svg');
                               }}
                               className="rounded-xl border border-slate-200 dark:border-slate-700 px-3 py-2 text-xs font-medium text-slate-500 hover:text-slate-800 dark:hover:text-white transition-colors cursor-pointer whitespace-nowrap"
                               title="Restore default QASWA logo"
@@ -1273,8 +1362,41 @@ export const AdminPage: React.FC = () => {
                               Reset Default
                             </button>
                           </div>
+                        </div>
+
+                        {/* Header Logo Display Size Selector */}
+                        <div className="pt-1 border-t border-slate-100 dark:border-slate-800">
+                          <div className="flex items-center justify-between mb-1.5">
+                            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                              Header Logo Size:
+                            </label>
+                            <span className="text-[11px] font-semibold text-[#00B2A2]">
+                              Scale: {settingsMap.SITE_LOGO_SCALE || '1.25'}x
+                            </span>
+                          </div>
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                            {[
+                              { label: 'Normal (100%)', val: '1.0' },
+                              { label: 'Medium (125%)', val: '1.25' },
+                              { label: 'Large (140%)', val: '1.4' },
+                              { label: 'Extra Large (160%)', val: '1.6' },
+                            ].map((opt) => (
+                              <button
+                                key={opt.val}
+                                type="button"
+                                onClick={() => setSettingsMap((prev) => ({ ...prev, SITE_LOGO_SCALE: opt.val }))}
+                                className={`px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition-all cursor-pointer text-center ${
+                                  (settingsMap.SITE_LOGO_SCALE || '1.25') === opt.val
+                                    ? 'bg-[#00B2A2] text-white shadow-xs ring-2 ring-[#00B2A2]/30'
+                                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                                }`}
+                              >
+                                {opt.label}
+                              </button>
+                            ))}
+                          </div>
                           <span className="text-[10px] text-slate-400 mt-1 block">
-                            Recommended format: SVG or transparent high-res PNG (height: 48px to 64px).
+                            Increases visible size in the website header while maintaining original proportions without distortion.
                           </span>
                         </div>
                       </div>
@@ -1291,11 +1413,15 @@ export const AdminPage: React.FC = () => {
                             <span>Light Header (Day Mode)</span>
                             <span className="text-emerald-600">Active</span>
                           </div>
-                          <div className="h-14 rounded-xl bg-white border border-slate-100 flex items-center justify-between px-3">
+                          <div className="h-16 rounded-xl bg-white border border-slate-100 flex items-center justify-between px-3 overflow-hidden">
                             <img
                               src={settingsMap.SITE_LOGO || '/qaswa-logo.svg'}
                               alt="Header Logo Light Preview"
-                              className="h-10 sm:h-12 w-auto max-w-[170px] object-contain drop-shadow-xs"
+                              style={{
+                                transform: `scale(${Number(settingsMap.SITE_LOGO_SCALE) || 1.25})`,
+                                transformOrigin: 'left center',
+                              }}
+                              className="h-12 w-auto max-w-[170px] object-contain drop-shadow-xs"
                             />
                             <div className="flex items-center gap-3 text-[11px] font-semibold text-slate-500">
                               <span className="text-[#00B2A2]">Home</span>
@@ -1311,11 +1437,15 @@ export const AdminPage: React.FC = () => {
                             <span>Dark Header (Night Mode)</span>
                             <span className="text-[#00B2A2]">Active</span>
                           </div>
-                          <div className="h-14 rounded-xl bg-[#0B1110] border border-[#263331] flex items-center justify-between px-3">
+                          <div className="h-16 rounded-xl bg-[#0B1110] border border-[#263331] flex items-center justify-between px-3 overflow-hidden">
                             <img
                               src={settingsMap.SITE_LOGO || '/qaswa-logo.svg'}
                               alt="Header Logo Dark Preview"
-                              className="h-10 sm:h-12 w-auto max-w-[170px] object-contain drop-shadow-xs"
+                              style={{
+                                transform: `scale(${Number(settingsMap.SITE_LOGO_SCALE) || 1.25})`,
+                                transformOrigin: 'left center',
+                              }}
+                              className="h-12 w-auto max-w-[170px] object-contain drop-shadow-xs"
                             />
                             <div className="flex items-center gap-3 text-[11px] font-semibold text-slate-400">
                               <span className="text-[#00B2A2]">Home</span>
