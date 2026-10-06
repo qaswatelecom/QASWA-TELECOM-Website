@@ -39,6 +39,7 @@ import {
   AlertCircle,
   ArrowUpDown,
   Camera,
+  Upload,
 } from 'lucide-react';
 import {
   Order,
@@ -61,6 +62,7 @@ import { ContentManagementTab } from '../components/admin/ContentManagementTab.t
 import { MediaManagerTab } from '../components/admin/MediaManagerTab.tsx';
 import { DeviceCatalogManagementTab } from '../components/admin/DeviceCatalogManagementTab.tsx';
 import { GalleryManagementTab } from '../components/admin/GalleryManagementTab.tsx';
+import { MediaPickerModal } from '../components/admin/MediaPickerModal.tsx';
 
 export const AdminPage: React.FC = () => {
   const { user, isAdmin, logout } = useAuth();
@@ -121,6 +123,29 @@ export const AdminPage: React.FC = () => {
   const [genericModalOpen, setGenericModalOpen] = useState(false);
   const [genericModalType, setGenericModalType] = useState<string>('');
   const [genericModalData, setGenericModalData] = useState<any>({});
+
+  // Website Logo Media Picker State
+  const [logoMediaPickerOpen, setLogoMediaPickerOpen] = useState(false);
+
+  // Quick save for Website Logo
+  const handleSaveLogoOnly = async () => {
+    try {
+      const logoToSave = settingsMap.SITE_LOGO || '/qaswa-logo.svg';
+      const res = await fetch('/api/admin/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ SITE_LOGO: logoToSave }),
+      });
+      if (res.ok) {
+        showToast('Website logo updated successfully! Header and footer updated.');
+        await refreshConfig();
+      } else {
+        showToast('Failed to save website logo.');
+      }
+    } catch (err) {
+      showToast('Error saving website logo.');
+    }
+  };
 
   // Fetch data on tab change
   useEffect(() => {
@@ -1158,6 +1183,151 @@ export const AdminPage: React.FC = () => {
                     </p>
                   </div>
 
+                  {/* Section 0: Dedicated Website Logo & Header Branding */}
+                  <div className="rounded-2xl border-2 border-[#00B2A2]/30 bg-white p-6 dark:border-[#00B2A2]/20 dark:bg-slate-900 shadow-md space-y-5">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100 dark:border-slate-800">
+                      <div>
+                        <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#00B2A2]/10 text-[#00B2A2] text-[10px] font-bold mb-1">
+                          <ImageIcon className="h-3.5 w-3.5" />
+                          <span>PRIMARY WEBSITE BRANDING</span>
+                        </div>
+                        <h4 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
+                          <span>QASWA TELECOM Official Logo</span>
+                        </h4>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                          Change the logo image displayed on the live website header, footer, mobile navigation, and admin portals.
+                        </p>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={handleSaveLogoOnly}
+                        className="inline-flex items-center gap-2 rounded-xl bg-[#00B2A2] px-5 py-2.5 text-xs font-bold text-white shadow-md hover:bg-[#009e90] cursor-pointer transition-all shrink-0 self-start sm:self-auto"
+                      >
+                        <Save className="h-4 w-4" />
+                        <span>Save Logo Changes</span>
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                      {/* Upload controls & inputs (7 cols) */}
+                      <div className="lg:col-span-7 space-y-4">
+                        {/* Direct File Upload & Media Picker Buttons */}
+                        <div className="flex flex-col sm:flex-row gap-2.5">
+                          <label className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 border-dashed border-[#00B2A2]/40 bg-[#00B2A2]/5 dark:bg-[#00B2A2]/10 hover:border-[#00B2A2] cursor-pointer transition-colors text-xs font-bold text-[#00B2A2]">
+                            <Upload className="h-4 w-4" />
+                            <span>Upload Logo from PC (SVG, PNG, WEBP, JPG)</span>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (!file) return;
+                                const reader = new FileReader();
+                                reader.onload = (ev) => {
+                                  const dataUrl = ev.target?.result as string;
+                                  setSettingsMap((prev) => ({ ...prev, SITE_LOGO: dataUrl }));
+                                  showToast('New logo loaded! Click "Save Logo Changes" to update the live website.');
+                                };
+                                reader.readAsDataURL(file);
+                              }}
+                              className="hidden"
+                            />
+                          </label>
+
+                          <button
+                            type="button"
+                            onClick={() => setLogoMediaPickerOpen(true)}
+                            className="rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-4 py-3 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer shrink-0 flex items-center justify-center gap-2"
+                            title="Select from Media Manager"
+                          >
+                            <ImageIcon className="h-4 w-4 text-[#00B2A2]" />
+                            <span>Media Manager</span>
+                          </button>
+                        </div>
+
+                        {/* URL Input */}
+                        <div>
+                          <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                            Or Logo Image URL / Path:
+                          </label>
+                          <div className="flex gap-2">
+                            <input
+                              type="text"
+                              value={settingsMap.SITE_LOGO ?? '/qaswa-logo.svg'}
+                              onChange={(e) =>
+                                setSettingsMap((prev) => ({ ...prev, SITE_LOGO: e.target.value }))
+                              }
+                              placeholder="/qaswa-logo.svg or https://..."
+                              className="flex-1 rounded-xl border border-slate-200 bg-slate-50 p-2.5 text-xs text-slate-900 focus:border-[#00B2A2] focus:bg-white focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white font-mono"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setSettingsMap((prev) => ({ ...prev, SITE_LOGO: '/qaswa-logo.svg' }));
+                                showToast('Reset to default logo: /qaswa-logo.svg');
+                              }}
+                              className="rounded-xl border border-slate-200 dark:border-slate-700 px-3 py-2 text-xs font-medium text-slate-500 hover:text-slate-800 dark:hover:text-white transition-colors cursor-pointer whitespace-nowrap"
+                              title="Restore default QASWA logo"
+                            >
+                              Reset Default
+                            </button>
+                          </div>
+                          <span className="text-[10px] text-slate-400 mt-1 block">
+                            Recommended format: SVG or transparent high-res PNG (height: 48px to 64px).
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Live Header Simulation Preview (5 cols) */}
+                      <div className="lg:col-span-5 space-y-2.5">
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                          Live Header Simulation Preview
+                        </label>
+
+                        {/* Light Mode Header View */}
+                        <div className="rounded-2xl border border-slate-200 bg-white p-3.5 shadow-sm space-y-1.5">
+                          <div className="flex items-center justify-between text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                            <span>Light Header (Day Mode)</span>
+                            <span className="text-emerald-600">Active</span>
+                          </div>
+                          <div className="h-14 rounded-xl bg-white border border-slate-100 flex items-center justify-between px-3">
+                            <img
+                              src={settingsMap.SITE_LOGO || '/qaswa-logo.svg'}
+                              alt="Header Logo Light Preview"
+                              className="h-10 sm:h-12 w-auto max-w-[170px] object-contain drop-shadow-xs"
+                            />
+                            <div className="flex items-center gap-3 text-[11px] font-semibold text-slate-500">
+                              <span className="text-[#00B2A2]">Home</span>
+                              <span>About</span>
+                              <span>Devices</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Dark Mode Header View */}
+                        <div className="rounded-2xl border border-slate-800 bg-[#0B1110] p-3.5 shadow-sm space-y-1.5">
+                          <div className="flex items-center justify-between text-[10px] text-slate-500 font-bold uppercase tracking-wider">
+                            <span>Dark Header (Night Mode)</span>
+                            <span className="text-[#00B2A2]">Active</span>
+                          </div>
+                          <div className="h-14 rounded-xl bg-[#0B1110] border border-[#263331] flex items-center justify-between px-3">
+                            <img
+                              src={settingsMap.SITE_LOGO || '/qaswa-logo.svg'}
+                              alt="Header Logo Dark Preview"
+                              className="h-10 sm:h-12 w-auto max-w-[170px] object-contain drop-shadow-xs"
+                            />
+                            <div className="flex items-center gap-3 text-[11px] font-semibold text-slate-400">
+                              <span className="text-[#00B2A2]">Home</span>
+                              <span>About</span>
+                              <span>Devices</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
                   {/* Section 1: Business Contact & WhatsApp */}
                   <div className="rounded-2xl border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900 shadow-sm space-y-4">
                     <h4 className="text-xs font-bold text-[#00B2A2] uppercase tracking-wider flex items-center gap-1.5">
@@ -1185,27 +1355,6 @@ export const AdminPage: React.FC = () => {
                         placeholder="e.g. 9324316048"
                         className="w-full rounded-xl border border-emerald-300 bg-white p-2.5 text-xs text-slate-900 font-mono font-bold focus:border-emerald-500 focus:outline-none dark:bg-slate-900 dark:border-emerald-800 dark:text-white"
                       />
-                    </div>
-
-                    {/* Brand Logo URL */}
-                    <div>
-                      <label className="block text-xs font-semibold mb-1">Brand Logo Image URL (Header & Footer)</label>
-                      <div className="flex items-center gap-3">
-                        <input
-                          type="text"
-                          value={settingsMap.SITE_LOGO ?? '/qaswa-logo.svg'}
-                          onChange={(e) =>
-                            setSettingsMap((prev) => ({ ...prev, SITE_LOGO: e.target.value }))
-                          }
-                          placeholder="/qaswa-logo.svg or https://..."
-                          className="w-full rounded-xl border border-slate-200 bg-slate-50 p-2.5 text-xs text-slate-900 focus:border-[#00B2A2] focus:bg-white focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
-                        />
-                        <img
-                          src={settingsMap.SITE_LOGO || '/qaswa-logo.svg'}
-                          alt="Logo Preview"
-                          className="h-10 w-auto max-w-[100px] object-contain rounded-lg border border-slate-200 p-1 dark:border-slate-700 bg-white"
-                        />
-                      </div>
                     </div>
 
                     {/* Site Name & Tagline */}
@@ -2208,6 +2357,19 @@ export const AdminPage: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Website Logo Media Picker Modal */}
+      <MediaPickerModal
+        isOpen={logoMediaPickerOpen}
+        onClose={() => setLogoMediaPickerOpen(false)}
+        onSelectImage={(url) => {
+          setSettingsMap((prev) => ({ ...prev, SITE_LOGO: url }));
+          setLogoMediaPickerOpen(false);
+          showToast('Selected logo from Media Manager. Click "Save Logo Changes" to update the live site.');
+        }}
+        title="Select Website Logo from Media Library"
+        showToast={showToast}
+      />
     </div>
   );
 };
