@@ -128,6 +128,10 @@ export const ExploreTopBrands: React.FC = () => {
   }, [allBrands]);
 
   const handleBrandClick = (brand: RepairBrandItem) => {
+    // If brand has no URL needed / disabled, do not navigate
+    if (!brand.slug || brand.slug === '#') {
+      return;
+    }
     // Strictly route to the mobile category models page
     navigate(`/categories/mobile/${brand.slug}`);
   };

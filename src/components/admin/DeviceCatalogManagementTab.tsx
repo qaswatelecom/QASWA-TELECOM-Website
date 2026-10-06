@@ -20,6 +20,7 @@ import {
   ExternalLink,
   ChevronRight,
   Filter,
+  Upload,
 } from 'lucide-react';
 import { DeviceCategory, Brand, Model, Service } from '../../types/index.ts';
 import { MediaPickerModal } from './MediaPickerModal.tsx';
@@ -823,10 +824,11 @@ export const DeviceCatalogManagementTab: React.FC<DeviceCatalogManagementTabProp
               {/* BRAND MODAL FIELDS */}
               {modalType === 'brand' && (
                 <>
-                  <div className="grid grid-cols-2 gap-4">
+                  {/* 1. Category & 3. Order Number */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                        Category
+                        Category *
                       </label>
                       <select
                         value={editingItem.categorySlug || 'mobile'}
@@ -839,27 +841,43 @@ export const DeviceCatalogManagementTab: React.FC<DeviceCatalogManagementTabProp
                             categoryId: foundCat?.id || null,
                           });
                         }}
-                        className="w-full rounded-xl border border-slate-200 bg-slate-50 p-2.5 text-xs text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-white font-semibold"
+                        className="w-full rounded-xl border border-slate-200 bg-slate-50 p-2.5 text-xs text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-white font-semibold focus:border-[#00B2A2] focus:outline-none"
                       >
-                        <option value="mobile">Mobile</option>
-                        <option value="tablet">Tablet</option>
+                        {categoriesList.map((cat) => (
+                          <option key={cat.id} value={cat.slug}>
+                            {cat.name}
+                          </option>
+                        ))}
+                        {!categoriesList.length && (
+                          <>
+                            <option value="mobile">Mobile</option>
+                            <option value="ipad">iPad</option>
+                            <option value="apple-watch">Apple Watch</option>
+                            <option value="tablet">Tablet</option>
+                          </>
+                        )}
                       </select>
+                      <span className="text-[10px] text-slate-400 mt-0.5 block">Admin/database field for identifying the brand category.</span>
                     </div>
 
                     <div>
                       <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                        Display Order
+                        Order Number
                       </label>
                       <input
                         type="number"
+                        min="0"
                         value={editingItem.sortOrder ?? 0}
                         onChange={(e) => setEditingItem({ ...editingItem, sortOrder: Number(e.target.value) })}
-                        className="w-full rounded-xl border border-slate-200 bg-slate-50 p-2.5 text-xs dark:bg-slate-800 dark:border-slate-700"
+                        placeholder="0"
+                        className="w-full rounded-xl border border-slate-200 bg-slate-50 p-2.5 text-xs dark:bg-slate-800 dark:border-slate-700 font-bold focus:border-[#00B2A2] focus:outline-none"
                       />
+                      <span className="text-[10px] text-slate-400 mt-0.5 block">Controls display order of brands (lower numbers appear first).</span>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  {/* 2. Brand Name & 4. URL Slug + 6. No Need Brand Url */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                         Brand Name *
@@ -870,106 +888,179 @@ export const DeviceCatalogManagementTab: React.FC<DeviceCatalogManagementTabProp
                         value={editingItem.name || ''}
                         onChange={(e) => {
                           const name = e.target.value;
-                          const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+                          const autoSlug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
                           setEditingItem({
                             ...editingItem,
                             name,
-                            slug: editingItem.slug ? editingItem.slug : slug,
+                            slug: editingItem.noNeedBrandUrl ? '#' : (editingItem.slug && editingItem.slug !== '#' ? editingItem.slug : autoSlug),
                           });
                         }}
                         placeholder="e.g. Apple, Samsung, OnePlus"
-                        className="w-full rounded-xl border border-slate-200 bg-slate-50 p-2.5 text-xs dark:bg-slate-800 dark:border-slate-700"
+                        className="w-full rounded-xl border border-slate-200 bg-slate-50 p-2.5 text-xs dark:bg-slate-800 dark:border-slate-700 focus:border-[#00B2A2] focus:outline-none font-semibold"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                        URL Slug *
-                      </label>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                          URL Slug {editingItem.noNeedBrandUrl || editingItem.slug === '#' ? '(Disabled)' : '*'}
+                        </label>
+                        {/* 6. No Need Brand Url option */}
+                        <label className="inline-flex items-center gap-1.5 cursor-pointer text-[11px] text-[#00B2A2] font-semibold select-none">
+                          <input
+                            type="checkbox"
+                            checked={Boolean(editingItem.noNeedBrandUrl || editingItem.slug === '#')}
+                            onChange={(e) => {
+                              const checked = e.target.checked;
+                              setEditingItem({
+                                ...editingItem,
+                                noNeedBrandUrl: checked,
+                                slug: checked ? '#' : (editingItem.name ? editingItem.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') : ''),
+                              });
+                            }}
+                            className="rounded text-[#00B2A2] focus:ring-[#00B2A2]"
+                          />
+                          <span>No Need Brand URL</span>
+                        </label>
+                      </div>
+
                       <input
                         type="text"
-                        required
-                        value={editingItem.slug || ''}
+                        disabled={Boolean(editingItem.noNeedBrandUrl || editingItem.slug === '#')}
+                        required={!Boolean(editingItem.noNeedBrandUrl || editingItem.slug === '#')}
+                        value={editingItem.slug === '#' ? '' : (editingItem.slug || '')}
                         onChange={(e) => setEditingItem({ ...editingItem, slug: e.target.value })}
-                        placeholder="e.g. apple, samsung-mobile"
-                        className="w-full rounded-xl border border-slate-200 bg-slate-50 p-2.5 text-xs dark:bg-slate-800 dark:border-slate-700 font-mono"
+                        placeholder={editingItem.noNeedBrandUrl || editingItem.slug === '#' ? 'Brand URL disabled (No dedicated page)' : 'e.g. apple, samsung'}
+                        className={`w-full rounded-xl border p-2.5 text-xs font-mono transition-colors ${
+                          editingItem.noNeedBrandUrl || editingItem.slug === '#'
+                            ? 'bg-slate-100 dark:bg-slate-800/40 text-slate-400 border-slate-200 dark:border-slate-800 cursor-not-allowed italic'
+                            : 'border-slate-200 bg-slate-50 dark:bg-slate-800 dark:border-slate-700 text-slate-900 dark:text-white focus:border-[#00B2A2] focus:outline-none'
+                        }`}
                       />
+                      <span className="text-[10px] text-slate-400 mt-0.5 block">
+                        {editingItem.noNeedBrandUrl || editingItem.slug === '#'
+                          ? '✓ Brand URL is disabled. This brand card will display normally without an external link.'
+                          : 'Internal SEO URL identifier (admin-only, not displayed as raw text to customers).'}
+                      </span>
                     </div>
                   </div>
 
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Brand Logo URL
-                    </label>
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        value={editingItem.logoUrl || ''}
-                        onChange={(e) => setEditingItem({ ...editingItem, logoUrl: e.target.value })}
-                        placeholder="https://... or select from Media Manager"
-                        className="flex-1 rounded-xl border border-slate-200 bg-slate-50 p-2.5 text-xs dark:bg-slate-800 dark:border-slate-700"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setMediaPickerTarget('brandLogo');
-                          setMediaPickerOpen(true);
-                        }}
-                        className="rounded-xl bg-[#00B2A2]/10 text-[#00B2A2] px-3 py-2 text-xs font-bold hover:bg-[#00B2A2] hover:text-white transition-colors cursor-pointer shrink-0"
-                      >
-                        🖼️ Media Manager
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                        Display Order (Sort Order)
+                  {/* 5. Brand Image Upload & 7. Brand Image Preview */}
+                  <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 p-4 space-y-3">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                        Brand Image Upload
                       </label>
-                      <input
-                        type="number"
-                        min="1"
-                        value={editingItem.sortOrder ?? 1}
-                        onChange={(e) => setEditingItem({ ...editingItem, sortOrder: Number(e.target.value) })}
-                        className="w-full rounded-xl border border-slate-200 bg-slate-50 p-2.5 text-xs dark:bg-slate-800 dark:border-slate-700 font-bold"
-                      />
-                      <span className="text-[10px] text-slate-400 mt-0.5 block">Lower numbers appear first on homepage.</span>
+                      <span className="text-[10px] text-slate-400">
+                        Manages brand image in "Brands We Repair" section (upload controls hidden on live site)
+                      </span>
                     </div>
 
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                        Logo Preview
-                      </label>
-                      <div className="h-10 rounded-xl border border-slate-200 bg-white dark:bg-slate-800 p-1 flex items-center justify-center">
-                        {editingItem.logoUrl ? (
-                          <img src={editingItem.logoUrl} alt="Logo preview" className="max-h-full max-w-full object-contain" />
-                        ) : (
-                          <span className="text-[10px] text-slate-400">No logo image</span>
-                        )}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
+                      {/* Upload controls */}
+                      <div className="md:col-span-2 space-y-2.5">
+                        {/* Direct File Upload */}
+                        <div className="flex items-center gap-2">
+                          <label className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-[#00B2A2] dark:hover:border-[#00B2A2] cursor-pointer transition-colors text-xs font-semibold text-slate-700 dark:text-slate-300">
+                            <Upload className="h-4 w-4 text-[#00B2A2]" />
+                            <span>Choose Image File (PNG, SVG, WEBP, JPG)</span>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (!file) return;
+                                const reader = new FileReader();
+                                reader.onload = (ev) => {
+                                  const dataUrl = ev.target?.result as string;
+                                  setEditingItem((prev: any) => ({ ...prev, logoUrl: dataUrl }));
+                                };
+                                reader.readAsDataURL(file);
+                              }}
+                              className="hidden"
+                            />
+                          </label>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setMediaPickerTarget('brandLogo');
+                              setMediaPickerOpen(true);
+                            }}
+                            className="rounded-xl bg-[#00B2A2]/10 text-[#00B2A2] px-3.5 py-2.5 text-xs font-bold hover:bg-[#00B2A2] hover:text-white transition-colors cursor-pointer shrink-0"
+                            title="Select from Media Manager"
+                          >
+                            🖼️ Media Manager
+                          </button>
+                        </div>
+
+                        {/* Direct Image URL input */}
+                        <div className="flex items-center gap-2">
+                          <span className="text-[11px] font-semibold text-slate-400 shrink-0">or Image URL:</span>
+                          <input
+                            type="text"
+                            value={editingItem.logoUrl || ''}
+                            onChange={(e) => setEditingItem({ ...editingItem, logoUrl: e.target.value })}
+                            placeholder="/brands/apple.svg or https://..."
+                            className="w-full rounded-xl border border-slate-200 bg-white p-2 text-xs dark:bg-slate-800 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:border-[#00B2A2] focus:outline-none"
+                          />
+                        </div>
+                      </div>
+
+                      {/* 7. Brand Image Preview */}
+                      <div>
+                        <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                          Brand Image Preview
+                        </label>
+                        <div className="h-20 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-2 flex flex-col items-center justify-center relative overflow-hidden shadow-xs">
+                          {editingItem.logoUrl ? (
+                            <>
+                              <img
+                                src={editingItem.logoUrl}
+                                alt="Brand preview"
+                                className="max-h-12 max-w-full object-contain"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => setEditingItem({ ...editingItem, logoUrl: '' })}
+                                className="absolute top-1 right-1 bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white rounded-md p-1 text-[10px] transition-colors cursor-pointer"
+                                title="Remove image"
+                              >
+                                ✕
+                              </button>
+                            </>
+                          ) : (
+                            <span className="text-[10px] text-slate-400 italic">No image selected</span>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
 
+                  {/* 8. Description */}
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Description
-                    </label>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                        Description
+                      </label>
+                      <span className="text-[10px] text-slate-400">Admin-only notes (Not displayed on live website)</span>
+                    </div>
                     <textarea
-                      rows={2}
+                      rows={3}
                       value={editingItem.description || ''}
                       onChange={(e) => setEditingItem({ ...editingItem, description: e.target.value })}
-                      placeholder="Specialized display repairs for flagship devices..."
-                      className="w-full rounded-xl border border-slate-200 bg-slate-50 p-2.5 text-xs dark:bg-slate-800 dark:border-slate-700"
+                      placeholder="Internal administration notes regarding display repairs for this brand..."
+                      className="w-full rounded-xl border border-slate-200 bg-slate-50 p-2.5 text-xs dark:bg-slate-800 dark:border-slate-700 focus:border-[#00B2A2] focus:outline-none"
                     />
                   </div>
 
+                  {/* Active Toggle */}
                   <label className="flex items-center gap-2 cursor-pointer pt-1">
                     <input
                       type="checkbox"
                       checked={editingItem.isActive !== false}
                       onChange={(e) => setEditingItem({ ...editingItem, isActive: e.target.checked })}
-                      className="rounded text-[#00B2A2]"
+                      className="rounded text-[#00B2A2] focus:ring-[#00B2A2]"
                     />
                     <span className="font-bold text-xs text-slate-800 dark:text-slate-200">
                       Active (Visible on website)

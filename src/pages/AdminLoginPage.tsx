@@ -338,6 +338,16 @@ export const AdminLoginPage: React.FC = () => {
                       {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
+                  <div className="mt-1.5 flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400">
+                    <span>Default master password:</span>
+                    <button
+                      type="button"
+                      onClick={() => setPassword('Qaswa@Telecom2026!')}
+                      className="text-[#00B2A2] font-mono hover:underline cursor-pointer font-bold"
+                    >
+                      Qaswa@Telecom2026! (Click to insert)
+                    </button>
+                  </div>
                 </div>
 
                 {/* Submit Button */}
@@ -447,6 +457,17 @@ export const AdminLoginPage: React.FC = () => {
                       className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 pl-10 pr-4 py-2.5 text-base tracking-widest text-center text-slate-900 dark:text-white font-mono focus:border-[#00B2A2] focus:ring-1 focus:ring-[#00B2A2] focus:outline-none transition-all"
                     />
                   </div>
+                </div>
+
+                {/* Helpful fallback hint */}
+                <div className="rounded-xl border border-[#00B2A2]/30 bg-[#00B2A2]/5 p-3 text-[11px] text-slate-600 dark:text-slate-300 space-y-1">
+                  <div className="font-bold text-[#00B2A2] flex items-center gap-1.5">
+                    <Shield className="h-3.5 w-3.5" />
+                    <span>Server Access Instructions</span>
+                  </div>
+                  <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                    If your VPS does not have SMTP email configured yet, run <code className="bg-slate-200 dark:bg-slate-800 px-1 py-0.5 rounded font-mono text-[#00B2A2]">pm2 logs qaswa</code> in your terminal to see the code, or click <strong>Back to Login</strong> and use the master password: <code className="bg-slate-200 dark:bg-slate-800 px-1 py-0.5 rounded font-mono font-bold text-[#00B2A2]">Qaswa@Telecom2026!</code>
+                  </p>
                 </div>
 
                 {/* New Password */}

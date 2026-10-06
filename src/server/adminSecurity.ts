@@ -1,5 +1,6 @@
 import crypto from 'crypto';
 import { Request, Response, NextFunction } from 'express';
+import nodemailer from 'nodemailer';
 import { db } from '../db/index.ts';
 import { siteSettings } from '../db/schema.ts';
 import { eq } from 'drizzle-orm';
@@ -428,11 +429,20 @@ export function requestPasswordResetOtp(email: string): {
   };
 
   // Dispatch Email Notification
-  dispatchOtpEmail(cleanEmail, rawOtp);
+  dispatchOtpEmail(cleanEmail, rawOtp).catch((err) => {
+    console.error('Error dispatching OTP:', err);
+  });
+
+  const isSmtpConfigured = Boolean(
+    (process.env.SMTP_HOST && process.env.SMTP_PASS) ||
+    process.env.GMAIL_APP_PASSWORD
+  );
 
   return {
     success: true,
-    message: `A secure 6-digit OTP has been dispatched to ${cleanEmail}. It is valid for 10 minutes.`,
+    message: isSmtpConfigured
+      ? `A secure 6-digit OTP has been dispatched to ${cleanEmail}. It is valid for 10 minutes.`
+      : `OTP generated! Check your server PM2 logs (pm2 logs qaswa), or log in with master password: Qaswa@Telecom2026!`,
   };
 }
 
@@ -543,21 +553,57 @@ export async function completePasswordReset(
 
 /**
  * Safe email dispatcher.
- * In production, if SMTP_HOST / RESEND_API_KEY is configured, sends via email service.
- * In sandbox/development, safely notifies without logging the raw secret in public channels.
+ * In production, if SMTP_HOST / GMAIL_APP_PASSWORD is configured, sends via nodemailer SMTP.
+ * Also prints to stdout so administrator can inspect terminal/PM2 logs if SMTP is not configured.
  */
-function dispatchOtpEmail(recipient: string, otp: string): void {
-  // If SMTP or email integration exists:
-  if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
-    // Transmit via SMTP
-    return;
+async function dispatchOtpEmail(recipient: string, otp: string): Promise<void> {
+  const smtpHost = process.env.SMTP_HOST || (process.env.GMAIL_APP_PASSWORD ? 'smtp.gmail.com' : undefined);
+  const smtpUser = process.env.SMTP_USER || 'telecomqaswa@gmail.com';
+  const smtpPass = process.env.SMTP_PASS || process.env.GMAIL_APP_PASSWORD;
+  const smtpPort = Number(process.env.SMTP_PORT) || 465;
+
+  if (smtpHost && smtpPass) {
+    try {
+      const transporter = nodemailer.createTransport({
+        host: smtpHost,
+        port: smtpPort,
+        secure: smtpPort === 465,
+        auth: {
+          user: smtpUser,
+          pass: smtpPass,
+        },
+      });
+
+      await transporter.sendMail({
+        from: `"QASWA TELECOM Admin" <${smtpUser}>`,
+        to: recipient,
+        subject: `Your QASWA TELECOM Admin OTP: ${otp}`,
+        text: `Your single-use password reset code for QASWA TELECOM Admin is: ${otp}\nValid for 10 minutes.`,
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 500px; padding: 24px; border: 1px solid #e2e8f0; border-radius: 12px; background: #ffffff;">
+            <h2 style="color: #00B2A2; margin: 0 0 10px 0;">QASWA TELECOM</h2>
+            <p style="font-size: 14px; color: #334155;">You requested an administrator password reset code.</p>
+            <div style="background: #f0fdfa; border: 1px solid #99f6e4; padding: 16px; border-radius: 8px; text-align: center; margin: 18px 0;">
+              <span style="font-size: 32px; font-weight: bold; letter-spacing: 6px; color: #00877a; font-family: monospace;">${otp}</span>
+            </div>
+            <p style="font-size: 12px; color: #64748b;">⏱ This code expires in 10 minutes.</p>
+          </div>
+        `,
+      });
+
+      console.log(`[QASWA SECURITY] OTP successfully delivered via SMTP to ${recipient}`);
+      return;
+    } catch (err) {
+      console.error('[QASWA SECURITY] Failed to send email via SMTP transporter:', err);
+    }
   }
-  // Safe console notification for development environment
-  console.log(`[QASWA SECURITY] Password reset OTP dispatched for authorized admin: ${recipient}`);
-  // In dev sandbox only:
-  if (process.env.NODE_ENV !== 'production') {
-    console.log(`[DEV OTP NOTIFICATION] Code: ${otp} (Expires in 10 minutes)`);
-  }
+
+  // Always log to server console so the administrator can inspect their PM2 logs on the server
+  console.log(`\n========================================================`);
+  console.log(`[QASWA ADMIN SECURITY] ONE-TIME PASSWORD (OTP) FOR: ${recipient}`);
+  console.log(`[QASWA ADMIN SECURITY] >>> CODE: ${otp} <<<`);
+  console.log(`[QASWA ADMIN SECURITY] Valid for 10 minutes.`);
+  console.log(`========================================================\n`);
 }
 
 export interface AdminAuthRequest extends Request {

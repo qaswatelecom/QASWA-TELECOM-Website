@@ -1795,8 +1795,8 @@ apiRouter.get('/admin/brands', async (req: Request, res: Response) => {
 
 apiRouter.post('/admin/brands', async (req: Request, res: Response) => {
   try {
-    const { categoryId, categorySlug, name, slug, logoUrl, description, seoTitle, seoDescription, isActive, sortOrder } = req.body;
-    const finalSlug = slug || name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    const { categoryId, categorySlug, name, slug, logoUrl, description, seoTitle, seoDescription, isActive, sortOrder, noNeedBrandUrl } = req.body;
+    const finalSlug = (noNeedBrandUrl || slug === '#') ? '#' : (slug || name.toLowerCase().replace(/[^a-z0-9]+/g, '-'));
     const created = await db
       .insert(brands)
       .values({
@@ -1821,14 +1821,15 @@ apiRouter.post('/admin/brands', async (req: Request, res: Response) => {
 apiRouter.put('/admin/brands/:id', async (req: Request, res: Response) => {
   try {
     const id = Number(req.params.id);
-    const { categoryId, categorySlug, name, slug, logoUrl, description, seoTitle, seoDescription, isActive, sortOrder } = req.body;
+    const { categoryId, categorySlug, name, slug, logoUrl, description, seoTitle, seoDescription, isActive, sortOrder, noNeedBrandUrl } = req.body;
+    const finalSlug = (noNeedBrandUrl || slug === '#') ? '#' : (slug || name.toLowerCase().replace(/[^a-z0-9]+/g, '-'));
     const updated = await db
       .update(brands)
       .set({
         categoryId: categoryId ? Number(categoryId) : null,
         categorySlug: categorySlug || 'mobile',
         name,
-        slug,
+        slug: finalSlug,
         logoUrl,
         description,
         seoTitle,
