@@ -73,6 +73,11 @@ export const QaswaHero: React.FC<QaswaHeroProps> = ({ onSelectCategory }) => {
       if (filtered.length >= 4) {
         return filtered.sort((a, b) => a.sortOrder - b.sortOrder);
       }
+      // If slugs were adjusted or active categories exist, pick first 4 active sorted
+      const activeCats = categories.filter((c) => c.isActive !== false);
+      if (activeCats.length >= 4) {
+        return [...activeCats].sort((a, b) => a.sortOrder - b.sortOrder).slice(0, 4);
+      }
       return categories.slice(0, 4);
     }
     return DEFAULT_FOUR_CATEGORIES;
@@ -121,15 +126,6 @@ export const QaswaHero: React.FC<QaswaHeroProps> = ({ onSelectCategory }) => {
 
         {/* 2. Device Categories Section (Four Main Categories: Mobile, iPad, Apple Watch, Tablet) */}
         <div>
-          <div className="flex items-center justify-between mb-3 px-1">
-            <h1 className="text-sm sm:text-base md:text-lg font-black text-slate-900 dark:text-white tracking-tight">
-              Display Repair Specialists in Borivali West, Mumbai
-            </h1>
-            <span className="text-xs font-semibold text-[#00B2A2] hover:underline cursor-pointer shrink-0 ml-2" onClick={() => navigate('/brands')}>
-              View All Devices →
-            </span>
-          </div>
-
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5 sm:gap-5">
             {displayCategories.map((cat, idx) => {
               const iconMap: Record<string, any> = {

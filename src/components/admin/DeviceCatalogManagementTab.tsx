@@ -452,7 +452,7 @@ export const DeviceCatalogManagementTab: React.FC<DeviceCatalogManagementTabProp
           }`}
         >
           <Sliders className="h-4 w-4" />
-          <span>Device Categories Setup</span>
+          <span>4 Categories Setup (Website Home)</span>
         </button>
       </div>
 
@@ -525,13 +525,13 @@ export const DeviceCatalogManagementTab: React.FC<DeviceCatalogManagementTabProp
                   </p>
                 </div>
 
-                <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-2">
+                <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2">
                   <button
                     onClick={() => handleOpenEdit('category', cat)}
-                    className="p-1.5 text-slate-500 hover:text-[#00B2A2] cursor-pointer"
-                    title="Edit Category"
+                    className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#00B2A2]/10 hover:bg-[#00B2A2] text-[#00B2A2] hover:text-white px-3 py-1.5 text-xs font-bold transition-colors cursor-pointer"
                   >
-                    <Edit className="h-4 w-4" />
+                    <Edit className="h-3.5 w-3.5" />
+                    <span>Edit Category & Image</span>
                   </button>
                   <button
                     onClick={() => handleDelete('category', cat.id, cat.name)}
@@ -1396,28 +1396,95 @@ export const DeviceCatalogManagementTab: React.FC<DeviceCatalogManagementTabProp
                     </div>
                   </div>
 
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Category Image URL
-                    </label>
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        value={editingItem.imageUrl || ''}
-                        onChange={(e) => setEditingItem({ ...editingItem, imageUrl: e.target.value })}
-                        placeholder="https://... or select from Media Manager"
-                        className="flex-1 rounded-xl border border-slate-200 bg-slate-50 p-2.5 text-xs dark:bg-slate-800 dark:border-slate-700"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setMediaPickerTarget('categoryImage');
-                          setMediaPickerOpen(true);
-                        }}
-                        className="rounded-xl bg-[#00B2A2]/10 text-[#00B2A2] px-3 py-2 text-xs font-bold hover:bg-[#00B2A2] hover:text-white transition-colors cursor-pointer shrink-0"
-                      >
-                        🖼️ Media Manager
-                      </button>
+                  {/* Category Image Upload & Preview */}
+                  <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 p-4 space-y-3">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                        Category Image Upload & Preview
+                      </label>
+                      <span className="text-[10px] text-slate-400">
+                        Updates the 4 Categories section on the website (Upload new image, replace, or URL)
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
+                      {/* Upload controls */}
+                      <div className="md:col-span-2 space-y-2.5">
+                        {/* Direct File Upload */}
+                        <div className="flex items-center gap-2">
+                          <label className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-[#00B2A2] dark:hover:border-[#00B2A2] cursor-pointer transition-colors text-xs font-semibold text-slate-700 dark:text-slate-300">
+                            <Upload className="h-4 w-4 text-[#00B2A2]" />
+                            <span>Choose Image File (PNG, JPG, WEBP, SVG)</span>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (!file) return;
+                                const reader = new FileReader();
+                                reader.onload = (ev) => {
+                                  const dataUrl = ev.target?.result as string;
+                                  setEditingItem((prev: any) => ({ ...prev, imageUrl: dataUrl }));
+                                };
+                                reader.readAsDataURL(file);
+                              }}
+                              className="hidden"
+                            />
+                          </label>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setMediaPickerTarget('categoryImage');
+                              setMediaPickerOpen(true);
+                            }}
+                            className="rounded-xl bg-[#00B2A2]/10 text-[#00B2A2] px-3.5 py-2.5 text-xs font-bold hover:bg-[#00B2A2] hover:text-white transition-colors cursor-pointer shrink-0"
+                            title="Select from Media Manager"
+                          >
+                            🖼️ Media Manager
+                          </button>
+                        </div>
+
+                        {/* Direct Image URL input */}
+                        <div className="flex items-center gap-2">
+                          <span className="text-[11px] font-semibold text-slate-400 shrink-0">or Image URL:</span>
+                          <input
+                            type="text"
+                            value={editingItem.imageUrl || ''}
+                            onChange={(e) => setEditingItem({ ...editingItem, imageUrl: e.target.value })}
+                            placeholder="https://... or /images/category.webp"
+                            className="w-full rounded-xl border border-slate-200 bg-white p-2 text-xs dark:bg-slate-800 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:border-[#00B2A2] focus:outline-none"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Category Image Preview */}
+                      <div>
+                        <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                          Category Image Preview
+                        </label>
+                        <div className="h-24 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-2 flex flex-col items-center justify-center relative overflow-hidden shadow-xs">
+                          {editingItem.imageUrl ? (
+                            <>
+                              <img
+                                src={editingItem.imageUrl}
+                                alt="Category preview"
+                                className="max-h-20 max-w-full object-contain"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => setEditingItem({ ...editingItem, imageUrl: '' })}
+                                className="absolute top-1 right-1 bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white rounded-md p-1 text-[10px] transition-colors cursor-pointer"
+                                title="Remove / Replace image"
+                              >
+                                ✕
+                              </button>
+                            </>
+                          ) : (
+                            <span className="text-[10px] text-slate-400 italic">No image selected</span>
+                          )}
+                        </div>
+                      </div>
                     </div>
                   </div>
 
