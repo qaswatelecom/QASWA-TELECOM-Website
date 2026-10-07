@@ -99,11 +99,24 @@ export const BrandsPage: React.FC = () => {
                   ? Smartphone
                   : Tablet;
 
+              const targetUrl =
+                cat.slug === 'mobile'
+                  ? '/repair-brands'
+                  : cat.slug === 'ipad'
+                  ? '/ipad'
+                  : cat.slug === 'apple-watch'
+                  ? '/apple-watch'
+                  : '/tablet';
+
               return (
-                <div
+                <a
                   key={cat.id}
-                  onClick={() => navigate(`/categories/${cat.slug}`)}
-                  className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-slate-200/90 bg-white p-5 shadow-xs transition-all duration-300 hover:-translate-y-1.5 hover:border-[#00B2A2] hover:shadow-xl dark:border-slate-800 dark:bg-slate-900 cursor-pointer"
+                  href={targetUrl}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    navigate(targetUrl);
+                  }}
+                  className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-slate-200/90 bg-white p-5 shadow-xs transition-all duration-300 hover:-translate-y-1.5 hover:border-[#00B2A2] hover:shadow-xl dark:border-slate-800 dark:bg-slate-900 cursor-pointer block text-inherit no-underline"
                 >
                   <div>
                     <div className="relative h-36 w-full overflow-hidden rounded-xl bg-slate-100 dark:bg-slate-800/80 mb-4 flex items-center justify-center p-2">
@@ -141,7 +154,7 @@ export const BrandsPage: React.FC = () => {
                       <ArrowRight className="h-3 w-3" />
                     </div>
                   </div>
-                </div>
+                </a>
               );
             })}
           </div>

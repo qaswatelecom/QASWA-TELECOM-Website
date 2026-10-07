@@ -71,11 +71,19 @@ export const DeviceCategories: React.FC<DeviceCategoriesProps> = ({ onSelectCate
     return DEFAULT_FOUR;
   }, [categories]);
 
+  const getCategoryUrl = (slug: string) => {
+    if (slug === 'mobile') return '/repair-brands';
+    if (slug === 'ipad') return '/ipad';
+    if (slug === 'apple-watch') return '/apple-watch';
+    if (slug === 'tablet') return '/tablet';
+    return `/${slug}`;
+  };
+
   const handleCategoryClick = (cat: { slug: string; name: string }) => {
     if (onSelectCategory) {
       onSelectCategory(cat.slug);
     }
-    navigate(`/categories/${cat.slug}`);
+    navigate(getCategoryUrl(cat.slug));
   };
 
   const getIcon = (slug: string, iconStr?: string | null) => {
@@ -120,14 +128,19 @@ export const DeviceCategories: React.FC<DeviceCategoriesProps> = ({ onSelectCate
           {displayCategories.map((cat) => {
             const CatIcon = getIcon(cat.slug, (cat as DeviceCategory).icon);
             const isHovered = hoveredSlug === cat.slug;
+            const targetUrl = getCategoryUrl(cat.slug);
 
             return (
-              <div
+              <a
                 key={cat.id}
+                href={targetUrl}
                 onMouseEnter={() => setHoveredSlug(cat.slug)}
                 onMouseLeave={() => setHoveredSlug(null)}
-                onClick={() => handleCategoryClick(cat)}
-                className={`group relative flex flex-col justify-between overflow-hidden rounded-2xl border transition-all duration-300 cursor-pointer p-4 sm:p-5 bg-white dark:bg-slate-900 ${
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleCategoryClick(cat);
+                }}
+                className={`group relative flex flex-col justify-between overflow-hidden rounded-2xl border transition-all duration-300 cursor-pointer p-4 sm:p-5 bg-white dark:bg-slate-900 block text-inherit no-underline ${
                   isHovered
                     ? 'border-[#00B2A2] shadow-xl -translate-y-1.5'
                     : 'border-slate-200 dark:border-slate-800 shadow-sm'
@@ -170,7 +183,7 @@ export const DeviceCategories: React.FC<DeviceCategoriesProps> = ({ onSelectCate
                     <ArrowRight className="h-3.5 w-3.5" />
                   </div>
                 </div>
-              </div>
+              </a>
             );
           })}
         </div>

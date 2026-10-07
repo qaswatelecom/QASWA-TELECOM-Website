@@ -91,12 +91,20 @@ export const QaswaHero: React.FC<QaswaHeroProps> = ({ onSelectCategory }) => {
     return () => clearInterval(timer);
   }, [isPaused, heroSlides.length]);
 
+  const getCategoryUrl = (slug: string) => {
+    if (slug === 'mobile') return '/repair-brands';
+    if (slug === 'ipad') return '/ipad';
+    if (slug === 'apple-watch') return '/apple-watch';
+    if (slug === 'tablet') return '/tablet';
+    return `/${slug}`;
+  };
+
   const handleCategoryClick = (cat: { slug: string; name: string }) => {
     if (onSelectCategory) {
       onSelectCategory(cat.name);
     }
     // Navigate directly to category page
-    navigate(`/categories/${cat.slug}`);
+    navigate(getCategoryUrl(cat.slug));
   };
 
   return (
@@ -135,11 +143,17 @@ export const QaswaHero: React.FC<QaswaHeroProps> = ({ onSelectCategory }) => {
               };
               const CatIcon = (cat.icon && iconMap[cat.icon]) || (cat.slug === 'apple-watch' ? Watch : cat.slug === 'mobile' ? Smartphone : Tablet);
 
+              const targetUrl = getCategoryUrl(cat.slug);
+
               return (
-                <div
+                <a
                   key={cat.id || idx}
-                  onClick={() => handleCategoryClick(cat)}
-                  className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-slate-200/90 bg-white p-4 sm:p-5 shadow-xs transition-all duration-300 hover:-translate-y-1.5 hover:border-[#00B2A2] hover:shadow-xl dark:border-slate-800 dark:bg-slate-900 cursor-pointer"
+                  href={targetUrl}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleCategoryClick(cat);
+                  }}
+                  className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-slate-200/90 bg-white p-4 sm:p-5 shadow-xs transition-all duration-300 hover:-translate-y-1.5 hover:border-[#00B2A2] hover:shadow-xl dark:border-slate-800 dark:bg-slate-900 cursor-pointer block text-inherit no-underline"
                 >
                   <div>
                     {/* Image Container with Smooth Zoom */}
@@ -176,7 +190,7 @@ export const QaswaHero: React.FC<QaswaHeroProps> = ({ onSelectCategory }) => {
                       <ArrowRight className="h-3 w-3" />
                     </div>
                   </div>
-                </div>
+                </a>
               );
             })}
           </div>

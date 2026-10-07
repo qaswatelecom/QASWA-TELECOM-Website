@@ -99,10 +99,18 @@ const AppContent: React.FC = () => {
           content = <ModelDetailPage modelSlug={parts[1]} />;
         } else {
           // e.g. /categories/mobile/apple or /categories/tablet/samsung
-          content = <BrandDetailPage categorySlug={parts[0]} brandSlug={parts[1]} />;
+          const targetBrand = parts[1] === 'apple' || parts[1] === 'iphone' ? 'apple-iphone' : parts[1];
+          if (typeof window !== 'undefined' && window.location.pathname.startsWith('/categories/')) {
+            window.history.replaceState({}, '', `/repair-models/${parts[0]}/${targetBrand}`);
+          }
+          content = <BrandDetailPage categorySlug={parts[0]} brandSlug={targetBrand} />;
         }
       } else {
         // e.g. /categories/mobile, /categories/ipad
+        const targetPath = parts[0] === 'mobile' ? '/repair-brands' : `/${parts[0]}`;
+        if (typeof window !== 'undefined' && window.location.pathname.startsWith('/categories/')) {
+          window.history.replaceState({}, '', targetPath);
+        }
         content = <CategoryDetailPage categorySlug={parts[0]} />;
       }
     } else if (currentPath.startsWith('/repair-models/')) {
