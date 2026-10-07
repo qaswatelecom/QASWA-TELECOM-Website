@@ -31,6 +31,7 @@ export interface DisplayIssueItem {
   id: string;
   title: string;
   icon: string;
+  customIconUrl?: string | null;
   badge?: string;
   color?: string; // 'amber' | 'emerald' | 'indigo' | 'sky' | 'purple' | 'teal' | 'rose' | 'green'
 }

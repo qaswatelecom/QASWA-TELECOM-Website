@@ -99,9 +99,18 @@ export const IssuesPage: React.FC = () => {
                     {/* Header: Issue Icon & Checkbox */}
                     <div className="flex items-start justify-between gap-3 mb-3">
                       <div
-                        className={`flex h-11 w-11 items-center justify-center rounded-xl shrink-0 border transition-transform duration-200 group-hover:scale-105 ${styles.color}`}
+                        className={`flex h-12 w-12 items-center justify-center rounded-xl shrink-0 border transition-transform duration-200 group-hover:scale-105 ${styles.color}`}
                       >
-                        <IssueIcon className="h-5 w-5" />
+                        {issueItem.customIconUrl ? (
+                          <img
+                            src={issueItem.customIconUrl}
+                            alt={issueTitle}
+                            className="h-7 w-7 object-contain"
+                            loading="lazy"
+                          />
+                        ) : (
+                          <IssueIcon className="h-6 w-6" />
+                        )}
                       </div>
 
                       {/* Custom Multi-Select Checkbox */}

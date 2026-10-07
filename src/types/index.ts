@@ -296,6 +296,7 @@ export interface DisplayIssueItem {
   id: string;
   title: string;
   icon: string;
+  customIconUrl?: string | null;
   badge?: string;
   color?: string;
 }
