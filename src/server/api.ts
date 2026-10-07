@@ -70,6 +70,84 @@ async function getSetting(key: string, defaultValue: string = ''): Promise<strin
   }
 }
 
+export const DEFAULT_DISPLAY_ISSUES_LIST = [
+  {
+    id: 'issue-1',
+    title: 'Cracked or Shattered Front Glass (Touch & OLED Working)',
+    icon: 'Layers',
+    badge: 'Glass Layer Malfunction',
+    color: 'amber',
+  },
+  {
+    id: 'issue-2',
+    title: 'Green Line / Vertical & Horizontal Display Lines',
+    icon: 'Sliders',
+    badge: 'Laser Line Fault',
+    color: 'emerald',
+  },
+  {
+    id: 'issue-3',
+    title: 'OLED Black Screen / Blank Display Malfunction',
+    icon: 'Moon',
+    badge: 'No Display / Backlight Off',
+    color: 'indigo',
+  },
+  {
+    id: 'issue-4',
+    title: 'Touch Digitizer Not Responding / Ghost Touch',
+    icon: 'Fingerprint',
+    badge: 'Digitizer Touch Lag',
+    color: 'sky',
+  },
+  {
+    id: 'issue-5',
+    title: 'Flickering, Pink Tint or Distorted Display',
+    icon: 'Zap',
+    badge: 'Refresh Voltage Flickering',
+    color: 'purple',
+  },
+  {
+    id: 'issue-6',
+    title: 'TrueTone & Ambient Light Sensor Calibration',
+    icon: 'Sparkles',
+    badge: 'Hardware Sensor Alignment',
+    color: 'teal',
+  },
+  {
+    id: 'issue-7',
+    title: 'Pressure Damage / Internal Display Bleed',
+    icon: 'ShieldAlert',
+    badge: 'Physical Screen Impact',
+    color: 'rose',
+  },
+  {
+    id: 'issue-8',
+    title: 'White Screen Flex Bonding Laser Issue',
+    icon: 'Monitor',
+    badge: 'Flex Bonding Laser Fault',
+    color: 'green',
+  },
+];
+
+export async function getMasterDisplayIssuesConfig(): Promise<any[]> {
+  try {
+    const settingRes = await db
+      .select()
+      .from(siteSettings)
+      .where(eq(siteSettings.key, 'DISPLAY_ISSUES_CONFIG'))
+      .limit(1);
+    if (settingRes[0]?.value) {
+      const parsed = JSON.parse(settingRes[0].value);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed;
+      }
+    }
+  } catch (err) {
+    console.error('Error reading DISPLAY_ISSUES_CONFIG:', err);
+  }
+  return DEFAULT_DISPLAY_ISSUES_LIST;
+}
+
 // ==========================================
 // 1. PUBLIC ENDPOINTS
 // ==========================================
@@ -77,13 +155,14 @@ async function getSetting(key: string, defaultValue: string = ''): Promise<strin
 // Global bootstrap config (Site settings, categories, active brands, services, form fields)
 apiRouter.get('/public/bootstrap', async (_req: Request, res: Response) => {
   try {
-    const [allSettings, allCategories, allBrands, allServices, allFormFields, allStatuses] = await Promise.all([
+    const [allSettings, allCategories, allBrands, allServices, allFormFields, allStatuses, masterIssues] = await Promise.all([
       db.select().from(siteSettings),
       db.select().from(deviceCategories).where(eq(deviceCategories.isActive, true)).orderBy(asc(deviceCategories.sortOrder)),
       db.select().from(brands).where(eq(brands.isActive, true)).orderBy(asc(brands.sortOrder), asc(brands.name)),
       db.select().from(services).where(eq(services.isActive, true)).orderBy(asc(services.sortOrder), asc(services.name)),
       db.select().from(customerFormFields).where(eq(customerFormFields.isEnabled, true)).orderBy(asc(customerFormFields.sortOrder)),
       db.select().from(orderStatuses).where(eq(orderStatuses.isActive, true)).orderBy(asc(orderStatuses.sortOrder)),
+      getMasterDisplayIssuesConfig(),
     ]);
 
     const settingsMap: Record<string, string> = {};
@@ -108,6 +187,7 @@ apiRouter.get('/public/bootstrap', async (_req: Request, res: Response) => {
       services: allServices,
       formFields: allFormFields,
       orderStatuses: allStatuses,
+      displayIssues: masterIssues,
     });
   } catch (error: any) {
     console.error('Failed to fetch bootstrap data:', error);
@@ -229,45 +309,56 @@ apiRouter.get('/categories/:categorySlug/brands', async (req: Request, res: Resp
 });
 
 // Brand detail in a category
-apiRouter.get('/categories/:categorySlug/brands/:brandSlug', async (req: Request, res: Response) => {
-  try {
-    const categorySlug = req.params.categorySlug || 'mobile';
-    const brandSlug = req.params.brandSlug;
-    const s = brandSlug.toLowerCase();
+apiRouter.get(
+  [
+    '/categories/:categorySlug/brands/:brandSlug',
+    '/repair-models/:categorySlug/brands/:brandSlug',
+    '/repair-models/:categorySlug/:brandSlug',
+  ],
+  async (req: Request, res: Response) => {
+    try {
+      const categorySlug = req.params.categorySlug || 'mobile';
+      const brandSlug = req.params.brandSlug;
+      const s = brandSlug.toLowerCase();
+      const cleanS = s.replace('-mobile', '').replace('-tablet', '').replace('-iphone', '');
 
-    // Prepare alias matching conditions
-    const aliasConditions = [
-      eq(brands.slug, brandSlug),
-      eq(brands.slug, `${brandSlug}-mobile`),
-      eq(brands.slug, `${brandSlug}-tablet`),
-      eq(brands.slug, brandSlug.replace('-mobile', '').replace('-tablet', '')),
-      ilike(brands.name, brandSlug),
-      ilike(brands.name, `%${brandSlug}%`),
-    ];
+      // Prepare alias matching conditions
+      const aliasConditions = [
+        eq(brands.slug, brandSlug),
+        eq(brands.slug, cleanS),
+        eq(brands.slug, `${cleanS}-mobile`),
+        eq(brands.slug, `${cleanS}-tablet`),
+        eq(brands.slug, `${brandSlug}-mobile`),
+        eq(brands.slug, `${brandSlug}-tablet`),
+        eq(brands.slug, brandSlug.replace('-mobile', '').replace('-tablet', '')),
+        ilike(brands.name, brandSlug),
+        ilike(brands.name, cleanS),
+        ilike(brands.name, `%${cleanS}%`),
+      ];
 
-    if (s === 'apple' || s === 'iphone') {
-      aliasConditions.push(
-        eq(brands.slug, 'apple'),
-        eq(brands.slug, 'iphone'),
-        ilike(brands.name, '%apple%'),
-        ilike(brands.name, '%iphone%')
-      );
-    }
-    if (s === 'samsung' || s === 'samsung-galaxy') {
-      aliasConditions.push(
-        eq(brands.slug, 'samsung'),
-        eq(brands.slug, 'samsung-galaxy'),
-        ilike(brands.name, '%samsung%')
-      );
-    }
-    if (s === 'google-pixel' || s === 'google' || s === 'pixel') {
-      aliasConditions.push(
-        eq(brands.slug, 'google-pixel'),
-        eq(brands.slug, 'google'),
-        ilike(brands.name, '%pixel%'),
-        ilike(brands.name, '%google%')
-      );
-    }
+      if (s === 'apple' || s === 'iphone' || s === 'apple-iphone' || cleanS === 'apple') {
+        aliasConditions.push(
+          eq(brands.slug, 'apple'),
+          eq(brands.slug, 'iphone'),
+          ilike(brands.name, '%apple%'),
+          ilike(brands.name, '%iphone%')
+        );
+      }
+      if (s === 'samsung' || s === 'samsung-galaxy' || cleanS === 'samsung') {
+        aliasConditions.push(
+          eq(brands.slug, 'samsung'),
+          eq(brands.slug, 'samsung-galaxy'),
+          ilike(brands.name, '%samsung%')
+        );
+      }
+      if (s === 'google-pixel' || s === 'google' || s === 'pixel' || cleanS === 'google') {
+        aliasConditions.push(
+          eq(brands.slug, 'google-pixel'),
+          eq(brands.slug, 'google'),
+          ilike(brands.name, '%pixel%'),
+          ilike(brands.name, '%google%')
+        );
+      }
 
     const categoryCondition =
       categorySlug === 'tablet'
@@ -543,33 +634,68 @@ apiRouter.get('/models/:slug', async (req: Request, res: Response) => {
     }
 
     // Parse display issues
-    let parsedIssues: string[] = [];
+    const masterIssues = await getMasterDisplayIssuesConfig();
+    let rawIssues: any[] = [];
     if (m.displayIssues) {
       try {
-        parsedIssues = JSON.parse(m.displayIssues);
+        rawIssues = JSON.parse(m.displayIssues);
       } catch {
-        parsedIssues = m.displayIssues.split(',').map((s) => s.trim());
+        rawIssues = m.displayIssues.split(',').map((s) => s.trim());
       }
     }
-    if (parsedIssues.length === 0) {
-      parsedIssues = [
-        'Display Damaged',
-        'Display Touch Glass Broken',
-        'Green Screen Issue',
-        'Touch Not Responding Issue',
-        'Green & Pink Line Issue',
-        'Black Screen Issue',
-        'Display Flickering Issue',
-        'Other Display-Related Issue',
-        'Foldable Phone Hinge & Flex Cable Issue',
-      ];
+
+    let resolvedIssues: any[] = [];
+    if (Array.isArray(rawIssues) && rawIssues.length > 0) {
+      resolvedIssues = rawIssues.map((item, idx) => {
+        if (typeof item === 'object' && item !== null && item.id) {
+          const byId = masterIssues.find((mi) => mi.id === item.id);
+          if (byId) return byId;
+          return item;
+        }
+        if (typeof item === 'object' && item !== null && item.title) {
+          const byTitle = masterIssues.find((mi) => mi.title.toLowerCase() === item.title.toLowerCase());
+          if (byTitle) return byTitle;
+          return item;
+        }
+        const titleStr = String(item).trim();
+        const matched = masterIssues.find(
+          (mi) =>
+            mi.id === titleStr ||
+            mi.title.toLowerCase() === titleStr.toLowerCase()
+        );
+        if (matched) {
+          return matched;
+        }
+
+        // Match against default issue titles so even if the title was renamed in masterIssues, the slot maps to masterIssues[idx]
+        const defaultMatchIndex = DEFAULT_DISPLAY_ISSUES_LIST.findIndex(
+          (di) => di.id === titleStr || di.title.toLowerCase() === titleStr.toLowerCase()
+        );
+        if (defaultMatchIndex !== -1 && masterIssues[defaultMatchIndex]) {
+          return masterIssues[defaultMatchIndex];
+        }
+
+        if (idx < masterIssues.length) {
+          return masterIssues[idx];
+        }
+
+        return {
+          id: `issue-custom-${idx}`,
+          title: titleStr,
+          icon: 'AlertTriangle',
+          badge: 'Certified cleanroom repair',
+          color: 'teal',
+        };
+      });
+    } else {
+      resolvedIssues = masterIssues;
     }
 
     res.json({
       model: m,
       brand,
       category,
-      displayIssues: parsedIssues,
+      displayIssues: resolvedIssues,
       services: availableServices,
     });
   } catch (error: any) {
@@ -2054,6 +2180,49 @@ apiRouter.delete('/admin/models/:id', async (req: Request, res: Response) => {
     res.json({ success: true });
   } catch (error: any) {
     res.status(500).json({ error: error.message || 'Failed to delete model' });
+  }
+});
+
+// ==========================================
+// DISPLAY ISSUES CONFIGURATION CRUD
+// ==========================================
+apiRouter.get('/public/display-issues', async (_req: Request, res: Response) => {
+  try {
+    const list = await getMasterDisplayIssuesConfig();
+    res.json(list);
+  } catch (error: any) {
+    res.status(500).json({ error: 'Failed to fetch display issues' });
+  }
+});
+
+apiRouter.get('/admin/display-issues', async (_req: Request, res: Response) => {
+  try {
+    const list = await getMasterDisplayIssuesConfig();
+    res.json(list);
+  } catch (error: any) {
+    res.status(500).json({ error: 'Failed to fetch display issues' });
+  }
+});
+
+apiRouter.put('/admin/display-issues', async (req: Request, res: Response) => {
+  try {
+    const { issues } = req.body;
+    if (!Array.isArray(issues)) {
+      return res.status(400).json({ error: 'Issues must be an array' });
+    }
+
+    const value = JSON.stringify(issues);
+    await db
+      .insert(siteSettings)
+      .values({ key: 'DISPLAY_ISSUES_CONFIG', value })
+      .onConflictDoUpdate({
+        target: siteSettings.key,
+        set: { value },
+      });
+
+    res.json({ success: true, issues });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Failed to update display issues' });
   }
 });
 

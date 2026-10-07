@@ -23,6 +23,7 @@ import { AboutPage } from './pages/AboutPage.tsx';
 import { TermsPage } from './pages/TermsPage.tsx';
 import { FaqPage } from './pages/FaqPage.tsx';
 import { GalleryPage } from './pages/GalleryPage.tsx';
+import { IssuesPage } from './pages/IssuesPage.tsx';
 import { CustomPage } from './pages/CustomPage.tsx';
 import { AdminPage } from './pages/AdminPage.tsx';
 import { AdminLoginPage } from './pages/AdminLoginPage.tsx';
@@ -77,7 +78,11 @@ const AppContent: React.FC = () => {
       content = <MobileRepairPage />;
     } else if (currentPath === '/categories' || currentPath === '/brands') {
       content = <BrandsPage />;
-    } else if (currentPath === '/mobile') {
+    } else if (
+      currentPath === '/mobile' ||
+      currentPath === '/repair-brands' ||
+      currentPath === '/repair-brands/'
+    ) {
       content = <CategoryDetailPage categorySlug="mobile" />;
     } else if (currentPath === '/ipad') {
       content = <CategoryDetailPage categorySlug="ipad" />;
@@ -100,11 +105,27 @@ const AppContent: React.FC = () => {
         // e.g. /categories/mobile, /categories/ipad
         content = <CategoryDetailPage categorySlug={parts[0]} />;
       }
+    } else if (currentPath.startsWith('/repair-models/')) {
+      const rest = currentPath.replace('/repair-models/', '');
+      const parts = rest.split('/');
+      if (parts.length >= 2) {
+        // e.g. /repair-models/mobile/apple-iphone or /repair-models/tablet/samsung
+        content = <BrandDetailPage categorySlug={parts[0]} brandSlug={parts[1]} />;
+      } else if (parts.length === 1 && parts[0]) {
+        if (parts[0] === 'mobile' || parts[0] === 'tablet' || parts[0] === 'ipad' || parts[0] === 'apple-watch') {
+          content = <CategoryDetailPage categorySlug={parts[0]} />;
+        } else {
+          content = <BrandDetailPage categorySlug="mobile" brandSlug={parts[0]} />;
+        }
+      }
     } else if (currentPath.startsWith('/models/')) {
       const slug = currentPath.replace('/models/', '');
       content = <ModelDetailPage modelSlug={slug} />;
     } else if (currentPath.startsWith('/brands/')) {
       const slug = currentPath.replace('/brands/', '');
+      content = <BrandDetailPage categorySlug="mobile" brandSlug={slug} />;
+    } else if (currentPath.startsWith('/repair-brands/')) {
+      const slug = currentPath.replace('/repair-brands/', '');
       content = <BrandDetailPage categorySlug="mobile" brandSlug={slug} />;
     } else if (currentPath === '/services') {
       content = <ServicesPage />;
@@ -132,6 +153,8 @@ const AppContent: React.FC = () => {
       content = <TermsPage />;
     } else if (currentPath === '/faqs' || currentPath === '/faq') {
       content = <FaqPage />;
+    } else if (currentPath === '/issues' || currentPath === '/display-issues') {
+      content = <IssuesPage />;
     } else {
       // Custom dynamic pages fallback
       const slug = currentPath.replace(/^\//, '');

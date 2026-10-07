@@ -132,8 +132,15 @@ export const ExploreTopBrands: React.FC = () => {
     if (!brand.slug || brand.slug === '#') {
       return;
     }
-    // Strictly route to the mobile category models page
-    navigate(`/categories/mobile/${brand.slug}`);
+    const brandSlugLower = (brand.slug || '').toLowerCase();
+    const brandNameLower = (brand.name || '').toLowerCase();
+    const targetBrandSlug =
+      brandSlugLower === 'apple' || brandSlugLower === 'iphone' || brandNameLower === 'apple'
+        ? 'apple-iphone'
+        : brand.slug;
+
+    // Strictly route to the mobile repair models page
+    navigate(`/repair-models/mobile/${targetBrandSlug}`);
   };
 
   return (

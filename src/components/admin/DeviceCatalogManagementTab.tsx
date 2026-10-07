@@ -24,11 +24,12 @@ import {
 } from 'lucide-react';
 import { DeviceCategory, Brand, Model, Service } from '../../types/index.ts';
 import { MediaPickerModal } from './MediaPickerModal.tsx';
+import { IssueCardsManagementTab } from './IssueCardsManagementTab.tsx';
 
 interface DeviceCatalogManagementTabProps {
   showToast: (msg: string) => void;
   onRefreshAll?: () => void;
-  initialSection?: 'mobile' | 'ipad' | 'apple-watch' | 'tablet' | 'categories';
+  initialSection?: 'mobile' | 'ipad' | 'apple-watch' | 'tablet' | 'categories' | 'issue_cards';
   initialSubTab?: 'brands' | 'models';
 }
 
@@ -49,8 +50,8 @@ export const DeviceCatalogManagementTab: React.FC<DeviceCatalogManagementTabProp
   initialSection = 'mobile',
   initialSubTab = 'brands',
 }) => {
-  // Main Selected Section: 'mobile' | 'ipad' | 'apple-watch' | 'tablet' | 'categories'
-  const [activeSection, setActiveSection] = useState<'mobile' | 'ipad' | 'apple-watch' | 'tablet' | 'categories'>(initialSection);
+  // Main Selected Section: 'mobile' | 'ipad' | 'apple-watch' | 'tablet' | 'categories' | 'issue_cards'
+  const [activeSection, setActiveSection] = useState<'mobile' | 'ipad' | 'apple-watch' | 'tablet' | 'categories' | 'issue_cards'>(initialSection);
   // Secondary sub-tab for Mobile & Tablet: 'brands' | 'models'
   const [subTab, setSubTab] = useState<'brands' | 'models'>(initialSubTab);
 
@@ -454,6 +455,21 @@ export const DeviceCatalogManagementTab: React.FC<DeviceCatalogManagementTabProp
           <Sliders className="h-4 w-4" />
           <span>4 Categories Setup (Website Home)</span>
         </button>
+
+        <button
+          onClick={() => {
+            setActiveSection('issue_cards');
+            setSearchQuery('');
+          }}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${
+            activeSection === 'issue_cards'
+              ? 'bg-white dark:bg-slate-900 text-[#00B2A2] shadow-xs'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+          }`}
+        >
+          <AlertTriangle className="h-4 w-4" />
+          <span>Issue Cards (Issues Page)</span>
+        </button>
       </div>
 
       {/* Sub-tab switcher for Mobile & Tablet */}
@@ -549,6 +565,14 @@ export const DeviceCatalogManagementTab: React.FC<DeviceCatalogManagementTabProp
             ))}
           </div>
         </div>
+      )}
+
+      {/* ISSUE CARDS (ISSUES PAGE) */}
+      {activeSection === 'issue_cards' && (
+        <IssueCardsManagementTab
+          showToast={showToast}
+          onRefreshAll={onRefreshAll}
+        />
       )}
 
       {/* ===================================================================== */}

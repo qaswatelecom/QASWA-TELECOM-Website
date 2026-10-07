@@ -229,12 +229,21 @@ export const DynamicSectionRenderer: React.FC = () => {
                   </div>
 
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
-                    {brands.slice(0, 10).map((b) => (
-                      <div
-                        key={b.id}
-                        onClick={() => navigate(`/brands/${b.slug}`)}
-                        className="cursor-pointer group flex flex-col items-center justify-center rounded-xl border border-slate-200 bg-white p-5 text-center transition-all hover:border-[#00B2A2] hover:shadow-md dark:border-slate-800 dark:bg-slate-900"
-                      >
+                    {brands.slice(0, 10).map((b) => {
+                      const bSlugLower = (b.slug || '').toLowerCase();
+                      const bNameLower = (b.name || '').toLowerCase();
+                      const targetBrandSlug =
+                        bSlugLower === 'apple' || bSlugLower === 'iphone' || bNameLower === 'apple'
+                          ? 'apple-iphone'
+                          : b.slug;
+                      const catSlug = b.categorySlug || 'mobile';
+
+                      return (
+                        <div
+                          key={b.id}
+                          onClick={() => navigate(`/repair-models/${catSlug}/${targetBrandSlug}`)}
+                          className="cursor-pointer group flex flex-col items-center justify-center rounded-xl border border-slate-200 bg-white p-5 text-center transition-all hover:border-[#00B2A2] hover:shadow-md dark:border-slate-800 dark:bg-slate-900"
+                        >
                         <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800 mb-3 group-hover:scale-105 transition-transform">
                           {b.logoUrl ? (
                             <img src={b.logoUrl} alt={b.name} className="h-8 w-8 object-contain" />
@@ -247,7 +256,8 @@ export const DynamicSectionRenderer: React.FC = () => {
                         </span>
                         <span className="text-[11px] text-slate-400 mt-0.5">Explore Models</span>
                       </div>
-                    ))}
+                    );
+                  })}
                   </div>
                 </section>
               );

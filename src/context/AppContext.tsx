@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import { DeviceCategory, Brand, Service, CustomerFormField, OrderStatus, SiteSettings } from '../types/index.ts';
+import { DeviceCategory, Brand, Service, CustomerFormField, OrderStatus, SiteSettings, DisplayIssueItem } from '../types/index.ts';
+import { DEFAULT_DISPLAY_ISSUES } from '../lib/issueIcons.ts';
 
 interface AppContextType {
   settings: SiteSettings;
@@ -8,6 +9,7 @@ interface AppContextType {
   services: Service[];
   formFields: CustomerFormField[];
   orderStatuses: OrderStatus[];
+  displayIssues: DisplayIssueItem[];
   loading: boolean;
   error: string | null;
   currentPath: string;
@@ -46,6 +48,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [services, setServices] = useState<Service[]>([]);
   const [formFields, setFormFields] = useState<CustomerFormField[]>([]);
   const [orderStatuses, setOrderStatuses] = useState<OrderStatus[]>([]);
+  const [displayIssues, setDisplayIssues] = useState<DisplayIssueItem[]>(DEFAULT_DISPLAY_ISSUES);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -88,6 +91,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (data.services) setServices(data.services);
       if (data.formFields) setFormFields(data.formFields);
       if (data.orderStatuses) setOrderStatuses(data.orderStatuses);
+      if (data.displayIssues && Array.isArray(data.displayIssues) && data.displayIssues.length > 0) {
+        setDisplayIssues(data.displayIssues);
+      }
     } catch (err: any) {
       console.error('Bootstrap fetch error:', err);
       setError(err.message || 'Unable to connect to database');
@@ -109,6 +115,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         services,
         formFields,
         orderStatuses,
+        displayIssues,
         loading,
         error,
         currentPath,

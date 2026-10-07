@@ -183,10 +183,17 @@ export const BrandsPage: React.FC = () => {
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-4 sm:gap-6">
             {filteredBrands.map((b) => {
               const catSlug = b.categorySlug || 'mobile';
+              const bSlugLower = (b.slug || '').toLowerCase();
+              const bNameLower = (b.name || '').toLowerCase();
+              const targetBrandSlug =
+                bSlugLower === 'apple' || bSlugLower === 'iphone' || bNameLower === 'apple'
+                  ? 'apple-iphone'
+                  : b.slug;
+
               return (
                 <div
                   key={b.id}
-                  onClick={() => navigate(`/categories/${catSlug}/${b.slug}`)}
+                  onClick={() => navigate(`/repair-models/${catSlug}/${targetBrandSlug}`)}
                   className="group relative flex flex-col justify-between rounded-2xl border border-slate-200/90 bg-white p-5 shadow-xs transition-all duration-300 hover:-translate-y-1 hover:border-[#00B2A2] hover:shadow-xl dark:border-slate-800 dark:bg-slate-900 cursor-pointer"
                 >
                   <div>

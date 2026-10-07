@@ -790,9 +790,10 @@ export function resolveDynamicSeo(
     };
   }
 
-  // 5. Category Brand route: /categories/mobile/:brandSlug or /categories/tablet/:brandSlug
-  if (cleanPath.startsWith('/categories/')) {
-    const parts = cleanPath.replace('/categories/', '').split('/');
+  // 5. Category Brand route: /repair-models/:cat/:brand or /categories/mobile/:brandSlug
+  if (cleanPath.startsWith('/repair-models/') || cleanPath.startsWith('/categories/')) {
+    const prefix = cleanPath.startsWith('/repair-models/') ? '/repair-models/' : '/categories/';
+    const parts = cleanPath.replace(prefix, '').split('/');
     if (parts.length >= 2) {
       const catSlug = parts[0];
       const secondPart = parts[1];
@@ -816,14 +817,25 @@ export function resolveDynamicSeo(
         };
       }
 
-      // Brand route (e.g. /categories/mobile/apple)
-      const brandName = secondPart.charAt(0).toUpperCase() + secondPart.slice(1);
+      // Brand route (e.g. /repair-models/mobile/apple-iphone or /categories/mobile/apple)
+      let brandName = secondPart.charAt(0).toUpperCase() + secondPart.slice(1);
+      if (secondPart === 'apple-iphone' || secondPart === 'apple' || secondPart === 'iphone') {
+        brandName = 'Apple iPhone';
+      } else if (secondPart === 'google-pixel') {
+        brandName = 'Google Pixel';
+      } else if (secondPart.includes('-')) {
+        brandName = secondPart
+          .split('-')
+          .map((s) => s.charAt(0).toUpperCase() + s.slice(1))
+          .join(' ');
+      }
+      const catName = catSlug === 'tablet' ? 'Tablet' : 'Mobile';
       return {
         path: cleanPath,
         pageName: `${brandName} Display Repair`,
         category: 'Brands',
-        title: `${brandName} Mobile Display Repair in Mumbai | ${siteName}`,
-        description: `Specialized display repair for ${brandName} smartphones in Borivali West, Mumbai. Original OLED panel restoration, cracked touch glass replacement, and green line fix.`,
+        title: `${brandName} ${catName} Display Repair in Mumbai | ${siteName}`,
+        description: `Specialized display repair for ${brandName} ${catName.toLowerCase()} devices in Borivali West, Mumbai. Original OLED panel restoration, cracked touch glass replacement, and green line fix.`,
         keywords: `${brandName} display repair Mumbai, ${brandName} screen replacement, ${brandName} touch glass repair Borivali West`,
         robots: 'index, follow',
         schemaType: 'Service',

@@ -37,6 +37,7 @@ import {
   Moon,
   Shield,
   AlertCircle,
+  AlertTriangle,
   ArrowUpDown,
   Camera,
   Upload,
@@ -62,6 +63,7 @@ import { ContentManagementTab } from '../components/admin/ContentManagementTab.t
 import { MediaManagerTab } from '../components/admin/MediaManagerTab.tsx';
 import { DeviceCatalogManagementTab } from '../components/admin/DeviceCatalogManagementTab.tsx';
 import { GalleryManagementTab } from '../components/admin/GalleryManagementTab.tsx';
+import { IssueCardsManagementTab } from '../components/admin/IssueCardsManagementTab.tsx';
 import { MediaPickerModal } from '../components/admin/MediaPickerModal.tsx';
 
 export const AdminPage: React.FC = () => {
@@ -440,6 +442,7 @@ export const AdminPage: React.FC = () => {
     { id: 'customers', label: 'Customers', icon: Users },
     { id: 'brands', label: 'Brands We Repair', icon: Smartphone },
     { id: 'device_catalog', label: 'Device Categories & Models', icon: Smartphone },
+    { id: 'issue_cards', label: 'Issue Cards (Issues Page)', icon: AlertTriangle },
     { id: 'services', label: 'Display Services', icon: Wrench },
     { id: 'form_fields', label: 'Customer Form', icon: CheckSquare },
     { id: 'statuses', label: 'Order Statuses', icon: Sliders },
@@ -961,6 +964,14 @@ export const AdminPage: React.FC = () => {
                   onRefreshAll={refreshConfig}
                   initialSection="mobile"
                   initialSubTab={activeTab === 'models' ? 'models' : 'brands'}
+                />
+              )}
+
+              {/* TAB: DISPLAY ISSUE CARDS (ISSUES PAGE) */}
+              {activeTab === 'issue_cards' && (
+                <IssueCardsManagementTab
+                  showToast={showToast}
+                  onRefreshAll={refreshConfig}
                 />
               )}
 

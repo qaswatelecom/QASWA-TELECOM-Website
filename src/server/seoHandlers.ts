@@ -51,7 +51,7 @@ export async function handleSitemapXml(req: Request, res: Response) {
           .from(deviceCategories)
           .where(eq(deviceCategories.isActive, true)),
         db
-          .select({ slug: brands.slug, categorySlug: brands.categorySlug })
+          .select({ slug: brands.slug, name: brands.name, categorySlug: brands.categorySlug })
           .from(brands)
           .where(eq(brands.isActive, true)),
         db
@@ -105,6 +105,19 @@ export async function handleSitemapXml(req: Request, res: Response) {
     // Brand Landing Pages (Organized by category)
     allBrands.forEach((b) => {
       const catSlug = b.categorySlug || 'mobile';
+      const bSlugLower = (b.slug || '').toLowerCase();
+      const bNameLower = (b.name || '').toLowerCase();
+      const targetBrandSlug =
+        bSlugLower === 'apple' || bSlugLower === 'iphone' || bNameLower === 'apple'
+          ? 'apple-iphone'
+          : b.slug;
+
+      urlList.push({
+        loc: `${baseUrl}/repair-models/${catSlug}/${targetBrandSlug}`,
+        priority: '0.90',
+        changefreq: 'weekly',
+        lastmod: currentDate,
+      });
       urlList.push({
         loc: `${baseUrl}/categories/${catSlug}/${b.slug}`,
         priority: '0.85',

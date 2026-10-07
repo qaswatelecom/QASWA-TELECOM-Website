@@ -283,9 +283,11 @@ export const CategoryDetailPage: React.FC<CategoryDetailPageProps> = ({ category
   // Breadcrumbs schema for SEO
   const breadcrumbItems = React.useMemo(() => {
     const origin = typeof window !== 'undefined' ? window.location.origin : 'https://qaswatelecom.com';
+    const isRepairBrands = typeof window !== 'undefined' && window.location.pathname.startsWith('/repair-brands');
+    const catUrl = isRepairBrands ? `${origin}/repair-brands` : `${origin}/categories/${categorySlug}`;
     return [
       { name: 'Home', url: `${origin}/` },
-      { name: category?.name || 'Device Categories', url: `${origin}/categories/${categorySlug}` },
+      { name: isRepairBrands ? 'Repair Brands' : (category?.name || 'Device Categories'), url: catUrl },
     ];
   }, [category, categorySlug]);
 
@@ -459,12 +461,26 @@ export const CategoryDetailPage: React.FC<CategoryDetailPageProps> = ({ category
               </div>
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-4 sm:gap-6">
-                {filteredBrands.map((brand) => (
-                  <div
-                    key={brand.id}
-                    onClick={() => navigate(`/categories/${category.slug}/${brand.slug}`)}
-                    className="group relative flex flex-col justify-between rounded-2xl border border-slate-200/90 bg-white p-5 sm:p-6 shadow-xs transition-all duration-300 hover:-translate-y-1 hover:border-[#00B2A2] hover:shadow-xl dark:border-slate-800 dark:bg-slate-900 cursor-pointer"
-                  >
+                {filteredBrands.map((brand) => {
+                  const brandSlugLower = (brand.slug || '').toLowerCase();
+                  const brandNameLower = (brand.name || '').toLowerCase();
+                  const cleanBrandSlug = brandSlugLower.replace(/-(mobile|tablet)$/, '');
+                  const targetBrandSlug =
+                    cleanBrandSlug === 'apple' || cleanBrandSlug === 'iphone' || brandNameLower === 'apple'
+                      ? 'apple-iphone'
+                      : cleanBrandSlug || brand.slug;
+                  const brandUrl = `/repair-models/${category.slug}/${targetBrandSlug}`;
+
+                  return (
+                    <a
+                      key={brand.id}
+                      href={brandUrl}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        navigate(brandUrl);
+                      }}
+                      className="group relative flex flex-col justify-between rounded-2xl border border-slate-200/90 bg-white p-5 sm:p-6 shadow-xs transition-all duration-300 hover:-translate-y-1 hover:border-[#00B2A2] hover:shadow-xl dark:border-slate-800 dark:bg-slate-900 cursor-pointer block text-inherit no-underline"
+                    >
                     <div>
                       {/* Brand Logo / Icon */}
                       <div className="h-16 w-16 sm:h-20 sm:w-20 rounded-2xl bg-slate-50 dark:bg-slate-800/80 mx-auto mb-4 flex items-center justify-center p-3 border border-slate-100 dark:border-slate-800 group-hover:scale-105 transition-transform">
@@ -495,8 +511,9 @@ export const CategoryDetailPage: React.FC<CategoryDetailPageProps> = ({ category
                         <ArrowRight className="h-3 w-3" />
                       </div>
                     </div>
-                  </div>
-                ))}
+                  </a>
+                );
+              })}
               </div>
             )}
           </div>

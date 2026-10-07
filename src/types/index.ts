@@ -292,4 +292,12 @@ export interface CustomerEnquiry {
   updatedAt: string;
 }
 
+export interface DisplayIssueItem {
+  id: string;
+  title: string;
+  icon: string;
+  badge?: string;
+  color?: string;
+}
+
 

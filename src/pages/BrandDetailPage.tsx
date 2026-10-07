@@ -65,14 +65,17 @@ export const BrandDetailPage: React.FC<BrandDetailPageProps> = ({ brandSlug, cat
         }
       })
       .catch(() => {
-        // Fallback: look in context brands strictly matching this category
+        const cleanBrand = brandSlug.toLowerCase().replace('-mobile', '').replace('-tablet', '').replace('-iphone', '');
         const found = brands.find(
           (b) =>
             (b.categorySlug === targetCategorySlug || (!b.categorySlug && targetCategorySlug === 'mobile')) &&
             (b.slug === brandSlug ||
+              b.slug === cleanBrand ||
               b.slug.replace('-mobile', '').replace('-tablet', '') === brandSlug ||
               b.name.toLowerCase() === brandSlug.toLowerCase() ||
-              (brandSlug === 'apple' && (b.slug === 'iphone' || b.name.toLowerCase() === 'apple')) ||
+              b.name.toLowerCase() === cleanBrand ||
+              ((brandSlug === 'apple' || brandSlug === 'apple-iphone' || brandSlug === 'iphone' || cleanBrand === 'apple') &&
+                (b.slug === 'apple' || b.slug === 'iphone' || b.name.toLowerCase().includes('apple'))) ||
               (brandSlug === 'samsung' && (b.slug === 'samsung-galaxy' || b.name.toLowerCase().includes('samsung'))))
         );
 
@@ -109,7 +112,7 @@ export const BrandDetailPage: React.FC<BrandDetailPageProps> = ({ brandSlug, cat
     return [
       { name: 'Home', url: `${origin}/` },
       { name: categoryName, url: `${origin}/categories/${categorySlug}` },
-      { name: brand?.name || 'Brand', url: `${origin}/categories/${categorySlug}/${brandSlug}` },
+      { name: brand?.name || 'Brand', url: `${origin}/repair-models/${categorySlug}/${brandSlug}` },
     ];
   }, [categoryName, categorySlug, brand, brandSlug]);
 

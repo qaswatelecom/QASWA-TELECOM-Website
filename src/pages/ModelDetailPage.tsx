@@ -31,6 +31,7 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { generateBreadcrumbSchema, generateServiceSchema, useJsonLd, usePageSeo } from '../lib/seo.ts';
+import { getIssueIcon, getIssueStyles } from '../lib/issueIcons.ts';
 
 const getIssueMeta = (issue: string) => {
   const lower = issue.toLowerCase();
@@ -115,7 +116,7 @@ export const ModelDetailPage: React.FC<ModelDetailPageProps> = ({ modelSlug }) =
   const [model, setModel] = useState<Model | null>(null);
   const [brand, setBrand] = useState<Brand | null>(null);
   const [category, setCategory] = useState<DeviceCategory | null>(null);
-  const [displayIssues, setDisplayIssues] = useState<string[]>([]);
+  const [displayIssues, setDisplayIssues] = useState<any[]>([]);
   const [services, setServices] = useState<Service[]>([]);
   const [selectedIssues, setSelectedIssues] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
@@ -207,7 +208,10 @@ export const ModelDetailPage: React.FC<ModelDetailPageProps> = ({ modelSlug }) =
         setDisplayIssues(data.displayIssues || []);
         setServices(data.services || []);
         if (data.displayIssues && data.displayIssues.length > 0) {
-          setSelectedIssues([data.displayIssues[0]]);
+          const firstTitle = typeof data.displayIssues[0] === 'object' && data.displayIssues[0]?.title
+            ? data.displayIssues[0].title
+            : String(data.displayIssues[0]);
+          setSelectedIssues([firstTitle]);
         }
       })
       .catch((err) => {
@@ -234,9 +238,15 @@ export const ModelDetailPage: React.FC<ModelDetailPageProps> = ({ modelSlug }) =
     ];
 
     if (brand) {
+      const bSlugLower = (brand.slug || '').toLowerCase();
+      const bNameLower = (brand.name || '').toLowerCase();
+      const targetBrandSlug =
+        bSlugLower === 'apple' || bSlugLower === 'iphone' || bNameLower === 'apple'
+          ? 'apple-iphone'
+          : brand.slug;
       items.push({
         name: brand.name,
-        url: `${origin}/categories/${categorySlug}/${brand.slug}`,
+        url: `${origin}/repair-models/${categorySlug}/${targetBrandSlug}`,
       });
     }
 
@@ -494,7 +504,15 @@ export const ModelDetailPage: React.FC<ModelDetailPageProps> = ({ modelSlug }) =
                 <li aria-hidden="true" className="text-slate-400">/</li>
                 <li>
                   <button
-                    onClick={() => navigate(`/categories/${categorySlug}/${brand.slug}`)}
+                    onClick={() => {
+                      const bSlugLower = (brand.slug || '').toLowerCase();
+                      const bNameLower = (brand.name || '').toLowerCase();
+                      const targetBrandSlug =
+                        bSlugLower === 'apple' || bSlugLower === 'iphone' || bNameLower === 'apple'
+                          ? 'apple-iphone'
+                          : brand.slug;
+                      navigate(`/repair-models/${categorySlug}/${targetBrandSlug}`);
+                    }}
                     className="hover:text-[#00B2A2] transition-colors cursor-pointer"
                   >
                     {brand.name}
@@ -631,18 +649,24 @@ export const ModelDetailPage: React.FC<ModelDetailPageProps> = ({ modelSlug }) =
 
           {/* Multi-Select Issue Cards with Issue Icons */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {displayIssues.map((issue, idx) => {
-              const isSelected = selectedIssues.includes(issue);
-              const meta = getIssueMeta(issue);
-              const IssueIcon = meta.icon;
+            {displayIssues.map((issueItem, idx) => {
+              const issueTitle = typeof issueItem === 'object' && issueItem?.title ? issueItem.title : String(issueItem);
+              const issueIconName = typeof issueItem === 'object' && issueItem?.icon ? issueItem.icon : undefined;
+              const issueBadge = typeof issueItem === 'object' && issueItem?.badge ? issueItem.badge : undefined;
+              const issueColor = typeof issueItem === 'object' && issueItem?.color ? issueItem.color : undefined;
+
+              const isSelected = selectedIssues.includes(issueTitle);
+              const meta = getIssueMeta(issueTitle);
+              const IssueIcon = issueIconName ? getIssueIcon(issueIconName) : meta.icon;
+              const styles = issueColor ? getIssueStyles(issueColor) : { color: meta.color, selectedClass: meta.selectedClass };
 
               return (
                 <div
                   key={idx}
-                  onClick={() => toggleIssue(issue)}
+                  onClick={() => toggleIssue(issueTitle)}
                   className={`group relative flex flex-col justify-between rounded-2xl p-4 sm:p-5 transition-all duration-200 cursor-pointer border select-none ${
                     isSelected
-                      ? meta.selectedClass + ' shadow-md'
+                      ? styles.selectedClass + ' shadow-md'
                       : 'border-slate-200 bg-white hover:border-[#00B2A2]/60 dark:border-slate-800 dark:bg-slate-900 shadow-xs hover:shadow-md'
                   }`}
                 >
@@ -650,7 +674,7 @@ export const ModelDetailPage: React.FC<ModelDetailPageProps> = ({ modelSlug }) =
                     {/* Header: Issue Icon & Checkbox */}
                     <div className="flex items-start justify-between gap-3 mb-3">
                       <div
-                        className={`flex h-11 w-11 items-center justify-center rounded-xl shrink-0 border transition-transform duration-200 group-hover:scale-105 ${meta.color}`}
+                        className={`flex h-11 w-11 items-center justify-center rounded-xl shrink-0 border transition-transform duration-200 group-hover:scale-105 ${styles.color}`}
                       >
                         <IssueIcon className="h-5 w-5" />
                       </div>
@@ -669,10 +693,10 @@ export const ModelDetailPage: React.FC<ModelDetailPageProps> = ({ modelSlug }) =
 
                     {/* Issue Name & Diagnostic Badge */}
                     <span className="text-sm font-black text-slate-900 dark:text-white block group-hover:text-[#00B2A2] transition-colors leading-snug">
-                      {issue}
+                      {issueTitle}
                     </span>
                     <span className="text-[11px] text-slate-500 dark:text-slate-400 block mt-1">
-                      {meta.badge} • Certified cleanroom repair
+                      {issueBadge || `${meta.badge} • Certified cleanroom repair`}
                     </span>
                   </div>
 
