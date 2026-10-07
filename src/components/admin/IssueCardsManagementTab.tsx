@@ -162,8 +162,12 @@ export const IssueCardsManagementTab: React.FC<IssueCardsManagementTabProps> = (
         customName: `issue-icon-${editingItem.id || 'custom'}`,
       });
 
-      setEditingItem((prev) => (prev ? { ...prev, customIconUrl: result.url } : null));
-      showToast('Custom icon uploaded successfully');
+      if (result && result.url) {
+        setEditingItem((prev) => (prev ? { ...prev, customIconUrl: result.url } : null));
+        showToast('Custom icon uploaded successfully');
+      } else {
+        throw new Error('Upload completed but did not return an icon URL');
+      }
     } catch (err: any) {
       console.error('Failed to upload custom icon:', err);
       showToast(err.message || 'Failed to upload icon');
@@ -282,16 +286,16 @@ export const IssueCardsManagementTab: React.FC<IssueCardsManagementTabProps> = (
                   {/* Card Index & Badge */}
                   <div className="flex items-start justify-between gap-3 mb-3">
                     <div
-                      className={`flex h-12 w-12 items-center justify-center rounded-xl shrink-0 border transition-transform duration-200 group-hover:scale-105 ${styles.color}`}
+                      className={`flex h-13 w-13 items-center justify-center rounded-xl shrink-0 border transition-transform duration-200 group-hover:scale-105 ${styles.color}`}
                     >
                       {issue.customIconUrl ? (
                         <img
                           src={issue.customIconUrl}
                           alt={issue.title}
-                          className="h-7 w-7 object-contain rounded-xs"
+                          className="h-8 w-8 object-contain rounded-xs"
                         />
                       ) : (
-                        <IssueIcon className="h-6 w-6" />
+                        <IssueIcon className="h-7 w-7" />
                       )}
                     </div>
 
@@ -423,16 +427,16 @@ export const IssueCardsManagementTab: React.FC<IssueCardsManagementTabProps> = (
                   return (
                     <div className="flex items-center gap-3 p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60">
                       <div
-                        className={`flex h-13 w-13 items-center justify-center rounded-xl border bg-white dark:bg-slate-900 shrink-0 ${styles.color}`}
+                        className={`flex h-14 w-14 items-center justify-center rounded-xl border bg-white dark:bg-slate-900 shrink-0 ${styles.color}`}
                       >
                         {isCustom ? (
                           <img
                             src={editingItem.customIconUrl!}
                             alt={editingItem.title}
-                            className="h-8 w-8 object-contain"
+                            className="h-9 w-9 object-contain"
                           />
                         ) : (
-                          <CurrentIcon className="h-7 w-7" />
+                          <CurrentIcon className="h-8 w-8" />
                         )}
                       </div>
                       <div className="flex-1 min-w-0">

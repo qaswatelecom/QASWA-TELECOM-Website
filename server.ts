@@ -28,12 +28,15 @@ async function startServer() {
   } else {
     // In production, serve the built Vite SPA from dist/
     const distPath = path.resolve(__dirname, 'dist');
+    const uploadsPath = path.resolve(__dirname, 'public', 'uploads');
+    app.use('/uploads', express.static(uploadsPath));
     app.use(express.static(distPath));
 
     // Fallback all non-API GET requests to index.html for client-side routing
     app.get('*', (req, res, next) => {
       if (
         req.path.startsWith('/api') ||
+        req.path.startsWith('/uploads') ||
         req.path === '/sitemap.xml' ||
         req.path === '/robots.txt'
       ) {

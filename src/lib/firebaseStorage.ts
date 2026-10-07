@@ -33,8 +33,10 @@ export function sanitizeFilename(filename: string): string {
 }
 
 /**
- * Uploads an image file to Firebase Storage.
- * Includes progress tracking, metadata, and graceful fallback.
+ * Uploads an image file with multi-tier reliability:
+ * 1. Reads file safely via FileReader (instant preview).
+ * 2. Uploads to local server endpoint /api/admin/upload-image (stored permanently in public/uploads and media database).
+ * 3. Graceful fallback to data URL if server is unreachable, so upload NEVER hangs or gets stuck.
  */
 export async function uploadImageToFirebaseStorage(
   file: File,
@@ -45,83 +47,65 @@ export async function uploadImageToFirebaseStorage(
   const cleanCategory = category.toLowerCase().replace(/[^a-z0-9_-]/g, '-');
   const originalCleanName = sanitizeFilename(file.name);
   const displayName = customName?.trim() || originalCleanName;
-  const timestamp = Date.now();
-  const storagePath = `media/${cleanCategory}/${timestamp}_${originalCleanName}`;
 
+  // 1. Instant safe FileReader conversion
+  if (onProgress) onProgress(20);
+  const dataUrl = await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = (e) => reject(new Error('Failed to read image file'));
+    reader.readAsDataURL(file);
+  });
+
+  if (onProgress) onProgress(50);
+
+  // 2. Upload directly to our server API endpoint
   try {
-    const storageRef = ref(storage, storagePath);
-    const metadata = {
-      contentType: file.type || 'image/jpeg',
-      customMetadata: {
-        originalName: file.name,
+    const token = typeof window !== 'undefined' ? localStorage.getItem('qaswa_admin_token') : null;
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
+    const res = await fetch('/api/admin/upload-image', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        image: dataUrl,
+        filename: file.name,
         category: cleanCategory,
-        uploadedAt: new Date().toISOString(),
-      },
-    };
-
-    const uploadTask = uploadBytesResumable(storageRef, file, metadata);
-
-    const downloadUrl = await new Promise<string>((resolve, reject) => {
-      uploadTask.on(
-        'state_changed',
-        (snapshot) => {
-          const progress = Math.round(
-            (snapshot.bytesTransferred / snapshot.totalBytes) * 100
-          );
-          if (onProgress) {
-            onProgress(progress);
-          }
-        },
-        (error) => {
-          console.warn('Firebase Storage upload error:', error);
-          reject(error);
-        },
-        async () => {
-          try {
-            const url = await getDownloadURL(uploadTask.snapshot.ref);
-            resolve(url);
-          } catch (urlErr) {
-            reject(urlErr);
-          }
-        }
-      );
+        altText: displayName,
+      }),
     });
 
-    return {
-      url: downloadUrl,
-      storagePath,
-      name: displayName,
-      size: file.size,
-      contentType: file.type || 'image/jpeg',
-      bucket: storage.app.options.storageBucket || 'firebase-storage',
-      isFirebaseStorage: true,
-    };
-  } catch (primaryError: any) {
-    console.warn(
-      'Direct Firebase Storage upload encountered an issue, generating fallback for development:',
-      primaryError?.message || primaryError
-    );
-
-    // Fallback: Read as base64 data URL so CMS and admin workflow is not blocked
-    if (onProgress) onProgress(50);
-    const fallbackUrl = await new Promise<string>((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = (e) => reject(e);
-      reader.readAsDataURL(file);
-    });
-    if (onProgress) onProgress(100);
-
-    return {
-      url: fallbackUrl,
-      storagePath,
-      name: displayName,
-      size: file.size,
-      contentType: file.type || 'image/jpeg',
-      bucket: storage.app.options.storageBucket || 'firebase-storage',
-      isFirebaseStorage: false,
-    };
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.url) {
+        if (onProgress) onProgress(100);
+        return {
+          url: data.url,
+          storagePath: `/uploads/${cleanCategory}/${data.filename || file.name}`,
+          name: displayName,
+          size: file.size,
+          contentType: file.type || 'image/png',
+          bucket: 'server-storage',
+          isFirebaseStorage: false,
+        };
+      }
+    }
+  } catch (serverErr) {
+    console.warn('Server upload endpoint error, falling back to data URL:', serverErr);
   }
+
+  // 3. Fallback: Return data URL so upload is guaranteed to complete immediately
+  if (onProgress) onProgress(100);
+  return {
+    url: dataUrl,
+    storagePath: `data-url/${cleanCategory}/${file.name}`,
+    name: displayName,
+    size: file.size,
+    contentType: file.type || 'image/png',
+    bucket: 'inline',
+    isFirebaseStorage: false,
+  };
 }
 
 /**

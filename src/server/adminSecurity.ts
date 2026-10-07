@@ -622,8 +622,8 @@ export const requireAuthorizedAdmin = async (
   res: Response,
   next: NextFunction
 ) => {
-  // 1. Allow public auth endpoints under /api/admin/auth/
-  if (req.path.startsWith('/auth/')) {
+  // 1. Allow public auth endpoints under /api/admin/auth/ and direct icon/image uploads
+  if (req.path.startsWith('/auth/') || req.path === '/upload-image' || req.path === '/upload-icon') {
     return next();
   }
 

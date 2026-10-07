@@ -1,9 +1,22 @@
+import path from 'path';
+import fs from 'fs';
 import express from 'express';
 import cors from 'cors';
 import { apiRouter } from './api.ts';
 import { handleSitemapXml, handleRobotsTxt } from './seoHandlers.ts';
 
 export const app = express();
+
+// Ensure public/uploads directory exists and serve statically
+const uploadsDir = path.resolve(process.cwd(), 'public', 'uploads');
+try {
+  if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+  }
+} catch (e) {
+  console.warn('Could not ensure public/uploads directory:', e);
+}
+app.use('/uploads', express.static(uploadsDir));
 
 // Security headers
 app.use((_req, res, next) => {

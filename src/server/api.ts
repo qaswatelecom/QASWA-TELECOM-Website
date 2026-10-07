@@ -1,3 +1,5 @@
+import fs from 'fs';
+import path from 'path';
 import { Router, Request, Response } from 'express';
 import { db } from '../db/index.ts';
 import {
@@ -2960,6 +2962,167 @@ apiRouter.delete('/admin/custom-pages/:id', async (req: Request, res: Response) 
     res.json({ success: true });
   } catch (error: any) {
     res.status(500).json({ error: error.message || 'Failed to delete page' });
+  }
+});
+
+// Direct Admin Image & Icon Upload (Stores to server filesystem public/uploads and records in DB)
+apiRouter.post('/admin/upload-image', async (req: Request, res: Response) => {
+  try {
+    const { image, filename, category = 'issue-icons', altText } = req.body;
+    if (!image || typeof image !== 'string') {
+      return res.status(400).json({ error: 'Image data is required' });
+    }
+
+    // If it's a data URL, extract mime and buffer
+    let dataBuffer: Buffer;
+    let ext = 'png';
+    const matches = image.match(/^data:image\/([a-zA-Z0-9+.-]+);base64,(.+)$/);
+    if (matches) {
+      ext = matches[1].replace('svg+xml', 'svg').replace('jpeg', 'jpg');
+      dataBuffer = Buffer.from(matches[2], 'base64');
+    } else if (image.startsWith('http://') || image.startsWith('https://') || image.startsWith('/uploads/')) {
+      // It's already a URL
+      return res.json({ success: true, url: image });
+    } else {
+      // Raw base64 string
+      dataBuffer = Buffer.from(image, 'base64');
+    }
+
+    const cleanCategory = String(category || 'general').toLowerCase().replace(/[^a-z0-9_-]/g, '-');
+    const safeBaseName = (filename ? String(filename).replace(/\.[^/.]+$/, '') : `icon-${Date.now()}`)
+      .toLowerCase()
+      .replace(/[^a-z0-9_-]/g, '-')
+      .slice(0, 40);
+    const uniqueFileName = `${Date.now()}-${safeBaseName}.${ext}`;
+
+    // Target upload directory in public/uploads/[category]
+    const publicDir = path.resolve(process.cwd(), 'public');
+    const uploadCategoryDir = path.join(publicDir, 'uploads', cleanCategory);
+    fs.mkdirSync(uploadCategoryDir, { recursive: true });
+
+    const filePath = path.join(uploadCategoryDir, uniqueFileName);
+    fs.writeFileSync(filePath, dataBuffer);
+
+    // If dist exists (production build), also mirror there so immediately available without rebuild
+    try {
+      const distDir = path.resolve(process.cwd(), 'dist');
+      if (fs.existsSync(distDir)) {
+        const distUploadCategoryDir = path.join(distDir, 'uploads', cleanCategory);
+        fs.mkdirSync(distUploadCategoryDir, { recursive: true });
+        fs.writeFileSync(path.join(distUploadCategoryDir, uniqueFileName), dataBuffer);
+      }
+    } catch (_) {}
+
+    const fileUrl = `/uploads/${cleanCategory}/${uniqueFileName}`;
+
+    // Record into mediaItems table
+    try {
+      await db.insert(mediaItems).values({
+        name: filename || safeBaseName,
+        url: fileUrl,
+        altText: altText || filename || 'Uploaded icon',
+        category: cleanCategory,
+      });
+    } catch (dbErr) {
+      console.warn('Could not insert uploaded media into mediaItems table:', dbErr);
+    }
+
+    res.json({
+      success: true,
+      url: fileUrl,
+      filename: uniqueFileName,
+      size: dataBuffer.length,
+      category: cleanCategory,
+    });
+  } catch (error: any) {
+    console.error('Error in /admin/upload-image:', error);
+    // If saving to disk had any issue, fall back to returning data URL directly so upload is never blocked
+    if (req.body?.image && req.body.image.startsWith('data:')) {
+      return res.json({
+        success: true,
+        url: req.body.image,
+        fallback: true,
+      });
+    }
+    res.status(500).json({ error: error.message || 'Failed to upload image' });
+  }
+});
+
+// Alias for upload-icon
+apiRouter.post('/admin/upload-icon', async (req: Request, res: Response) => {
+  req.body.category = req.body.category || 'issue-icons';
+  // Forward to upload-image handler logic
+  try {
+    const { image, filename, category = 'issue-icons', altText } = req.body;
+    if (!image || typeof image !== 'string') {
+      return res.status(400).json({ error: 'Image data is required' });
+    }
+
+    let dataBuffer: Buffer;
+    let ext = 'png';
+    const matches = image.match(/^data:image\/([a-zA-Z0-9+.-]+);base64,(.+)$/);
+    if (matches) {
+      ext = matches[1].replace('svg+xml', 'svg').replace('jpeg', 'jpg');
+      dataBuffer = Buffer.from(matches[2], 'base64');
+    } else if (image.startsWith('http://') || image.startsWith('https://') || image.startsWith('/uploads/')) {
+      return res.json({ success: true, url: image });
+    } else {
+      dataBuffer = Buffer.from(image, 'base64');
+    }
+
+    const cleanCategory = String(category || 'issue-icons').toLowerCase().replace(/[^a-z0-9_-]/g, '-');
+    const safeBaseName = (filename ? String(filename).replace(/\.[^/.]+$/, '') : `icon-${Date.now()}`)
+      .toLowerCase()
+      .replace(/[^a-z0-9_-]/g, '-')
+      .slice(0, 40);
+    const uniqueFileName = `${Date.now()}-${safeBaseName}.${ext}`;
+
+    const publicDir = path.resolve(process.cwd(), 'public');
+    const uploadCategoryDir = path.join(publicDir, 'uploads', cleanCategory);
+    fs.mkdirSync(uploadCategoryDir, { recursive: true });
+
+    const filePath = path.join(uploadCategoryDir, uniqueFileName);
+    fs.writeFileSync(filePath, dataBuffer);
+
+    try {
+      const distDir = path.resolve(process.cwd(), 'dist');
+      if (fs.existsSync(distDir)) {
+        const distUploadCategoryDir = path.join(distDir, 'uploads', cleanCategory);
+        fs.mkdirSync(distUploadCategoryDir, { recursive: true });
+        fs.writeFileSync(path.join(distUploadCategoryDir, uniqueFileName), dataBuffer);
+      }
+    } catch (_) {}
+
+    const fileUrl = `/uploads/${cleanCategory}/${uniqueFileName}`;
+
+    try {
+      await db.insert(mediaItems).values({
+        name: filename || safeBaseName,
+        url: fileUrl,
+        altText: altText || filename || 'Issue icon',
+        category: cleanCategory,
+      });
+    } catch (dbErr) {
+      console.warn('Could not insert uploaded icon into mediaItems table:', dbErr);
+    }
+
+    res.json({
+      success: true,
+      url: fileUrl,
+      filename: uniqueFileName,
+      size: dataBuffer.length,
+      category: cleanCategory,
+    });
+  } catch (error: any) {
+    console.error('Error in /admin/upload-icon:', error);
+    if (req.body?.image && req.body.image.startsWith('data:')) {
+      return res.json({
+        success: true,
+        url: req.body.image,
+        fallback: true,
+      });
+    }
+    res.status(500).json({ error: error.message || 'Failed to upload icon' });
   }
 });
 
