@@ -753,11 +753,11 @@ export function resolveDynamicSeo(
     };
   }
 
-  // 3. Category alias /mobile, /ipad, /apple-watch, /tablet
-  if (cleanPath === '/mobile') return DEFAULT_PAGE_SEO_MAP['/categories/mobile'];
-  if (cleanPath === '/ipad') return DEFAULT_PAGE_SEO_MAP['/categories/ipad'];
-  if (cleanPath === '/apple-watch') return DEFAULT_PAGE_SEO_MAP['/categories/apple-watch'];
-  if (cleanPath === '/tablet') return DEFAULT_PAGE_SEO_MAP['/categories/tablet'];
+  // 3. Category alias /mobile, /repair-brands, /ipad, /repair/ipad, /apple-watch, /repair/apple-watch, /tablet, /repair/tablet
+  if (cleanPath === '/mobile' || cleanPath === '/repair-brands') return DEFAULT_PAGE_SEO_MAP['/categories/mobile'];
+  if (cleanPath === '/ipad' || cleanPath === '/repair/ipad') return DEFAULT_PAGE_SEO_MAP['/categories/ipad'];
+  if (cleanPath === '/apple-watch' || cleanPath === '/repair/apple-watch') return DEFAULT_PAGE_SEO_MAP['/categories/apple-watch'];
+  if (cleanPath === '/tablet' || cleanPath === '/repair/tablet') return DEFAULT_PAGE_SEO_MAP['/categories/tablet'];
 
   // 4. Model route: /repair/:slug or /models/:slug
   if (cleanPath.startsWith('/repair/') || cleanPath.startsWith('/models/')) {

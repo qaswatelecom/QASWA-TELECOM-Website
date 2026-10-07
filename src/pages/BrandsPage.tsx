@@ -103,10 +103,10 @@ export const BrandsPage: React.FC = () => {
                 cat.slug === 'mobile'
                   ? '/repair-brands'
                   : cat.slug === 'ipad'
-                  ? '/ipad'
+                  ? '/repair/ipad'
                   : cat.slug === 'apple-watch'
-                  ? '/apple-watch'
-                  : '/tablet';
+                  ? '/repair/apple-watch'
+                  : '/repair/tablet';
 
               return (
                 <a

@@ -73,10 +73,10 @@ export const DeviceCategories: React.FC<DeviceCategoriesProps> = ({ onSelectCate
 
   const getCategoryUrl = (slug: string) => {
     if (slug === 'mobile') return '/repair-brands';
-    if (slug === 'ipad') return '/ipad';
-    if (slug === 'apple-watch') return '/apple-watch';
-    if (slug === 'tablet') return '/tablet';
-    return `/${slug}`;
+    if (slug === 'ipad') return '/repair/ipad';
+    if (slug === 'apple-watch') return '/repair/apple-watch';
+    if (slug === 'tablet') return '/repair/tablet';
+    return `/repair/${slug}`;
   };
 
   const handleCategoryClick = (cat: { slug: string; name: string }) => {

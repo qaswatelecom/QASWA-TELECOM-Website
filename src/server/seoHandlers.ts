@@ -77,10 +77,10 @@ export async function handleSitemapXml(req: Request, res: Response) {
       { loc: `${baseUrl}/`, priority: '1.0', changefreq: 'daily', lastmod: currentDate },
 
       // 2. Primary Device Categories
-      { loc: `${baseUrl}/categories/mobile`, priority: '0.9', changefreq: 'weekly', lastmod: currentDate },
-      { loc: `${baseUrl}/categories/ipad`, priority: '0.9', changefreq: 'weekly', lastmod: currentDate },
-      { loc: `${baseUrl}/categories/apple-watch`, priority: '0.9', changefreq: 'weekly', lastmod: currentDate },
-      { loc: `${baseUrl}/categories/tablet`, priority: '0.9', changefreq: 'weekly', lastmod: currentDate },
+      { loc: `${baseUrl}/repair-brands`, priority: '0.9', changefreq: 'weekly', lastmod: currentDate },
+      { loc: `${baseUrl}/repair/ipad`, priority: '0.9', changefreq: 'weekly', lastmod: currentDate },
+      { loc: `${baseUrl}/repair/apple-watch`, priority: '0.9', changefreq: 'weekly', lastmod: currentDate },
+      { loc: `${baseUrl}/repair/tablet`, priority: '0.9', changefreq: 'weekly', lastmod: currentDate },
 
       // 3. Core Informational & Service Landing Pages
       { loc: `${baseUrl}/brands`, priority: '0.85', changefreq: 'weekly', lastmod: currentDate },

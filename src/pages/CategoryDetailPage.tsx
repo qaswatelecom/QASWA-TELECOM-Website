@@ -284,7 +284,11 @@ export const CategoryDetailPage: React.FC<CategoryDetailPageProps> = ({ category
   const breadcrumbItems = React.useMemo(() => {
     const origin = typeof window !== 'undefined' ? window.location.origin : 'https://qaswatelecom.com';
     const isRepairBrands = typeof window !== 'undefined' && window.location.pathname.startsWith('/repair-brands');
-    const catUrl = isRepairBrands ? `${origin}/repair-brands` : `${origin}/categories/${categorySlug}`;
+    const catUrl = isRepairBrands
+      ? `${origin}/repair-brands`
+      : ['ipad', 'apple-watch', 'tablet'].includes(cleanCatSlug)
+      ? `${origin}/repair/${cleanCatSlug}`
+      : `${origin}/categories/${categorySlug}`;
     return [
       { name: 'Home', url: `${origin}/` },
       { name: isRepairBrands ? 'Repair Brands' : (category?.name || 'Device Categories'), url: catUrl },

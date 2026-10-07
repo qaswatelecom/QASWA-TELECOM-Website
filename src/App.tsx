@@ -84,11 +84,20 @@ const AppContent: React.FC = () => {
       currentPath === '/repair-brands/'
     ) {
       content = <CategoryDetailPage categorySlug="mobile" />;
-    } else if (currentPath === '/ipad') {
+    } else if (currentPath === '/ipad' || currentPath === '/repair/ipad') {
+      if (typeof window !== 'undefined' && window.location.pathname === '/ipad') {
+        window.history.replaceState({}, '', '/repair/ipad');
+      }
       content = <CategoryDetailPage categorySlug="ipad" />;
-    } else if (currentPath === '/apple-watch') {
+    } else if (currentPath === '/apple-watch' || currentPath === '/repair/apple-watch') {
+      if (typeof window !== 'undefined' && window.location.pathname === '/apple-watch') {
+        window.history.replaceState({}, '', '/repair/apple-watch');
+      }
       content = <CategoryDetailPage categorySlug="apple-watch" />;
-    } else if (currentPath === '/tablet') {
+    } else if (currentPath === '/tablet' || currentPath === '/repair/tablet') {
+      if (typeof window !== 'undefined' && window.location.pathname === '/tablet') {
+        window.history.replaceState({}, '', '/repair/tablet');
+      }
       content = <CategoryDetailPage categorySlug="tablet" />;
     } else if (currentPath.startsWith('/categories/')) {
       const rest = currentPath.replace('/categories/', '');
@@ -110,7 +119,7 @@ const AppContent: React.FC = () => {
         }
       } else {
         // e.g. /categories/mobile, /categories/ipad
-        const targetPath = parts[0] === 'mobile' ? '/repair-brands' : `/${parts[0]}`;
+        const targetPath = parts[0] === 'mobile' ? '/repair-brands' : `/repair/${parts[0]}`;
         if (typeof window !== 'undefined' && window.location.pathname.startsWith('/categories/')) {
           window.history.replaceState({}, '', targetPath);
         }
