@@ -494,13 +494,17 @@ export const DeviceCatalogManagementTab: React.FC<DeviceCatalogManagementTabProp
                 className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs dark:border-slate-800 dark:bg-slate-900 flex flex-col justify-between"
               >
                 <div>
-                  <div className="relative h-32 w-full rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800 mb-3.5 flex items-center justify-center">
+                  <div className="relative h-32 w-full rounded-xl overflow-hidden bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 mb-3.5 flex items-center justify-center p-2">
                     {cat.imageUrl ? (
-                      <img src={cat.imageUrl} alt={cat.name} className="h-full w-full object-cover" />
+                      <img
+                        src={cat.imageUrl}
+                        alt={cat.name}
+                        className="h-full w-full object-contain object-center"
+                      />
                     ) : (
                       <Smartphone className="h-10 w-10 text-[#00B2A2]" />
                     )}
-                    <span className="absolute top-2 left-2 rounded-md bg-black/60 backdrop-blur-sm px-2 py-0.5 text-[10px] font-bold text-white">
+                    <span className="absolute top-2 left-2 rounded-md bg-black/60 backdrop-blur-sm px-2 py-0.5 text-[10px] font-bold text-white shadow-xs">
                       Order: {cat.sortOrder}
                     </span>
                   </div>
