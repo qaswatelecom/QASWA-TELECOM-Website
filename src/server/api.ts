@@ -573,9 +573,14 @@ apiRouter.get('/models', async (req: Request, res: Response) => {
 });
 
 // Model details + display services + display issues
-apiRouter.get('/models/:slug', async (req: Request, res: Response) => {
+apiRouter.get(['/models/:slug', '/repair/:slug'], async (req: Request, res: Response) => {
   try {
-    const model = await db.select().from(models).where(eq(models.slug, req.params.slug)).limit(1);
+    const paramSlug = req.params.slug;
+    let model = await db.select().from(models).where(eq(models.slug, paramSlug)).limit(1);
+    if (!model[0]) {
+      const cleanSlug = paramSlug.replace(/^iphone-iphone-/, 'iphone-').replace(/^apple-apple-/, 'apple-');
+      model = await db.select().from(models).where(eq(models.slug, cleanSlug)).limit(1);
+    }
     if (!model[0]) return res.status(404).json({ error: 'Model not found' });
 
     const m = model[0];

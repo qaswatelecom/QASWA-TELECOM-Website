@@ -586,12 +586,18 @@ export const CategoryDetailPage: React.FC<CategoryDetailPageProps> = ({ category
               </div>
             ) : (
               <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-2.5 sm:gap-3.5 md:gap-4 lg:gap-4.5">
-                {filteredModels.map((model) => (
-                  <div
-                    key={model.id}
-                    onClick={() => navigate(`/models/${model.slug}`)}
-                    className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-slate-200/90 bg-white p-2.5 sm:p-3.5 md:p-4 shadow-xs transition-all duration-300 hover:-translate-y-1.5 hover:border-[#00B2A2] hover:shadow-xl dark:border-slate-800 dark:bg-slate-900 cursor-pointer select-none"
-                  >
+                {filteredModels.map((model) => {
+                  const modelUrl = `/repair/${model.slug}`;
+                  return (
+                    <a
+                      key={model.id}
+                      href={modelUrl}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        navigate(modelUrl);
+                      }}
+                      className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-slate-200/90 bg-white p-2.5 sm:p-3.5 md:p-4 shadow-xs transition-all duration-300 hover:-translate-y-1.5 hover:border-[#00B2A2] hover:shadow-xl dark:border-slate-800 dark:bg-slate-900 cursor-pointer select-none block text-inherit no-underline"
+                    >
                     <div>
                       {/* Model Image Container */}
                       <div className="relative h-24 sm:h-28 md:h-32 w-full overflow-hidden rounded-xl bg-slate-50 dark:bg-slate-800/80 mb-2 sm:mb-2.5 flex items-center justify-center p-1.5 sm:p-2">
@@ -622,8 +628,9 @@ export const CategoryDetailPage: React.FC<CategoryDetailPageProps> = ({ category
                         <ArrowRight className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
                       </div>
                     </div>
-                  </div>
-                ))}
+                  </a>
+                );
+              })}
               </div>
             )}
           </div>

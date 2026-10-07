@@ -759,9 +759,11 @@ export function resolveDynamicSeo(
   if (cleanPath === '/apple-watch') return DEFAULT_PAGE_SEO_MAP['/categories/apple-watch'];
   if (cleanPath === '/tablet') return DEFAULT_PAGE_SEO_MAP['/categories/tablet'];
 
-  // 4. Model route: /models/:slug
-  if (cleanPath.startsWith('/models/')) {
-    const slug = cleanPath.replace('/models/', '');
+  // 4. Model route: /repair/:slug or /models/:slug
+  if (cleanPath.startsWith('/repair/') || cleanPath.startsWith('/models/')) {
+    const slug = cleanPath.startsWith('/repair/')
+      ? cleanPath.replace('/repair/', '')
+      : cleanPath.replace('/models/', '');
     const modelName = slug
       .split('-')
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1))

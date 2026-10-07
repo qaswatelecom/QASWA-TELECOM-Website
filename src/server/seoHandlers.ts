@@ -138,6 +138,12 @@ export async function handleSitemapXml(req: Request, res: Response) {
     // Dedicated Model Display Repair Pages
     allModels.forEach((m) => {
       urlList.push({
+        loc: `${baseUrl}/repair/${m.slug}`,
+        priority: '0.85',
+        changefreq: 'weekly',
+        lastmod: currentDate,
+      });
+      urlList.push({
         loc: `${baseUrl}/models/${m.slug}`,
         priority: '0.80',
         changefreq: 'weekly',

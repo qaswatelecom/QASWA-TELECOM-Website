@@ -792,7 +792,7 @@ export const DeviceCatalogManagementTab: React.FC<DeviceCatalogManagementTabProp
                         <td className="py-3 px-4 text-right">
                           <div className="flex items-center justify-end gap-2">
                             <a
-                              href={`/models/${m.slug}`}
+                              href={`/repair/${m.slug}`}
                               target="_blank"
                               rel="noreferrer"
                               className="p-1 text-slate-400 hover:text-[#00B2A2] transition-colors"

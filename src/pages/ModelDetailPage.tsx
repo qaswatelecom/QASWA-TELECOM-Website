@@ -253,11 +253,11 @@ export const ModelDetailPage: React.FC<ModelDetailPageProps> = ({ modelSlug }) =
     if (model) {
       items.push({
         name: model.name,
-        url: `${origin}/models/${model.slug}`,
+        url: `${origin}/repair/${model.slug}`,
       });
       items.push({
         name: 'Display Repair Services',
-        url: `${origin}/models/${model.slug}`,
+        url: `${origin}/repair/${model.slug}`,
       });
     }
 
@@ -283,7 +283,7 @@ export const ModelDetailPage: React.FC<ModelDetailPageProps> = ({ modelSlug }) =
       name: `${model.name} Display Repair Service`,
       description: modelPageDesc,
       serviceType: 'Display Repair & Screen Replacement',
-      url: `${origin}/models/${model.slug}`,
+      url: `${origin}/repair/${model.slug}`,
       providerName: 'QASWA TELECOM',
       providerUrl: origin,
     });

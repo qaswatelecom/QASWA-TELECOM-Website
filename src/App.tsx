@@ -96,6 +96,9 @@ const AppContent: React.FC = () => {
       if (parts.length >= 2) {
         if (parts[0] === 'ipad' || parts[0] === 'apple-watch') {
           // Direct model route (e.g. /categories/ipad/ipad-pro-13-m4 or /categories/apple-watch/apple-watch-ultra-2)
+          if (typeof window !== 'undefined' && window.location.pathname.startsWith('/categories/')) {
+            window.history.replaceState({}, '', `/repair/${parts[1]}`);
+          }
           content = <ModelDetailPage modelSlug={parts[1]} />;
         } else {
           // e.g. /categories/mobile/apple or /categories/tablet/samsung
@@ -126,8 +129,14 @@ const AppContent: React.FC = () => {
           content = <BrandDetailPage categorySlug="mobile" brandSlug={parts[0]} />;
         }
       }
-    } else if (currentPath.startsWith('/models/')) {
-      const slug = currentPath.replace('/models/', '');
+    } else if (currentPath.startsWith('/repair/')) {
+      const slug = currentPath.replace('/repair/', '');
+      content = <ModelDetailPage modelSlug={slug} />;
+    } else if (currentPath.startsWith('/models/') || currentPath.startsWith('/model/')) {
+      const slug = currentPath.replace(/^\/(models|model)\//, '');
+      if (typeof window !== 'undefined') {
+        window.history.replaceState({}, '', `/repair/${slug}`);
+      }
       content = <ModelDetailPage modelSlug={slug} />;
     } else if (currentPath.startsWith('/brands/')) {
       const slug = currentPath.replace('/brands/', '');
