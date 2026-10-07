@@ -143,7 +143,7 @@ export const QaswaHero: React.FC<QaswaHeroProps> = ({ onSelectCategory }) => {
                 >
                   <div>
                     {/* Image Container with Smooth Zoom */}
-                    <div className="relative h-28 sm:h-36 w-full overflow-hidden rounded-xl bg-slate-100 dark:bg-slate-800/80 mb-3.5 flex items-center justify-center p-1.5 sm:p-2">
+                    <div className="relative h-28 sm:h-36 w-full overflow-hidden rounded-xl bg-white dark:bg-slate-900 mb-3.5 flex items-center justify-center p-1.5 sm:p-2">
                       {cat.imageUrl ? (
                         <img
                           src={cat.imageUrl}
@@ -154,7 +154,6 @@ export const QaswaHero: React.FC<QaswaHeroProps> = ({ onSelectCategory }) => {
                       ) : (
                         <CatIcon className="h-12 w-12 text-[#00B2A2]" />
                       )}
-                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950/20 via-transparent to-transparent opacity-30 pointer-events-none" />
 
                       {/* Floating Category Icon Badge */}
                       <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5 rounded-lg bg-black/60 backdrop-blur-md px-2 py-1 text-[11px] font-bold text-white shadow-xs">
@@ -162,14 +161,6 @@ export const QaswaHero: React.FC<QaswaHeroProps> = ({ onSelectCategory }) => {
                         <span>{cat.name}</span>
                       </div>
                     </div>
-
-                    {/* Title & Tagline */}
-                    <h3 className="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white group-hover:text-[#00B2A2] transition-colors flex items-center justify-between">
-                      <span>{cat.name}</span>
-                    </h3>
-                    <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium line-clamp-1">
-                      {cat.tagline || (cat as any).description || 'Specialized display repairs'}
-                    </p>
                   </div>
 
                   {/* Bottom Action Indicator */}

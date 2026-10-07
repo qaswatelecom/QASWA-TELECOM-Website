@@ -135,7 +135,7 @@ export const DeviceCategories: React.FC<DeviceCategoriesProps> = ({ onSelectCate
               >
                 <div>
                   {/* Image container */}
-                  <div className="relative h-40 sm:h-44 w-full overflow-hidden rounded-xl bg-slate-100 dark:bg-slate-800 mb-4 p-1.5 sm:p-2 flex items-center justify-center">
+                  <div className="relative h-40 sm:h-44 w-full overflow-hidden rounded-xl bg-white dark:bg-slate-900 mb-4 p-1.5 sm:p-2 flex items-center justify-center">
                     {cat.imageUrl ? (
                       <img
                         src={cat.imageUrl}
@@ -148,7 +148,6 @@ export const DeviceCategories: React.FC<DeviceCategoriesProps> = ({ onSelectCate
                         <CatIcon className="h-12 w-12 text-[#00B2A2]" />
                       </div>
                     )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/20 via-transparent to-transparent opacity-30 pointer-events-none" />
 
                     {/* Category pill */}
                     <div className="absolute top-3 left-3 flex items-center gap-1.5 rounded-lg bg-black/60 backdrop-blur-md px-2.5 py-1 text-xs font-semibold text-white">
@@ -156,14 +155,6 @@ export const DeviceCategories: React.FC<DeviceCategoriesProps> = ({ onSelectCate
                       <span>{cat.name}</span>
                     </div>
                   </div>
-
-                  {/* Title & Tagline */}
-                  <h3 className="text-lg font-bold text-slate-900 dark:text-white group-hover:text-[#00B2A2] transition-colors">
-                    {cat.name}
-                  </h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium line-clamp-2">
-                    {cat.tagline || cat.description}
-                  </p>
                 </div>
 
                 {/* Bottom link */}
