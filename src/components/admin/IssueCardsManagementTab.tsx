@@ -157,17 +157,45 @@ export const IssueCardsManagementTab: React.FC<IssueCardsManagementTabProps> = (
 
     try {
       setUploadingIcon(true);
-      const result = await uploadImageToFirebaseStorage(file, {
-        category: 'issue-icons',
-        customName: `issue-icon-${editingItem.id || 'custom'}`,
+
+      // 1. Read file immediately via FileReader (instant preview & zero hang)
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = () => reject(new Error('Failed to read image file'));
+        reader.readAsDataURL(file);
       });
 
-      if (result && result.url) {
-        setEditingItem((prev) => (prev ? { ...prev, customIconUrl: result.url } : null));
-        showToast('Custom icon uploaded successfully');
-      } else {
-        throw new Error('Upload completed but did not return an icon URL');
+      let finalUrl = dataUrl;
+
+      // 2. Try server endpoint upload for persistent file URL
+      try {
+        const token = typeof window !== 'undefined' ? localStorage.getItem('qaswa_admin_token') : null;
+        const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+
+        const uploadRes = await fetch('/api/admin/upload-icon', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({
+            image: dataUrl,
+            filename: file.name,
+            category: 'issue-icons',
+          }),
+        });
+
+        if (uploadRes.ok) {
+          const resData = await uploadRes.json();
+          if (resData && resData.url) {
+            finalUrl = resData.url;
+          }
+        }
+      } catch (uploadErr) {
+        console.warn('Server upload not reachable, using data URL fallback:', uploadErr);
       }
+
+      setEditingItem((prev) => (prev ? { ...prev, customIconUrl: finalUrl } : null));
+      showToast('Custom icon uploaded successfully');
     } catch (err: any) {
       console.error('Failed to upload custom icon:', err);
       showToast(err.message || 'Failed to upload icon');

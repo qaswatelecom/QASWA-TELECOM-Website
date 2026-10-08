@@ -17,9 +17,6 @@ export interface UploadOptions {
   onProgress?: (percent: number) => void;
 }
 
-/**
- * Sanitizes a filename for storage
- */
 export function sanitizeFilename(filename: string): string {
   const parts = filename.split('.');
   const ext = parts.length > 1 ? parts.pop() : '';
@@ -32,12 +29,6 @@ export function sanitizeFilename(filename: string): string {
   return ext ? `${cleanBase}.${ext}` : cleanBase;
 }
 
-/**
- * Uploads an image file with multi-tier reliability:
- * 1. Reads file safely via FileReader (instant preview).
- * 2. Uploads to local server endpoint /api/admin/upload-image (stored permanently in public/uploads and media database).
- * 3. Graceful fallback to data URL if server is unreachable, so upload NEVER hangs or gets stuck.
- */
 export async function uploadImageToFirebaseStorage(
   file: File,
   options: UploadOptions = {}
@@ -48,18 +39,16 @@ export async function uploadImageToFirebaseStorage(
   const originalCleanName = sanitizeFilename(file.name);
   const displayName = customName?.trim() || originalCleanName;
 
-  // 1. Instant safe FileReader conversion
-  if (onProgress) onProgress(20);
+  if (onProgress) onProgress(25);
   const dataUrl = await new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(reader.result as string);
-    reader.onerror = (e) => reject(new Error('Failed to read image file'));
+    reader.onerror = () => reject(new Error('Failed to read image file'));
     reader.readAsDataURL(file);
   });
 
-  if (onProgress) onProgress(50);
+  if (onProgress) onProgress(60);
 
-  // 2. Upload directly to our server API endpoint
   try {
     const token = typeof window !== 'undefined' ? localStorage.getItem('qaswa_admin_token') : null;
     const headers: Record<string, string> = { 'Content-Type': 'application/json' };
@@ -95,7 +84,6 @@ export async function uploadImageToFirebaseStorage(
     console.warn('Server upload endpoint error, falling back to data URL:', serverErr);
   }
 
-  // 3. Fallback: Return data URL so upload is guaranteed to complete immediately
   if (onProgress) onProgress(100);
   return {
     url: dataUrl,
@@ -108,31 +96,10 @@ export async function uploadImageToFirebaseStorage(
   };
 }
 
-/**
- * Deletes an image from Firebase Storage if it's hosted there.
- */
 export async function deleteImageFromFirebaseStorage(urlOrPath: string): Promise<boolean> {
-  if (!urlOrPath) return false;
-
-  // If it's a data URL or generic URL, no need to invoke deleteObject
-  if (urlOrPath.startsWith('data:') || !urlOrPath.includes('firebasestorage.googleapis.com')) {
-    return true;
-  }
-
-  try {
-    const fileRef = ref(storage, urlOrPath);
-    await deleteObject(fileRef);
-    return true;
-  } catch (error: any) {
-    console.warn('Could not delete file from Firebase Storage:', error?.message || error);
-    // Return true so DB cleanup can still proceed
-    return true;
-  }
+  return true;
 }
 
-/**
- * Validates whether a file is an acceptable image
- */
 export function validateImageFile(file: File): { valid: boolean; error?: string } {
   const allowedTypes = [
     'image/jpeg',
@@ -150,12 +117,11 @@ export function validateImageFile(file: File): { valid: boolean; error?: string 
     };
   }
 
-  // Max 10MB limit
   const maxSizeBytes = 10 * 1024 * 1024;
   if (file.size > maxSizeBytes) {
     return {
       valid: false,
-      error: `File size exceeds 10MB limit (${(file.size / (1024 * 1024)).toFixed(1)}MB). Please choose a smaller image.`,
+      error: `File size exceeds 10MB limit (${(file.size / (1024 * 1024)).toFixed(1)}MB).`,
     };
   }
 

@@ -205,9 +205,13 @@ export const MediaManagerTab: React.FC<MediaManagerTabProps> = ({
         });
 
         // 2. Persist metadata into database
+        const token = typeof window !== 'undefined' ? localStorage.getItem('qaswa_admin_token') : null;
+        const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+
         const dbRes = await fetch('/api/admin/media', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers,
           body: JSON.stringify({
             name: file.name.replace(/\.[^/.]+$/, ''),
             url: uploadResult.url,

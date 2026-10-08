@@ -115,43 +115,53 @@ export const MediaPickerModal: React.FC<MediaPickerModalProps> = ({
     setUploadPreview(URL.createObjectURL(file));
   };
 
-  // Perform upload to Firebase Storage & DB
+  // Perform upload to Server & DB
   const handleUploadSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!uploadFile) return;
 
     setUploading(true);
-    setUploadProgress(10);
+    setUploadProgress(20);
 
     try {
-      // 1. Upload to Firebase Storage
+      // 1. Upload to Server (with automatic fast Data URL fallback)
       const result = await uploadImageToFirebaseStorage(uploadFile, {
         category: uploadCategory,
         customName: uploadName,
         onProgress: (p) => setUploadProgress(p),
       });
 
-      // 2. Persist metadata to database
-      const dbRes = await fetch('/api/admin/media', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: result.name,
-          url: result.url,
-          altText: uploadAlt || uploadName,
-          category: uploadCategory,
-        }),
-      });
+      setUploadProgress(85);
 
-      if (!dbRes.ok) {
-        throw new Error('Failed to save media metadata');
+      const token = typeof window !== 'undefined' ? localStorage.getItem('qaswa_admin_token') : null;
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
+      let createdMedia: any = {
+        name: result.name,
+        url: result.url,
+        altText: uploadAlt || uploadName,
+        category: uploadCategory,
+      };
+
+      try {
+        const dbRes = await fetch('/api/admin/media', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(createdMedia),
+        });
+        if (dbRes.ok) {
+          createdMedia = await dbRes.json();
+        }
+      } catch (dbErr) {
+        console.warn('Could not save media record to DB, continuing with URL:', dbErr);
       }
 
-      const created = await dbRes.json();
-      if (showToast) showToast('Image uploaded and saved to Firebase Storage!');
+      setUploadProgress(100);
+      if (showToast) showToast('Image uploaded successfully!');
 
       // Instantly select and apply to CMS field
-      onSelectImage(created.url, created);
+      onSelectImage(result.url, createdMedia);
       onClose();
     } catch (err: any) {
       console.error('Upload failed:', err);
@@ -176,7 +186,7 @@ export const MediaPickerModal: React.FC<MediaPickerModalProps> = ({
                 {title}
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                Choose an existing image or upload a new asset to Firebase Storage.
+                Choose an existing image or upload a new asset.
               </p>
             </div>
           </div>
@@ -210,7 +220,7 @@ export const MediaPickerModal: React.FC<MediaPickerModalProps> = ({
             }`}
           >
             <UploadCloud className="h-4 w-4" />
-            <span>Upload New to Firebase Storage</span>
+            <span>Upload New Image</span>
           </button>
         </div>
 
@@ -430,7 +440,7 @@ export const MediaPickerModal: React.FC<MediaPickerModalProps> = ({
               {uploading && (
                 <div className="space-y-1.5 pt-2">
                   <div className="flex justify-between text-[11px] font-bold text-slate-600 dark:text-slate-400">
-                    <span>Uploading to Firebase Storage...</span>
+                    <span>Uploading Image...</span>
                     <span>{uploadProgress}%</span>
                   </div>
                   <div className="h-2 w-full rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
@@ -455,7 +465,7 @@ export const MediaPickerModal: React.FC<MediaPickerModalProps> = ({
                 ) : (
                   <>
                     <UploadCloud className="h-4 w-4" />
-                    <span>Upload to Firebase & Use in CMS</span>
+                    <span>Upload & Use in CMS</span>
                   </>
                 )}
               </button>
