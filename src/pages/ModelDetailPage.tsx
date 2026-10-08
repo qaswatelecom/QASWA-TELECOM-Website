@@ -552,8 +552,9 @@ export const ModelDetailPage: React.FC<ModelDetailPageProps> = ({ modelSlug }) =
               ? heroCardConfig.description.replace(/\{model\}/gi, model.name)
               : `Precision display repair and touch glass refurbishing for ${model.name}. Performed in our Class-5 dust-free optical cleanroom with original panel preservation.`);
 
-          const resolvedFeatures =
-            heroCardConfig?.features && heroCardConfig.features.length === 4
+          const modelFeatures = Array.isArray((model as any)?.features) && (model as any).features.length > 0
+            ? (model as any).features
+            : (Array.isArray(heroCardConfig?.features) && heroCardConfig.features.length > 0)
               ? heroCardConfig.features
               : [
                   {
@@ -573,6 +574,8 @@ export const ModelDetailPage: React.FC<ModelDetailPageProps> = ({ modelSlug }) =
                     description: 'Ambient light and digitizer sensor data programmed to ensure 100% fidelity',
                   },
                 ];
+
+          const resolvedFeatures = modelFeatures;
 
           return (
             <div className="rounded-2xl sm:rounded-3xl border border-slate-200/90 bg-white p-5 sm:p-6 md:p-7 shadow-sm dark:border-slate-800 dark:bg-slate-900/90 mb-8 sm:mb-10 overflow-hidden relative">
@@ -612,7 +615,7 @@ export const ModelDetailPage: React.FC<ModelDetailPageProps> = ({ modelSlug }) =
 
                     {/* Display Engineering Features */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3 mt-4">
-                      {resolvedFeatures.map((feat, fIdx) => (
+                      {resolvedFeatures.map((feat: any, fIdx: number) => (
                         <div
                           key={fIdx}
                           className="flex items-start gap-2.5 rounded-xl border border-slate-100 bg-slate-50/80 p-2.5 dark:border-slate-800 dark:bg-slate-800/50"
@@ -641,10 +644,6 @@ export const ModelDetailPage: React.FC<ModelDetailPageProps> = ({ modelSlug }) =
         {/* ========================================================================= */}
         <div id="display-issues-section" className="mb-12">
           <div className="mb-6">
-            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#00B2A2] mb-1">
-              <AlertTriangle className="h-4 w-4" />
-              <span>Diagnostic Problem Assessment</span>
-            </div>
             <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
               Display-Related Issues Reported & Solved for {model.name}
             </h2>
@@ -654,83 +653,97 @@ export const ModelDetailPage: React.FC<ModelDetailPageProps> = ({ modelSlug }) =
           </div>
 
           {/* Multi-Select Issue Cards with Issue Icons */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-3.5">
-            {displayIssues.map((issueItem, idx) => {
-              const issueTitle = typeof issueItem === 'object' && issueItem?.title ? issueItem.title : String(issueItem);
-              const issueIconName = typeof issueItem === 'object' && issueItem?.icon ? issueItem.icon : undefined;
-              const issueBadge = typeof issueItem === 'object' && issueItem?.badge ? issueItem.badge : undefined;
-              const issueColor = typeof issueItem === 'object' && issueItem?.color ? issueItem.color : undefined;
-              const customIconUrl = typeof issueItem === 'object' && issueItem?.customIconUrl ? issueItem.customIconUrl : undefined;
+          {displayIssues.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-slate-300 dark:border-slate-800 p-8 text-center bg-white dark:bg-slate-900/60">
+              <p className="text-sm font-semibold text-slate-600 dark:text-slate-400">
+                No specific display issues configured for {model.name}. Please contact us on WhatsApp for a custom diagnostic evaluation.
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-3.5">
+              {displayIssues.map((issueItem, idx) => {
+                const issueTitle = typeof issueItem === 'object' && issueItem?.title ? issueItem.title : String(issueItem);
+                const issueIconName = typeof issueItem === 'object' && issueItem?.icon ? issueItem.icon : undefined;
+                const issueBadge = typeof issueItem === 'object' && issueItem?.badge ? issueItem.badge : undefined;
+                const issueColor = typeof issueItem === 'object' && issueItem?.color ? issueItem.color : undefined;
+                const customIconUrl = typeof issueItem === 'object' && issueItem?.customIconUrl ? issueItem.customIconUrl : undefined;
+                const issueDescription = typeof issueItem === 'object' && issueItem?.description ? issueItem.description : undefined;
 
-              const isSelected = selectedIssues.includes(issueTitle);
-              const meta = getIssueMeta(issueTitle);
-              const IssueIcon = issueIconName ? getIssueIcon(issueIconName) : meta.icon;
-              const styles = issueColor ? getIssueStyles(issueColor) : { color: meta.color, selectedClass: meta.selectedClass };
+                const isSelected = selectedIssues.includes(issueTitle);
+                const meta = getIssueMeta(issueTitle);
+                const IssueIcon = issueIconName ? getIssueIcon(issueIconName) : meta.icon;
+                const styles = issueColor ? getIssueStyles(issueColor) : { color: meta.color, selectedClass: meta.selectedClass };
 
-              return (
-                <div
-                  key={idx}
-                  onClick={() => toggleIssue(issueTitle)}
-                  className={`group relative flex flex-col justify-between rounded-xl px-3.5 py-3 transition-all duration-200 cursor-pointer border select-none ${
-                    isSelected
-                      ? styles.selectedClass + ' shadow-md'
-                      : 'border-slate-200 bg-white hover:border-[#00B2A2]/60 dark:border-slate-800 dark:bg-slate-900 shadow-xs hover:shadow-md'
-                  }`}
-                >
-                  <div>
-                    {/* Header: Issue Icon & Checkbox */}
-                    <div className="flex items-start justify-between gap-2.5 mb-2">
-                      <div
-                        className={`flex h-18 w-18 sm:h-20 sm:w-20 items-center justify-center rounded-2xl shrink-0 border transition-transform duration-200 group-hover:scale-105 shadow-xs ${styles.color}`}
-                      >
-                        {customIconUrl ? (
-                          <img
-                            src={customIconUrl}
-                            alt={issueTitle}
-                            className="h-12 w-12 sm:h-14 sm:w-14 object-contain"
-                            loading="lazy"
-                          />
-                        ) : (
-                          <IssueIcon className="h-11 w-11 sm:h-13 sm:w-13 stroke-[2.2]" />
-                        )}
+                return (
+                  <div
+                    key={idx}
+                    onClick={() => toggleIssue(issueTitle)}
+                    className={`group relative flex flex-col justify-between rounded-xl px-3 py-2 sm:px-3.5 sm:py-2.5 transition-all duration-200 cursor-pointer border select-none ${
+                      isSelected
+                        ? styles.selectedClass + ' shadow-md'
+                        : 'border-slate-200 bg-white hover:border-[#00B2A2]/60 dark:border-slate-800 dark:bg-slate-900 shadow-xs hover:shadow-md'
+                    }`}
+                  >
+                    <div>
+                      {/* Header: Issue Icon & Checkbox */}
+                      <div className="flex items-start justify-between gap-2 mb-1.5">
+                        <div
+                          className={`flex h-11 w-11 sm:h-12 sm:w-12 items-center justify-center rounded-xl shrink-0 border transition-transform duration-200 group-hover:scale-105 shadow-xs ${styles.color}`}
+                        >
+                          {customIconUrl ? (
+                            <img
+                              src={customIconUrl}
+                              alt={issueTitle}
+                              className="h-7 w-7 sm:h-7.5 sm:w-7.5 object-contain"
+                              loading="lazy"
+                            />
+                          ) : (
+                            <IssueIcon className="h-6 w-6 sm:h-6.5 sm:w-6.5 stroke-[2.2]" />
+                          )}
+                        </div>
+
+                        {/* Custom Multi-Select Checkbox */}
+                        <div
+                          className={`h-4.5 w-4.5 rounded-md flex items-center justify-center transition-all ${
+                            isSelected
+                              ? 'bg-[#00B2A2] text-white shadow-xs'
+                              : 'border-2 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 group-hover:border-[#00B2A2]'
+                          }`}
+                        >
+                          {isSelected && <Check className="h-3 w-3 stroke-[3]" />}
+                        </div>
                       </div>
 
-                      {/* Custom Multi-Select Checkbox */}
-                      <div
-                        className={`h-5 w-5 rounded-md flex items-center justify-center transition-all ${
-                          isSelected
-                            ? 'bg-[#00B2A2] text-white shadow-xs'
-                            : 'border-2 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 group-hover:border-[#00B2A2]'
-                        }`}
-                      >
-                        {isSelected && <Check className="h-3.5 w-3.5 stroke-[3]" />}
-                      </div>
+                      {/* Issue Name & Diagnostic Badge */}
+                      <span className="text-xs sm:text-[13px] font-black text-slate-900 dark:text-white block group-hover:text-[#00B2A2] transition-colors leading-snug">
+                        {issueTitle}
+                      </span>
+                      <span className="text-[11px] text-slate-500 dark:text-slate-400 block mt-0.5 line-clamp-1">
+                        {issueBadge || meta.badge || 'Certified cleanroom repair'}
+                      </span>
+                      {issueDescription && (
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 leading-snug line-clamp-2">
+                          {issueDescription}
+                        </p>
+                      )}
                     </div>
 
-                    {/* Issue Name & Diagnostic Badge */}
-                    <span className="text-sm font-black text-slate-900 dark:text-white block group-hover:text-[#00B2A2] transition-colors leading-snug">
-                      {issueTitle}
-                    </span>
-                    <span className="text-[11px] text-slate-500 dark:text-slate-400 block mt-0.5 line-clamp-1">
-                      {issueBadge || meta.badge || 'Certified cleanroom repair'}
-                    </span>
-                  </div>
-
-                  {/* Bottom selection state */}
-                  <div className="mt-2 pt-1.5 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
-                    <span className={`text-[11px] font-bold ${isSelected ? 'text-[#00B2A2]' : 'text-slate-400 dark:text-slate-500'}`}>
-                      {isSelected ? '✓ Selected' : 'Click to select'}
-                    </span>
-                    {isSelected && (
-                      <span className="text-[10px] font-extrabold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-md border border-emerald-500/20">
-                        Added to Enquiry
+                    {/* Bottom selection state */}
+                    <div className="mt-1.5 pt-1 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
+                      <span className={`text-[10.5px] font-bold ${isSelected ? 'text-[#00B2A2]' : 'text-slate-400 dark:text-slate-500'}`}>
+                        {isSelected ? '✓ Selected' : 'Click to select'}
                       </span>
-                    )}
+                      {isSelected && (
+                        <span className="text-[9.5px] font-extrabold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-500/20">
+                          Added to Enquiry
+                        </span>
+                      )}
+                    </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          )}
 
           {/* ========================================================================= */}
           {/* PROMINENT "PROCEED WITH WHATSAPP" ENQUIRY PANEL (BOTTOM CENTRE)          */}
