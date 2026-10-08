@@ -236,9 +236,41 @@ export const DeviceCatalogManagementTab: React.FC<DeviceCatalogManagementTabProp
       }
       if (!Array.isArray(issues)) issues = [];
 
+      // Normalize all assigned issues so they reliably have stable id, title, icon, etc.
+      const masterList = availableDisplayIssues.length > 0 ? availableDisplayIssues : DEFAULT_DISPLAY_ISSUES;
+      const normalizedIssues = issues.map((iss, idx) => {
+        if (typeof iss === 'string') {
+          const matched = masterList.find(
+            (m) => m.title.trim().toLowerCase() === iss.trim().toLowerCase()
+          );
+          return {
+            id: matched?.id || `issue-${idx + 1}`,
+            title: iss,
+            icon: matched?.icon || 'Layers',
+            customIconUrl: matched?.customIconUrl || null,
+            badge: matched?.badge || 'Certified cleanroom repair',
+            color: matched?.color || 'teal',
+          };
+        } else if (typeof iss === 'object' && iss !== null) {
+          const matched = masterList.find(
+            (m) => (iss.id && m.id === iss.id) || (iss.title && m.title.trim().toLowerCase() === iss.title.trim().toLowerCase())
+          );
+          return {
+            ...iss,
+            id: iss.id || matched?.id || `issue-${idx + 1}`,
+            title: iss.title || matched?.title || 'Display Issue',
+            icon: iss.icon || matched?.icon || 'Layers',
+            customIconUrl: iss.customIconUrl !== undefined ? iss.customIconUrl : (matched?.customIconUrl || null),
+            badge: iss.badge || matched?.badge || 'Certified cleanroom repair',
+            color: iss.color || matched?.color || 'teal',
+          };
+        }
+        return iss;
+      });
+
       setEditingItem({
         ...item,
-        displayIssues: issues,
+        displayIssues: normalizedIssues,
         serviceIds: item.serviceIds || servicesList.map((s) => s.id),
       });
       setNewCustomIssueTitle('');
@@ -1452,27 +1484,31 @@ export const DeviceCatalogManagementTab: React.FC<DeviceCatalogManagementTabProp
 
                             {/* Editable Model-Specific Issue Text Input */}
                             <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-1 text-[10px] font-bold text-slate-500 dark:text-slate-400 mb-1">
+                                <Edit className="h-2.5 w-2.5 text-[#00B2A2]" />
+                                <span>Card Text (Editable for this model):</span>
+                              </div>
                               <input
                                 type="text"
                                 value={assignedTitle}
                                 onChange={(e) => {
                                   const newText = e.target.value;
+                                  const cList = Array.isArray(editingItem.displayIssues) ? editingItem.displayIssues : [];
                                   let found = false;
-                                  const updated = currentList.map((item: any) => {
-                                    const matches = (typeof item === 'object' && (item.id === masterIssue.id || item.title === assignedTitle)) ||
-                                                    (typeof item === 'string' && (item === assignedTitle || item === masterIssue.title));
-                                    if (matches) {
+                                  const updated = cList.map((item: any) => {
+                                    const isThisIssue =
+                                      (typeof item === 'object' && item !== null && (String(item.id) === String(masterIssue.id) || item.title === assignedTitle)) ||
+                                      (typeof item === 'string' && (item === assignedTitle || item === masterIssue.title));
+                                    if (isThisIssue) {
                                       found = true;
-                                      return typeof item === 'object'
-                                        ? { ...item, title: newText }
-                                        : {
-                                            id: masterIssue.id,
-                                            title: newText,
-                                            icon: masterIssue.icon,
-                                            customIconUrl: masterIssue.customIconUrl || null,
-                                            badge: masterIssue.badge || 'Certified cleanroom repair',
-                                            color: masterIssue.color || 'teal',
-                                          };
+                                      return {
+                                        id: masterIssue.id,
+                                        title: newText,
+                                        icon: (typeof item === 'object' && item.icon) || masterIssue.icon,
+                                        customIconUrl: (typeof item === 'object' && item.customIconUrl !== undefined) ? item.customIconUrl : (masterIssue.customIconUrl || null),
+                                        badge: (typeof item === 'object' && item.badge) || masterIssue.badge || 'Certified cleanroom repair',
+                                        color: (typeof item === 'object' && item.color) || masterIssue.color || 'teal',
+                                      };
                                     }
                                     return item;
                                   });
@@ -1494,7 +1530,7 @@ export const DeviceCatalogManagementTab: React.FC<DeviceCatalogManagementTabProp
                                 placeholder={masterIssue.title}
                                 className={`w-full rounded-lg border px-2.5 py-1.5 text-xs font-semibold focus:border-[#00B2A2] focus:outline-none transition-colors ${
                                   isChecked
-                                    ? 'border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white'
+                                    ? 'border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white ring-1 ring-[#00B2A2]/30'
                                     : 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-500'
                                 }`}
                               />

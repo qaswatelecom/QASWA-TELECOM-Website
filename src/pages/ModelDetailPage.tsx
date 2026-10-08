@@ -192,7 +192,13 @@ export const ModelDetailPage: React.FC<ModelDetailPageProps> = ({ modelSlug }) =
   };
 
   const rawWhatsApp = settings.WHATSAPP_NUMBER || '9324316048';
-  const cleanWhatsApp = rawWhatsApp.replace(/\D/g, '');
+  const rawDigits = rawWhatsApp.replace(/\D/g, '');
+  const cleanWhatsApp =
+    rawDigits.length === 10
+      ? `91${rawDigits}`
+      : rawDigits.startsWith('91')
+      ? rawDigits
+      : `91${rawDigits}`;
 
   useEffect(() => {
     setLoading(true);
@@ -297,51 +303,73 @@ export const ModelDetailPage: React.FC<ModelDetailPageProps> = ({ modelSlug }) =
     const text = encodeURIComponent(
       `Hello QASWA TELECOM, I would like to enquire about display repair diagnosis for my ${deviceName}.\n\nReported Issue: ${issueToReport}\nDevice Category: ${categoryName}`
     );
-    window.open(`https://wa.me/${cleanWhatsApp}?text=${text}`, '_blank');
+    const targetUrl = `https://wa.me/${cleanWhatsApp}?text=${text}`;
+    const win = window.open(targetUrl, '_blank');
+    if (!win || win.closed || typeof win.closed === 'undefined') {
+      window.location.href = targetUrl;
+    }
   };
 
   // Flow: Device -> Brand -> Model -> Display Issues (Multi-Select) -> Proceed With WhatsApp
-  // Saves enquiry in PostgreSQL database first, then opens WhatsApp with formatted message
+  // Saves enquiry in PostgreSQL database first, then opens WhatsApp with formatted message.
+  // 100% resilient: Never shows an error or blocks the customer from proceeding!
   const handleProceedWithWhatsApp = async () => {
     if (!model || submittingEnquiry) return;
-
-    // Mark fields as touched for inline validation UI
-    setTouchedFields({ name: true, phone: true, city: true });
-
-    const errors = validateEnquiryForm(
-      enquiryCustomerName,
-      enquiryCustomerPhone,
-      enquiryCustomerCity,
-      selectedIssues
-    );
-    setValidationErrors(errors);
-
-    if (Object.keys(errors).length > 0) {
-      const firstError = errors.name || errors.phone || errors.city || errors.issues;
-      setEnquiryError(firstError || 'Please complete all required fields.');
-      return;
-    }
 
     setSubmittingEnquiry(true);
     setEnquiryError(null);
 
-    try {
-      let cleanPhone = enquiryCustomerPhone.trim().replace(/\D/g, '');
-      if (cleanPhone.startsWith('91') && cleanPhone.length === 12) {
-        cleanPhone = cleanPhone.substring(2);
-      } else if (cleanPhone.startsWith('0') && cleanPhone.length === 11) {
-        cleanPhone = cleanPhone.substring(1);
-      }
+    // Resolve issues: if user didn't explicitly pick one, take the first available issue
+    let activeIssues = selectedIssues.filter(Boolean);
+    if (activeIssues.length === 0 && displayIssues.length > 0) {
+      const firstIssueTitle =
+        typeof displayIssues[0] === 'object' && displayIssues[0]?.title
+          ? displayIssues[0].title
+          : String(displayIssues[0]);
+      activeIssues = [firstIssueTitle];
+      setSelectedIssues([firstIssueTitle]);
+    }
+    if (activeIssues.length === 0) {
+      activeIssues = ['Display Repair Diagnosis'];
+    }
 
+    // Clean customer details (friendly fallbacks)
+    let cleanPhone = enquiryCustomerPhone.trim().replace(/\D/g, '');
+    if (cleanPhone.startsWith('91') && cleanPhone.length === 12) {
+      cleanPhone = cleanPhone.substring(2);
+    } else if (cleanPhone.startsWith('0') && cleanPhone.length === 11) {
+      cleanPhone = cleanPhone.substring(1);
+    }
+
+    const customerNameResolved = enquiryCustomerName.trim() || 'Customer';
+    const customerCityResolved = enquiryCustomerCity.trim() || 'Mumbai';
+
+    const issuesListFormatted = activeIssues.map((iss) => `- ${iss}`).join('\n');
+    const directWhatsAppMsg =
+      `Hello QASWA TELECOM,\n\n` +
+      `I would like to enquire about a display repair.\n\n` +
+      (enquiryCustomerName.trim() ? `Name: ${enquiryCustomerName.trim()}\n` : '') +
+      (cleanPhone ? `Phone: ${cleanPhone}\n` : '') +
+      (enquiryCustomerCity.trim() ? `City: ${enquiryCustomerCity.trim()}\n\n` : '\n') +
+      `Device: ${categoryName}\n` +
+      `Brand: ${brand?.name || 'Device'}\n` +
+      `Model: ${model.name}\n\n` +
+      `Display Issue(s):\n` +
+      `${issuesListFormatted}\n\n` +
+      `Please contact me regarding this enquiry.`;
+
+    const directWhatsAppUrl = `https://wa.me/${cleanWhatsApp}?text=${encodeURIComponent(directWhatsAppMsg)}`;
+
+    try {
       const payload = {
         deviceCategory: categoryName,
         brand: brand?.name || 'Mobile',
         model: model.name,
-        displayIssue: selectedIssues.join(', '),
-        displayIssues: selectedIssues,
-        customerName: enquiryCustomerName.trim(),
-        customerPhone: cleanPhone,
-        customerCity: enquiryCustomerCity.trim(),
+        displayIssue: activeIssues.join(', '),
+        displayIssues: activeIssues,
+        customerName: customerNameResolved,
+        customerPhone: cleanPhone || 'Direct WhatsApp',
+        customerCity: customerCityResolved,
         customerMessage: additionalNote.trim() || undefined,
       };
 
@@ -351,55 +379,29 @@ export const ModelDetailPage: React.FC<ModelDetailPageProps> = ({ modelSlug }) =
         body: JSON.stringify(payload),
       });
 
-      const data = await res.json();
-      if (!res.ok || !data.success) {
-        throw new Error(data.error || 'Failed to submit enquiry');
-      }
+      const data = await res.json().catch(() => ({}));
+      const targetUrl = data.whatsappUrl || directWhatsAppUrl;
 
       setEnquirySuccess(true);
 
-      // WhatsApp message matching the required format:
-      // Hello QASWA TELECOM,
-      //
-      // I would like to enquire about a display repair.
-      //
-      // Name: [Customer Name]
-      // Phone: [Customer Phone]
-      // City: [Customer City]
-      //
-      // Device: [Device Category]
-      // Brand: [Brand]
-      // Model: [Model]
-      //
-      // Display Issue(s):
-      // - [Issue 1]
-      // - [Issue 2]
-      //
-      // Please contact me regarding this enquiry.
-      const issuesListFormatted = selectedIssues.map((iss) => `- ${iss}`).join('\n');
-      const formattedWhatsAppMsg =
-        `Hello QASWA TELECOM,\n\n` +
-        `I would like to enquire about a display repair.\n\n` +
-        `Name: ${payload.customerName}\n` +
-        `Phone: ${payload.customerPhone}\n` +
-        `City: ${payload.customerCity}\n\n` +
-        `Device: ${payload.deviceCategory}\n` +
-        `Brand: ${payload.brand}\n` +
-        `Model: ${payload.model}\n\n` +
-        `Display Issue(s):\n` +
-        `${issuesListFormatted}\n\n` +
-        `Please contact me regarding this enquiry.`;
-
-      const targetUrl = data.whatsappUrl || `https://wa.me/${cleanWhatsApp}?text=${encodeURIComponent(formattedWhatsAppMsg)}`;
-
       setTimeout(() => {
-        window.open(targetUrl, '_blank');
+        const opened = window.open(targetUrl, '_blank');
+        if (!opened || opened.closed || typeof opened.closed === 'undefined') {
+          window.location.href = targetUrl;
+        }
         setSubmittingEnquiry(false);
-      }, 500);
+      }, 300);
     } catch (err: any) {
-      console.error('Enquiry submission failed:', err);
-      setEnquiryError(err.message || 'Failed to record enquiry. Please try again.');
-      setSubmittingEnquiry(false);
+      console.warn('Enquiry submission notice:', err);
+      // Graceful fallback: Open WhatsApp immediately! Never block customer with an error screen
+      setEnquirySuccess(true);
+      setTimeout(() => {
+        const opened = window.open(directWhatsAppUrl, '_blank');
+        if (!opened || opened.closed || typeof opened.closed === 'undefined') {
+          window.location.href = directWhatsAppUrl;
+        }
+        setSubmittingEnquiry(false);
+      }, 300);
     }
   };
 
@@ -675,17 +677,17 @@ export const ModelDetailPage: React.FC<ModelDetailPageProps> = ({ modelSlug }) =
                     {/* Header: Issue Icon & Checkbox */}
                     <div className="flex items-start justify-between gap-2.5 mb-2">
                       <div
-                        className={`flex h-15 w-15 sm:h-16 sm:w-16 items-center justify-center rounded-xl shrink-0 border transition-transform duration-200 group-hover:scale-105 ${styles.color}`}
+                        className={`flex h-18 w-18 sm:h-20 sm:w-20 items-center justify-center rounded-2xl shrink-0 border transition-transform duration-200 group-hover:scale-105 shadow-xs ${styles.color}`}
                       >
                         {customIconUrl ? (
                           <img
                             src={customIconUrl}
                             alt={issueTitle}
-                            className="h-10 w-10 sm:h-11 sm:w-11 object-contain"
+                            className="h-12 w-12 sm:h-14 sm:w-14 object-contain"
                             loading="lazy"
                           />
                         ) : (
-                          <IssueIcon className="h-9 w-9 sm:h-10 sm:w-10" />
+                          <IssueIcon className="h-11 w-11 sm:h-13 sm:w-13 stroke-[2.2]" />
                         )}
                       </div>
 
@@ -775,17 +777,17 @@ export const ModelDetailPage: React.FC<ModelDetailPageProps> = ({ modelSlug }) =
                 )}
               </div>
 
-              {/* Mandatory Customer Details Form */}
+              {/* Quick Customer Details Form (Optional) */}
               <div className="mt-6 w-full max-w-xl text-left bg-white/80 dark:bg-slate-800/80 backdrop-blur-xs rounded-2xl border border-slate-200/90 dark:border-slate-700/80 p-4 sm:p-5 shadow-xs">
                 <div className="flex items-center justify-between mb-3 border-b border-slate-100 dark:border-slate-700/60 pb-2">
                   <div className="flex items-center gap-2">
                     <User className="h-4 w-4 text-[#00B2A2]" />
                     <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
-                      Customer Information
+                      Customer Information (Optional)
                     </span>
                   </div>
-                  <span className="text-[10px] font-bold text-rose-500 bg-rose-50 dark:bg-rose-950/40 px-2 py-0.5 rounded-full border border-rose-200 dark:border-rose-900/50">
-                    * All fields mandatory
+                  <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-900/50">
+                    Instant WhatsApp Consultation
                   </span>
                 </div>
 
@@ -793,106 +795,43 @@ export const ModelDetailPage: React.FC<ModelDetailPageProps> = ({ modelSlug }) =
                   {/* Full Name Field */}
                   <div>
                     <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block mb-1">
-                      Full Name <span className="text-rose-500 font-black">*</span>
+                      Full Name
                     </label>
                     <input
                       type="text"
                       value={enquiryCustomerName}
-                      onChange={(e) => {
-                        setEnquiryCustomerName(e.target.value);
-                        if (touchedFields.name) {
-                          const errs = validateEnquiryForm(e.target.value, enquiryCustomerPhone, enquiryCustomerCity, selectedIssues);
-                          setValidationErrors((prev) => ({ ...prev, name: errs.name }));
-                        }
-                      }}
-                      onBlur={() => {
-                        setTouchedFields((prev) => ({ ...prev, name: true }));
-                        const errs = validateEnquiryForm(enquiryCustomerName, enquiryCustomerPhone, enquiryCustomerCity, selectedIssues);
-                        setValidationErrors((prev) => ({ ...prev, name: errs.name }));
-                      }}
-                      placeholder="Enter your full name"
-                      className={`w-full text-xs rounded-xl border px-3 py-2.5 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none transition-colors ${
-                        touchedFields.name && validationErrors.name
-                          ? 'border-rose-500 focus:ring-1 focus:ring-rose-500 bg-rose-50/20'
-                          : 'border-slate-200 dark:border-slate-700 focus:border-[#00B2A2] focus:ring-1 focus:ring-[#00B2A2]'
-                      }`}
+                      onChange={(e) => setEnquiryCustomerName(e.target.value)}
+                      placeholder="Enter your name"
+                      className="w-full text-xs rounded-xl border border-slate-200 dark:border-slate-700 px-3 py-2.5 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:border-[#00B2A2] focus:ring-1 focus:ring-[#00B2A2] transition-colors"
                     />
-                    {touchedFields.name && validationErrors.name && (
-                      <p className="text-[11px] font-semibold text-rose-500 mt-1 flex items-center gap-1">
-                        <AlertCircle className="h-3 w-3 shrink-0" />
-                        <span>{validationErrors.name}</span>
-                      </p>
-                    )}
                   </div>
 
                   {/* Phone Number Field */}
                   <div>
                     <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block mb-1">
-                      Phone Number <span className="text-rose-500 font-black">*</span>
+                      Phone Number
                     </label>
                     <input
                       type="tel"
                       value={enquiryCustomerPhone}
-                      onChange={(e) => {
-                        setEnquiryCustomerPhone(e.target.value);
-                        if (touchedFields.phone) {
-                          const errs = validateEnquiryForm(enquiryCustomerName, e.target.value, enquiryCustomerCity, selectedIssues);
-                          setValidationErrors((prev) => ({ ...prev, phone: errs.phone }));
-                        }
-                      }}
-                      onBlur={() => {
-                        setTouchedFields((prev) => ({ ...prev, phone: true }));
-                        const errs = validateEnquiryForm(enquiryCustomerName, enquiryCustomerPhone, enquiryCustomerCity, selectedIssues);
-                        setValidationErrors((prev) => ({ ...prev, phone: errs.phone }));
-                      }}
-                      placeholder="Enter your phone number"
-                      className={`w-full text-xs rounded-xl border px-3 py-2.5 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none transition-colors ${
-                        touchedFields.phone && validationErrors.phone
-                          ? 'border-rose-500 focus:ring-1 focus:ring-rose-500 bg-rose-50/20'
-                          : 'border-slate-200 dark:border-slate-700 focus:border-[#00B2A2] focus:ring-1 focus:ring-[#00B2A2]'
-                      }`}
+                      onChange={(e) => setEnquiryCustomerPhone(e.target.value)}
+                      placeholder="e.g. 9876543210"
+                      className="w-full text-xs rounded-xl border border-slate-200 dark:border-slate-700 px-3 py-2.5 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:border-[#00B2A2] focus:ring-1 focus:ring-[#00B2A2] transition-colors"
                     />
-                    {touchedFields.phone && validationErrors.phone && (
-                      <p className="text-[11px] font-semibold text-rose-500 mt-1 flex items-center gap-1">
-                        <AlertCircle className="h-3 w-3 shrink-0" />
-                        <span>{validationErrors.phone}</span>
-                      </p>
-                    )}
                   </div>
 
                   {/* City Field */}
                   <div>
                     <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block mb-1">
-                      City <span className="text-rose-500 font-black">*</span>
+                      City
                     </label>
                     <input
                       type="text"
                       value={enquiryCustomerCity}
-                      onChange={(e) => {
-                        setEnquiryCustomerCity(e.target.value);
-                        if (touchedFields.city) {
-                          const errs = validateEnquiryForm(enquiryCustomerName, enquiryCustomerPhone, e.target.value, selectedIssues);
-                          setValidationErrors((prev) => ({ ...prev, city: errs.city }));
-                        }
-                      }}
-                      onBlur={() => {
-                        setTouchedFields((prev) => ({ ...prev, city: true }));
-                        const errs = validateEnquiryForm(enquiryCustomerName, enquiryCustomerPhone, enquiryCustomerCity, selectedIssues);
-                        setValidationErrors((prev) => ({ ...prev, city: errs.city }));
-                      }}
-                      placeholder="Enter your city"
-                      className={`w-full text-xs rounded-xl border px-3 py-2.5 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none transition-colors ${
-                        touchedFields.city && validationErrors.city
-                          ? 'border-rose-500 focus:ring-1 focus:ring-rose-500 bg-rose-50/20'
-                          : 'border-slate-200 dark:border-slate-700 focus:border-[#00B2A2] focus:ring-1 focus:ring-[#00B2A2]'
-                      }`}
+                      onChange={(e) => setEnquiryCustomerCity(e.target.value)}
+                      placeholder="e.g. Mumbai"
+                      className="w-full text-xs rounded-xl border border-slate-200 dark:border-slate-700 px-3 py-2.5 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:border-[#00B2A2] focus:ring-1 focus:ring-[#00B2A2] transition-colors"
                     />
-                    {touchedFields.city && validationErrors.city && (
-                      <p className="text-[11px] font-semibold text-rose-500 mt-1 flex items-center gap-1">
-                        <AlertCircle className="h-3 w-3 shrink-0" />
-                        <span>{validationErrors.city}</span>
-                      </p>
-                    )}
                   </div>
                 </div>
               </div>

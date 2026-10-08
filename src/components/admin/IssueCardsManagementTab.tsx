@@ -274,6 +274,15 @@ export const IssueCardsManagementTab: React.FC<IssueCardsManagementTabProps> = (
 
         <div className="flex items-center gap-2 flex-wrap">
           <button
+            onClick={() => saveIssuesToBackend(issuesList)}
+            disabled={saving || loading}
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 transition-colors shadow-xs cursor-pointer"
+          >
+            <Save className="h-4 w-4" />
+            <span>{saving ? 'Saving...' : 'Save All Changes'}</span>
+          </button>
+
+          <button
             onClick={handleResetDefaults}
             disabled={saving || loading}
             className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 transition-colors cursor-pointer"
@@ -347,10 +356,27 @@ export const IssueCardsManagementTab: React.FC<IssueCardsManagementTabProps> = (
                     </div>
                   </div>
 
-                  {/* Issue Title / Text */}
-                  <span className="text-sm font-black text-slate-900 dark:text-white block group-hover:text-[#00B2A2] transition-colors leading-snug">
-                    {issue.title}
-                  </span>
+                  {/* Issue Title / Text (Directly Editable) */}
+                  <div className="space-y-1 mb-2">
+                    <div className="flex items-center justify-between">
+                      <label className="flex items-center gap-1 text-[10px] font-bold text-slate-500 dark:text-slate-400">
+                        <Edit className="h-2.5 w-2.5 text-[#00B2A2]" />
+                        <span>Issue Card Text:</span>
+                      </label>
+                      <span className="text-[9px] text-slate-400">Editable</span>
+                    </div>
+                    <textarea
+                      rows={2}
+                      value={issue.title}
+                      onChange={(e) => {
+                        const updated = [...issuesList];
+                        updated[idx] = { ...updated[idx], title: e.target.value };
+                        setIssuesList(updated);
+                      }}
+                      className="w-full text-xs font-bold rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-800/80 p-2 text-slate-900 dark:text-white focus:border-[#00B2A2] focus:bg-white dark:focus:bg-slate-900 focus:outline-none transition-colors"
+                      placeholder="Enter issue card text..."
+                    />
+                  </div>
 
                   {/* Icon label & Diagnostic Badge */}
                   <div className="mt-2 space-y-1">

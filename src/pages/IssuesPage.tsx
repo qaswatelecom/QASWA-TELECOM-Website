@@ -30,7 +30,13 @@ export const IssuesPage: React.FC = () => {
   };
 
   const rawWhatsApp = settings.WHATSAPP_NUMBER || '9324316048';
-  const cleanWhatsApp = rawWhatsApp.replace(/\D/g, '');
+  const rawDigits = rawWhatsApp.replace(/\D/g, '');
+  const cleanWhatsApp =
+    rawDigits.length === 10
+      ? `91${rawDigits}`
+      : rawDigits.startsWith('91')
+      ? rawDigits
+      : `91${rawDigits}`;
 
   const handleWhatsAppEnquiry = (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,7 +56,7 @@ export const IssuesPage: React.FC = () => {
       `Location: Borivali West, Mumbai Lab`;
 
     const encoded = encodeURIComponent(message);
-    const waUrl = `https://wa.me/91${cleanWhatsApp}?text=${encoded}`;
+    const waUrl = `https://wa.me/${cleanWhatsApp}?text=${encoded}`;
     window.location.href = waUrl;
     setIsSubmitting(false);
   };
@@ -99,17 +105,17 @@ export const IssuesPage: React.FC = () => {
                     {/* Header: Issue Icon & Checkbox */}
                     <div className="flex items-start justify-between gap-2.5 mb-2">
                       <div
-                        className={`flex h-15 w-15 sm:h-16 sm:w-16 items-center justify-center rounded-xl shrink-0 border transition-transform duration-200 group-hover:scale-105 ${styles.color}`}
+                        className={`flex h-18 w-18 sm:h-20 sm:w-20 items-center justify-center rounded-2xl shrink-0 border transition-transform duration-200 group-hover:scale-105 shadow-xs ${styles.color}`}
                       >
                         {issueItem.customIconUrl ? (
                           <img
                             src={issueItem.customIconUrl}
                             alt={issueTitle}
-                            className="h-10 w-10 sm:h-11 sm:w-11 object-contain"
+                            className="h-12 w-12 sm:h-14 sm:w-14 object-contain"
                             loading="lazy"
                           />
                         ) : (
-                          <IssueIcon className="h-9 w-9 sm:h-10 sm:w-10" />
+                          <IssueIcon className="h-11 w-11 sm:h-13 sm:w-13 stroke-[2.2]" />
                         )}
                       </div>
 
