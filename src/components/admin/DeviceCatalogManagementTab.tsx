@@ -21,20 +21,14 @@ import {
   ChevronRight,
   Filter,
   Upload,
-  ChevronDown,
-  ChevronUp,
-  Sparkles,
-  Palette,
 } from 'lucide-react';
 import { DeviceCategory, Brand, Model, Service } from '../../types/index.ts';
 import { MediaPickerModal } from './MediaPickerModal.tsx';
 import { IssueCardsManagementTab } from './IssueCardsManagementTab.tsx';
 import { uploadImageToFirebaseStorage } from '../../lib/firebaseStorage.ts';
 import {
-  AVAILABLE_ISSUE_ICONS,
   DEFAULT_DISPLAY_ISSUES,
   DisplayIssueItem,
-  ISSUE_COLOR_STYLES,
   getIssueIcon,
   getIssueStyles,
 } from '../../lib/issueIcons.ts';
@@ -80,10 +74,6 @@ export const DeviceCatalogManagementTab: React.FC<DeviceCatalogManagementTabProp
   const [servicesList, setServicesList] = useState<Service[]>([]);
   const [availableDisplayIssues, setAvailableDisplayIssues] = useState<DisplayIssueItem[]>(DEFAULT_DISPLAY_ISSUES);
   const [newCustomIssueTitle, setNewCustomIssueTitle] = useState('');
-  const [newCustomIssueBadge, setNewCustomIssueBadge] = useState('Model Fault Diagnosis');
-  const [newCustomIssueIcon, setNewCustomIssueIcon] = useState('Sparkles');
-  const [newCustomIssueColor, setNewCustomIssueColor] = useState('teal');
-  const [expandedIssueIds, setExpandedIssueIds] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(false);
 
   // Search & Filters
@@ -213,24 +203,6 @@ export const DeviceCatalogManagementTab: React.FC<DeviceCatalogManagementTabProp
     } else if (type === 'model') {
       const defaultCat = categoriesList.find((c) => c.slug === currentCategorySlug);
       const defaultBrand = currentSectionBrands[0];
-      const defaultFeatures = [
-        {
-          title: 'Original Panel Preservation',
-          description: 'Keep your original AMOLED/Retina panel when only front glass is cracked',
-        },
-        {
-          title: 'Laser Flex Bonding Available',
-          description: 'Eliminate green lines and white screen issues with cold laser bonding',
-        },
-        {
-          title: 'Cleanroom OCA Lamination',
-          description: 'Bubble-free optical autoclave bonding identical to factory standards',
-        },
-        {
-          title: 'TrueTone & Sensor Calibration',
-          description: 'Ambient light and digitizer sensor data programmed to ensure 100% fidelity',
-        },
-      ];
       setEditingItem({
         categoryId: defaultCat?.id || null,
         categorySlug: currentCategorySlug,
@@ -241,16 +213,11 @@ export const DeviceCatalogManagementTab: React.FC<DeviceCatalogManagementTabProp
         imageUrl: '',
         description: '',
         displayIssues: [], // Only issues selected by the admin will appear on frontend
-        features: defaultFeatures,
         serviceIds: servicesList.map((s) => s.id),
         isActive: true,
         sortOrder: currentSectionModels.length + 1,
       });
       setNewCustomIssueTitle('');
-      setNewCustomIssueBadge('Model Fault Diagnosis');
-      setNewCustomIssueIcon('Sparkles');
-      setNewCustomIssueColor('teal');
-      setExpandedIssueIds({});
     }
     setModalOpen(true);
   };
@@ -260,41 +227,14 @@ export const DeviceCatalogManagementTab: React.FC<DeviceCatalogManagementTabProp
     setModalType(type);
     if (type === 'model') {
       let issues: any[] = [];
-      let features: any[] = [];
       if (item.displayIssues) {
         try {
-          const parsed = typeof item.displayIssues === 'string' ? JSON.parse(item.displayIssues) : item.displayIssues;
-          if (Array.isArray(parsed)) {
-            issues = parsed;
-          } else if (parsed && typeof parsed === 'object') {
-            if (Array.isArray(parsed.issues)) issues = parsed.issues;
-            if (Array.isArray(parsed.features)) features = parsed.features;
-          }
+          issues = typeof item.displayIssues === 'string' ? JSON.parse(item.displayIssues) : item.displayIssues;
         } catch {
           issues = item.displayIssues.split(',').map((s: string) => s.trim()).filter(Boolean);
         }
       }
       if (!Array.isArray(issues)) issues = [];
-      if (!Array.isArray(features) || features.length === 0) {
-        features = [
-          {
-            title: 'Original Panel Preservation',
-            description: 'Keep your original AMOLED/Retina panel when only front glass is cracked',
-          },
-          {
-            title: 'Laser Flex Bonding Available',
-            description: 'Eliminate green lines and white screen issues with cold laser bonding',
-          },
-          {
-            title: 'Cleanroom OCA Lamination',
-            description: 'Bubble-free optical autoclave bonding identical to factory standards',
-          },
-          {
-            title: 'TrueTone & Sensor Calibration',
-            description: 'Ambient light and digitizer sensor data programmed to ensure 100% fidelity',
-          },
-        ];
-      }
 
       // Normalize all assigned issues so they reliably have stable id, title, icon, etc.
       const masterList = availableDisplayIssues.length > 0 ? availableDisplayIssues : DEFAULT_DISPLAY_ISSUES;
@@ -310,7 +250,6 @@ export const DeviceCatalogManagementTab: React.FC<DeviceCatalogManagementTabProp
             customIconUrl: matched?.customIconUrl || null,
             badge: matched?.badge || 'Certified cleanroom repair',
             color: matched?.color || 'teal',
-            description: matched?.description || '',
           };
         } else if (typeof iss === 'object' && iss !== null) {
           const matched = masterList.find(
@@ -321,10 +260,9 @@ export const DeviceCatalogManagementTab: React.FC<DeviceCatalogManagementTabProp
             id: iss.id || matched?.id || `issue-${idx + 1}`,
             title: iss.title || matched?.title || 'Display Issue',
             icon: iss.icon || matched?.icon || 'Layers',
-            customIconUrl: iss.customIconUrl !== undefined ? iss.customIconUrl : (matched?.customIconUrl || null),
+            customIconUrl: matched?.customIconUrl || iss.customIconUrl || null,
             badge: iss.badge || matched?.badge || 'Certified cleanroom repair',
             color: iss.color || matched?.color || 'teal',
-            description: iss.description !== undefined ? iss.description : (matched?.description || ''),
           };
         }
         return iss;
@@ -333,14 +271,9 @@ export const DeviceCatalogManagementTab: React.FC<DeviceCatalogManagementTabProp
       setEditingItem({
         ...item,
         displayIssues: normalizedIssues,
-        features: features,
         serviceIds: item.serviceIds || servicesList.map((s) => s.id),
       });
       setNewCustomIssueTitle('');
-      setNewCustomIssueBadge('Model Fault Diagnosis');
-      setNewCustomIssueIcon('Sparkles');
-      setNewCustomIssueColor('teal');
-      setExpandedIssueIds({});
     } else {
       setEditingItem({ ...item });
     }
@@ -362,22 +295,11 @@ export const DeviceCatalogManagementTab: React.FC<DeviceCatalogManagementTabProp
     const url = isEdit ? `${endpoint}/${editingItem.id}` : endpoint;
     const method = isEdit ? 'PUT' : 'POST';
 
-    const payload = { ...editingItem };
-    if (modalType === 'model') {
-      const activeIssues = Array.isArray(editingItem.displayIssues) ? editingItem.displayIssues : [];
-      const activeFeatures = Array.isArray(editingItem.features) ? editingItem.features : [];
-      payload.displayIssues = JSON.stringify({
-        issues: activeIssues,
-        features: activeFeatures,
-      });
-      payload.features = activeFeatures;
-    }
-
     try {
       const res = await fetch(url, {
         method,
         headers: getAuthHeaders(),
-        body: JSON.stringify(payload),
+        body: JSON.stringify(editingItem),
       });
 
       if (!res.ok) {
@@ -1436,14 +1358,14 @@ export const DeviceCatalogManagementTab: React.FC<DeviceCatalogManagementTabProp
                       <div>
                         <div className="flex items-center gap-2">
                           <label className="text-xs font-black text-slate-900 dark:text-white">
-                            Select & Configure Display Issues for this Model
+                            Assign Display-Related Issues for this Model
                           </label>
                           <span className="rounded-full bg-[#00B2A2]/10 text-[#00B2A2] px-2 py-0.5 text-[10px] font-bold">
                             {(Array.isArray(editingItem.displayIssues) ? editingItem.displayIssues.length : 0)} Selected
                           </span>
                         </div>
                         <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                          Only selected issues appear on this model's page. Customize titles, badges, icons, and colors specifically for this model.
+                          Only selected issues will appear on this model's live page. You can customize the exact text for this model below.
                         </p>
                       </div>
 
@@ -1458,7 +1380,6 @@ export const DeviceCatalogManagementTab: React.FC<DeviceCatalogManagementTabProp
                               customIconUrl: item.customIconUrl || null,
                               badge: item.badge || 'Certified cleanroom repair',
                               color: item.color || 'teal',
-                              description: item.description || '',
                             }));
                             setEditingItem({ ...editingItem, displayIssues: all });
                           }}
@@ -1477,7 +1398,7 @@ export const DeviceCatalogManagementTab: React.FC<DeviceCatalogManagementTabProp
                     </div>
 
                     {/* Master Display Issues List */}
-                    <div className="grid grid-cols-1 gap-2.5 max-h-[440px] overflow-y-auto pr-1">
+                    <div className="grid grid-cols-1 gap-2.5 max-h-[380px] overflow-y-auto pr-1">
                       {(availableDisplayIssues.length > 0 ? availableDisplayIssues : DEFAULT_DISPLAY_ISSUES).map((masterIssue) => {
                         const currentList: any[] = Array.isArray(editingItem.displayIssues)
                           ? editingItem.displayIssues
@@ -1496,220 +1417,129 @@ export const DeviceCatalogManagementTab: React.FC<DeviceCatalogManagementTabProp
 
                         const isChecked = Boolean(assignedItem);
                         const assignedTitle = typeof assignedItem === 'object' && assignedItem?.title ? assignedItem.title : (typeof assignedItem === 'string' ? assignedItem : masterIssue.title);
-                        const assignedIcon = typeof assignedItem === 'object' && assignedItem?.icon ? assignedItem.icon : masterIssue.icon;
-                        const assignedBadge = typeof assignedItem === 'object' && assignedItem?.badge ? assignedItem.badge : (masterIssue.badge || 'Certified cleanroom repair');
-                        const assignedColor = typeof assignedItem === 'object' && assignedItem?.color ? assignedItem.color : (masterIssue.color || 'teal');
-                        const assignedCustomIcon = typeof assignedItem === 'object' && assignedItem?.customIconUrl ? assignedItem.customIconUrl : (masterIssue.customIconUrl || '');
-                        const assignedDesc = typeof assignedItem === 'object' && assignedItem?.description ? assignedItem.description : (masterIssue.description || '');
 
-                        const isExpanded = Boolean(expandedIssueIds[masterIssue.id]);
-                        const IssueIcon = getIssueIcon(assignedIcon);
-                        const styles = getIssueStyles(assignedColor);
-
-                        // Helper to update this assigned issue
-                        const updateThisIssue = (patch: Partial<any>) => {
-                          let updated: any[] = [];
-                          let found = false;
-                          updated = currentList.map((item: any) => {
-                            const isMatch =
-                              (typeof item === 'object' && item !== null && (String(item.id) === String(masterIssue.id) || item.title === assignedTitle)) ||
-                              (typeof item === 'string' && (item === assignedTitle || item === masterIssue.title));
-                            if (isMatch) {
-                              found = true;
-                              return typeof item === 'object' ? { ...item, ...patch } : { id: masterIssue.id, title: item, ...patch };
-                            }
-                            return item;
-                          });
-                          if (!found) {
-                            updated.push({
-                              id: masterIssue.id,
-                              title: assignedTitle || masterIssue.title,
-                              icon: assignedIcon,
-                              customIconUrl: assignedCustomIcon || null,
-                              badge: assignedBadge,
-                              color: assignedColor,
-                              description: assignedDesc,
-                              ...patch,
-                            });
-                          }
-                          setEditingItem({ ...editingItem, displayIssues: updated });
-                        };
+                        const IssueIcon = getIssueIcon(masterIssue.icon);
+                        const styles = getIssueStyles(masterIssue.color);
 
                         return (
                           <div
                             key={masterIssue.id}
-                            className={`flex flex-col gap-2 p-2.5 rounded-xl border transition-all ${
+                            className={`flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 p-2.5 rounded-xl border transition-colors ${
                               isChecked
-                                ? 'border-[#00B2A2] bg-[#00B2A2]/5 dark:border-[#00B2A2]/50 dark:bg-[#00B2A2]/10 shadow-xs'
+                                ? 'border-[#00B2A2] bg-[#00B2A2]/5 dark:border-[#00B2A2]/50 dark:bg-[#00B2A2]/10'
                                 : 'border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800/80 opacity-75 hover:opacity-100'
                             }`}
                           >
-                            {/* Main Row */}
-                            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
-                              {/* Checkbox & Icon */}
-                              <div className="flex items-center gap-2 shrink-0">
-                                <input
-                                  type="checkbox"
-                                  checked={isChecked}
-                                  onChange={(e) => {
-                                    if (e.target.checked) {
-                                      const updated = [
-                                        ...currentList,
-                                        {
-                                          id: masterIssue.id,
-                                          title: assignedTitle || masterIssue.title,
-                                          icon: assignedIcon,
-                                          customIconUrl: assignedCustomIcon || null,
-                                          badge: assignedBadge,
-                                          color: assignedColor,
-                                          description: assignedDesc,
-                                        },
-                                      ];
-                                      setEditingItem({ ...editingItem, displayIssues: updated });
-                                    } else {
-                                      const updated = currentList.filter((item: any) => {
-                                        if (typeof item === 'object' && item !== null) {
-                                          if (item.id && item.id === masterIssue.id) return false;
-                                          if (item.title && item.title.trim().toLowerCase() === masterIssue.title.trim().toLowerCase()) return false;
-                                          if (item.title && item.title.trim().toLowerCase() === assignedTitle.trim().toLowerCase()) return false;
-                                        } else if (typeof item === 'string') {
-                                          if (item.trim().toLowerCase() === masterIssue.title.trim().toLowerCase()) return false;
-                                          if (item.trim().toLowerCase() === assignedTitle.trim().toLowerCase()) return false;
-                                        }
-                                        return true;
-                                      });
-                                      setEditingItem({ ...editingItem, displayIssues: updated });
-                                    }
-                                  }}
-                                  className="h-4 w-4 rounded text-[#00B2A2] cursor-pointer"
-                                />
+                            {/* Checkbox & Icon */}
+                            <div className="flex items-center gap-2.5 shrink-0">
+                              <input
+                                type="checkbox"
+                                checked={isChecked}
+                                onChange={(e) => {
+                                  let updated: any[] = [];
+                                  if (e.target.checked) {
+                                    // Add to selected issues with exact text
+                                    updated = [
+                                      ...currentList,
+                                      {
+                                        id: masterIssue.id,
+                                        title: assignedTitle || masterIssue.title,
+                                        icon: masterIssue.icon,
+                                        customIconUrl: masterIssue.customIconUrl || null,
+                                        badge: masterIssue.badge || 'Certified cleanroom repair',
+                                        color: masterIssue.color || 'teal',
+                                      },
+                                    ];
+                                  } else {
+                                    // Remove from selected issues
+                                    updated = currentList.filter((item: any) => {
+                                      if (typeof item === 'object' && item !== null) {
+                                        if (item.id && item.id === masterIssue.id) return false;
+                                        if (item.title && item.title.trim().toLowerCase() === masterIssue.title.trim().toLowerCase()) return false;
+                                        if (item.title && item.title.trim().toLowerCase() === assignedTitle.trim().toLowerCase()) return false;
+                                      } else if (typeof item === 'string') {
+                                        if (item.trim().toLowerCase() === masterIssue.title.trim().toLowerCase()) return false;
+                                        if (item.trim().toLowerCase() === assignedTitle.trim().toLowerCase()) return false;
+                                      }
+                                      return true;
+                                    });
+                                  }
+                                  setEditingItem({ ...editingItem, displayIssues: updated });
+                                }}
+                                className="h-4 w-4 rounded text-[#00B2A2] cursor-pointer"
+                              />
 
-                                <div className={`h-8 w-8 rounded-lg flex items-center justify-center border shrink-0 ${styles.color}`}>
-                                  {assignedCustomIcon ? (
-                                    <img
-                                      src={assignedCustomIcon}
-                                      alt={assignedTitle}
-                                      className="h-5 w-5 object-contain"
-                                    />
-                                  ) : (
-                                    <IssueIcon className="h-4 w-4" />
-                                  )}
-                                </div>
-                              </div>
-
-                              {/* Editable Title */}
-                              <div className="flex-1 min-w-0">
-                                <input
-                                  type="text"
-                                  value={assignedTitle}
-                                  onChange={(e) => updateThisIssue({ title: e.target.value })}
-                                  placeholder={masterIssue.title}
-                                  className={`w-full rounded-lg border px-2.5 py-1.5 text-xs font-semibold focus:border-[#00B2A2] focus:outline-none transition-colors ${
-                                    isChecked
-                                      ? 'border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white ring-1 ring-[#00B2A2]/30'
-                                      : 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-500'
-                                  }`}
-                                />
-                              </div>
-
-                              {/* Quick Icon Selector */}
-                              <div className="shrink-0">
-                                <select
-                                  value={assignedIcon}
-                                  onChange={(e) => updateThisIssue({ icon: e.target.value })}
-                                  className="rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-[11px] font-medium text-slate-700 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-300"
-                                  title="Choose icon for this model"
-                                >
-                                  {AVAILABLE_ISSUE_ICONS.map((ic) => (
-                                    <option key={ic.name} value={ic.name}>
-                                      {ic.name}
-                                    </option>
-                                  ))}
-                                </select>
-                              </div>
-
-                              {/* Quick Color Swatch Selector */}
-                              <div className="flex items-center gap-1 shrink-0">
-                                {Object.keys(ISSUE_COLOR_STYLES).map((col) => (
-                                  <button
-                                    key={col}
-                                    type="button"
-                                    onClick={() => updateThisIssue({ color: col })}
-                                    className={`h-4.5 w-4.5 rounded-full border transition-transform cursor-pointer ${
-                                      assignedColor === col ? 'scale-125 ring-2 ring-offset-1 ring-slate-400' : 'opacity-70 hover:opacity-100'
-                                    } ${
-                                      col === 'amber' ? 'bg-amber-500 border-amber-600' :
-                                      col === 'emerald' ? 'bg-emerald-500 border-emerald-600' :
-                                      col === 'indigo' ? 'bg-indigo-500 border-indigo-600' :
-                                      col === 'sky' ? 'bg-sky-500 border-sky-600' :
-                                      col === 'purple' ? 'bg-purple-500 border-purple-600' :
-                                      col === 'rose' ? 'bg-rose-500 border-rose-600' :
-                                      col === 'green' ? 'bg-green-500 border-green-600' :
-                                      'bg-[#00B2A2] border-teal-600'
-                                    }`}
-                                    title={`Set color: ${col}`}
+                              <div className={`h-8 w-8 rounded-lg flex items-center justify-center border shrink-0 ${styles.color}`}>
+                                {masterIssue.customIconUrl ? (
+                                  <img
+                                    src={masterIssue.customIconUrl}
+                                    alt={masterIssue.title}
+                                    className="h-5 w-5 object-contain"
                                   />
-                                ))}
+                                ) : (
+                                  <IssueIcon className="h-4 w-4" />
+                                )}
                               </div>
-
-                              {/* Expand / Details Toggle Button */}
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  setExpandedIssueIds((prev) => ({
-                                    ...prev,
-                                    [masterIssue.id]: !prev[masterIssue.id],
-                                  }))
-                                }
-                                className="px-2 py-1 text-[10px] font-bold rounded-lg border border-slate-200 bg-slate-100 hover:bg-slate-200 text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 transition-colors cursor-pointer shrink-0"
-                              >
-                                {isExpanded ? 'Hide Options ▲' : 'More Options ▼'}
-                              </button>
                             </div>
 
-                            {/* Expanded options: Badge, Custom Icon URL, Description */}
-                            {isExpanded && (
-                              <div className="pt-2 border-t border-slate-200 dark:border-slate-700 grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] bg-slate-50/70 dark:bg-slate-900/40 p-2 rounded-lg">
-                                <div>
-                                  <label className="block text-[10px] font-bold text-slate-600 dark:text-slate-400 mb-0.5">
-                                    Diagnostic Badge / Tag:
-                                  </label>
-                                  <input
-                                    type="text"
-                                    value={assignedBadge}
-                                    onChange={(e) => updateThisIssue({ badge: e.target.value })}
-                                    placeholder="e.g. Certified cleanroom repair"
-                                    className="w-full rounded border border-slate-200 bg-white p-1.5 text-[11px] dark:bg-slate-800 dark:border-slate-700"
-                                  />
-                                </div>
-
-                                <div>
-                                  <label className="block text-[10px] font-bold text-slate-600 dark:text-slate-400 mb-0.5">
-                                    Custom Icon Image URL (Optional):
-                                  </label>
-                                  <input
-                                    type="text"
-                                    value={assignedCustomIcon}
-                                    onChange={(e) => updateThisIssue({ customIconUrl: e.target.value })}
-                                    placeholder="https://... or /icons/..."
-                                    className="w-full rounded border border-slate-200 bg-white p-1.5 text-[11px] dark:bg-slate-800 dark:border-slate-700"
-                                  />
-                                </div>
-
-                                <div className="sm:col-span-2">
-                                  <label className="block text-[10px] font-bold text-slate-600 dark:text-slate-400 mb-0.5">
-                                    Issue Description / Details (Optional for this model):
-                                  </label>
-                                  <input
-                                    type="text"
-                                    value={assignedDesc}
-                                    onChange={(e) => updateThisIssue({ description: e.target.value })}
-                                    placeholder="Specific notes or repair warranty info for this issue on this model..."
-                                    className="w-full rounded border border-slate-200 bg-white p-1.5 text-[11px] dark:bg-slate-800 dark:border-slate-700"
-                                  />
-                                </div>
+                            {/* Editable Model-Specific Issue Text Input */}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-1 text-[10px] font-bold text-slate-500 dark:text-slate-400 mb-1">
+                                <Edit className="h-2.5 w-2.5 text-[#00B2A2]" />
+                                <span>Card Text (Editable for this model):</span>
                               </div>
-                            )}
+                              <input
+                                type="text"
+                                value={assignedTitle}
+                                onChange={(e) => {
+                                  const newText = e.target.value;
+                                  const cList = Array.isArray(editingItem.displayIssues) ? editingItem.displayIssues : [];
+                                  let found = false;
+                                  const updated = cList.map((item: any) => {
+                                    const isThisIssue =
+                                      (typeof item === 'object' && item !== null && (String(item.id) === String(masterIssue.id) || item.title === assignedTitle)) ||
+                                      (typeof item === 'string' && (item === assignedTitle || item === masterIssue.title));
+                                    if (isThisIssue) {
+                                      found = true;
+                                      return {
+                                        id: masterIssue.id,
+                                        title: newText,
+                                        icon: (typeof item === 'object' && item.icon) || masterIssue.icon,
+                                        customIconUrl: masterIssue.customIconUrl || ((typeof item === 'object' && item.customIconUrl) ? item.customIconUrl : null),
+                                        badge: (typeof item === 'object' && item.badge) || masterIssue.badge || 'Certified cleanroom repair',
+                                        color: (typeof item === 'object' && item.color) || masterIssue.color || 'teal',
+                                      };
+                                    }
+                                    return item;
+                                  });
+
+                                  // If not checked yet, automatically check it with the customized text!
+                                  if (!found) {
+                                    updated.push({
+                                      id: masterIssue.id,
+                                      title: newText,
+                                      icon: masterIssue.icon,
+                                      customIconUrl: masterIssue.customIconUrl || null,
+                                      badge: masterIssue.badge || 'Certified cleanroom repair',
+                                      color: masterIssue.color || 'teal',
+                                    });
+                                  }
+
+                                  setEditingItem({ ...editingItem, displayIssues: updated });
+                                }}
+                                placeholder={masterIssue.title}
+                                className={`w-full rounded-lg border px-2.5 py-1.5 text-xs font-semibold focus:border-[#00B2A2] focus:outline-none transition-colors ${
+                                  isChecked
+                                    ? 'border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white ring-1 ring-[#00B2A2]/30'
+                                    : 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-500'
+                                }`}
+                              />
+                            </div>
+
+                            {/* Diagnostic Badge */}
+                            <span className="text-[10px] text-slate-400 dark:text-slate-500 shrink-0 hidden md:inline">
+                              {masterIssue.badge}
+                            </span>
                           </div>
                         );
                       })}
@@ -1733,12 +1563,8 @@ export const DeviceCatalogManagementTab: React.FC<DeviceCatalogManagementTabProp
                             </span>
                             {customOnly.map((customItem: any, cIdx: number) => {
                               const cTitle = typeof customItem === 'object' ? customItem.title : String(customItem);
-                              const cBadge = typeof customItem === 'object' ? customItem.badge : 'Model Fault Diagnosis';
-                              const cIcon = typeof customItem === 'object' ? customItem.icon : 'Sparkles';
-                              const cColor = typeof customItem === 'object' ? customItem.color : 'teal';
-
                               return (
-                                <div key={cIdx} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 p-2 rounded-xl border border-teal-300 bg-teal-50/50 dark:border-teal-800 dark:bg-teal-950/30">
+                                <div key={cIdx} className="flex items-center gap-2 p-2 rounded-xl border border-teal-300 bg-teal-50/50 dark:border-teal-800 dark:bg-teal-950/30">
                                   <input
                                     type="text"
                                     value={cTitle}
@@ -1752,55 +1578,18 @@ export const DeviceCatalogManagementTab: React.FC<DeviceCatalogManagementTabProp
                                       });
                                       setEditingItem({ ...editingItem, displayIssues: updated });
                                     }}
-                                    placeholder="Issue title"
                                     className="flex-1 rounded-lg border border-teal-200 dark:border-teal-800 px-2 py-1 text-xs font-bold bg-white dark:bg-slate-900"
                                   />
-                                  <input
-                                    type="text"
-                                    value={cBadge}
-                                    onChange={(e) => {
-                                      const val = e.target.value;
-                                      const updated = currentList.map((ci: any) => {
-                                        if (ci === customItem || (typeof ci === 'object' && ci.id === customItem.id)) {
-                                          return typeof ci === 'object' ? { ...ci, badge: val } : { title: ci, badge: val };
-                                        }
-                                        return ci;
-                                      });
-                                      setEditingItem({ ...editingItem, displayIssues: updated });
-                                    }}
-                                    placeholder="Badge"
-                                    className="w-36 rounded-lg border border-teal-200 dark:border-teal-800 px-2 py-1 text-[11px] bg-white dark:bg-slate-900"
-                                  />
-                                  <select
-                                    value={cIcon}
-                                    onChange={(e) => {
-                                      const val = e.target.value;
-                                      const updated = currentList.map((ci: any) => {
-                                        if (ci === customItem || (typeof ci === 'object' && ci.id === customItem.id)) {
-                                          return typeof ci === 'object' ? { ...ci, icon: val } : { title: ci, icon: val };
-                                        }
-                                        return ci;
-                                      });
-                                      setEditingItem({ ...editingItem, displayIssues: updated });
-                                    }}
-                                    className="rounded-lg border border-teal-200 dark:border-teal-800 px-2 py-1 text-[11px] bg-white dark:bg-slate-900"
-                                  >
-                                    {AVAILABLE_ISSUE_ICONS.map((ic) => (
-                                      <option key={ic.name} value={ic.name}>
-                                        {ic.name}
-                                      </option>
-                                    ))}
-                                  </select>
                                   <button
                                     type="button"
                                     onClick={() => {
                                       const updated = currentList.filter((ci: any) => ci !== customItem && (!ci?.id || ci.id !== customItem.id));
                                       setEditingItem({ ...editingItem, displayIssues: updated });
                                     }}
-                                    className="text-red-500 hover:text-red-700 p-1 text-xs font-bold cursor-pointer"
+                                    className="text-red-500 hover:text-red-700 p-1 text-xs font-bold"
                                     title="Remove this custom issue"
                                   >
-                                    ✕ Remove
+                                    ✕
                                   </button>
                                 </div>
                               );
@@ -1811,20 +1600,36 @@ export const DeviceCatalogManagementTab: React.FC<DeviceCatalogManagementTabProp
                     </div>
 
                     {/* Inline Add Custom Issue Input */}
-                    <div className="pt-2 border-t border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/60 p-2.5 rounded-xl border flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                    <div className="pt-2 border-t border-slate-200 dark:border-slate-700 flex items-center gap-2">
                       <input
                         type="text"
                         value={newCustomIssueTitle}
                         onChange={(e) => setNewCustomIssueTitle(e.target.value)}
-                        placeholder="Add custom issue for this model (e.g. Dynamic Island OLED Glitch)..."
-                        className="flex-1 rounded-xl border border-slate-200 bg-slate-50 p-2 text-xs dark:bg-slate-900 dark:border-slate-700 focus:border-[#00B2A2] focus:outline-none"
-                      />
-                      <input
-                        type="text"
-                        value={newCustomIssueBadge}
-                        onChange={(e) => setNewCustomIssueBadge(e.target.value)}
-                        placeholder="Badge (e.g. Panel Fault)"
-                        className="w-36 rounded-xl border border-slate-200 bg-slate-50 p-2 text-xs dark:bg-slate-900 dark:border-slate-700 focus:border-[#00B2A2] focus:outline-none"
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            if (newCustomIssueTitle.trim()) {
+                              const currentList: any[] = Array.isArray(editingItem.displayIssues) ? editingItem.displayIssues : [];
+                              setEditingItem({
+                                ...editingItem,
+                                displayIssues: [
+                                  ...currentList,
+                                  {
+                                    id: `custom-${Date.now()}`,
+                                    title: newCustomIssueTitle.trim(),
+                                    icon: 'Sparkles',
+                                    customIconUrl: null,
+                                    badge: 'Model Fault Diagnosis',
+                                    color: 'teal',
+                                  },
+                                ],
+                              });
+                              setNewCustomIssueTitle('');
+                            }
+                          }
+                        }}
+                        placeholder="Add model-specific custom issue text (e.g. Dynamic Island OLED Glitch)..."
+                        className="flex-1 rounded-xl border border-slate-200 bg-white p-2 text-xs dark:bg-slate-900 dark:border-slate-700 focus:border-[#00B2A2] focus:outline-none"
                       />
                       <button
                         type="button"
@@ -1838,125 +1643,20 @@ export const DeviceCatalogManagementTab: React.FC<DeviceCatalogManagementTabProp
                                 {
                                   id: `custom-${Date.now()}`,
                                   title: newCustomIssueTitle.trim(),
-                                  icon: newCustomIssueIcon || 'Sparkles',
+                                  icon: 'Sparkles',
                                   customIconUrl: null,
-                                  badge: newCustomIssueBadge.trim() || 'Model Fault Diagnosis',
-                                  color: newCustomIssueColor || 'teal',
-                                  description: '',
+                                  badge: 'Model Fault Diagnosis',
+                                  color: 'teal',
                                 },
                               ],
                             });
                             setNewCustomIssueTitle('');
-                            setNewCustomIssueBadge('Model Fault Diagnosis');
                           }
                         }}
                         className="rounded-xl bg-[#00B2A2] text-white px-3 py-2 text-xs font-bold hover:bg-[#009e90] transition-colors cursor-pointer shrink-0"
                       >
                         + Add Custom Issue
                       </button>
-                    </div>
-                  </div>
-
-                  {/* MODEL SHOWCASE HIGHLIGHTS / ENGINEERING FEATURES */}
-                  <div className="rounded-2xl border border-slate-200 p-4 bg-slate-50 dark:border-slate-800 dark:bg-slate-800/50 space-y-3">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 dark:border-slate-700 pb-2.5">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <label className="text-xs font-black text-slate-900 dark:text-white">
-                            Model Showcase Highlights / Engineering Features
-                          </label>
-                          <span className="rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-2 py-0.5 text-[10px] font-bold">
-                            {(Array.isArray(editingItem.features) ? editingItem.features.length : 0)} Features Active
-                          </span>
-                        </div>
-                        <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                          Features displayed on this model's hero card (e.g. Model A can have 4 features, Model B can have 2 features).
-                        </p>
-                      </div>
-
-                      <div className="flex items-center gap-1.5 shrink-0">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const cur = Array.isArray(editingItem.features) ? editingItem.features : [];
-                            setEditingItem({
-                              ...editingItem,
-                              features: [
-                                ...cur,
-                                {
-                                  title: 'New Engineering Feature',
-                                  description: 'Description of repair method or cleanroom process',
-                                },
-                              ],
-                            });
-                          }}
-                          className="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 transition-colors cursor-pointer"
-                        >
-                          + Add Feature
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setEditingItem({ ...editingItem, features: [] })}
-                          className="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-700 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600 transition-colors cursor-pointer"
-                        >
-                          Clear
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Features List */}
-                    <div className="space-y-2">
-                      {(Array.isArray(editingItem.features) ? editingItem.features : []).map((feat: any, fIdx: number) => (
-                        <div
-                          key={fIdx}
-                          className="flex items-center gap-2.5 p-2.5 rounded-xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800"
-                        >
-                          <span className="h-6 w-6 rounded-full bg-[#00B2A2]/10 text-[#00B2A2] flex items-center justify-center text-[10px] font-black shrink-0">
-                            {fIdx + 1}
-                          </span>
-                          <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-2">
-                            <input
-                              type="text"
-                              value={feat.title || ''}
-                              onChange={(e) => {
-                                const updated = [...editingItem.features];
-                                updated[fIdx] = { ...updated[fIdx], title: e.target.value };
-                                setEditingItem({ ...editingItem, features: updated });
-                              }}
-                              placeholder="Feature Title (e.g. Laser Flex Bonding)"
-                              className="rounded-lg border border-slate-200 bg-slate-50 p-1.5 text-xs font-bold dark:bg-slate-900 dark:border-slate-700"
-                            />
-                            <input
-                              type="text"
-                              value={feat.description || ''}
-                              onChange={(e) => {
-                                const updated = [...editingItem.features];
-                                updated[fIdx] = { ...updated[fIdx], description: e.target.value };
-                                setEditingItem({ ...editingItem, features: updated });
-                              }}
-                              placeholder="Feature Description..."
-                              className="sm:col-span-2 rounded-lg border border-slate-200 bg-slate-50 p-1.5 text-xs dark:bg-slate-900 dark:border-slate-700"
-                            />
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const updated = editingItem.features.filter((_: any, i: number) => i !== fIdx);
-                              setEditingItem({ ...editingItem, features: updated });
-                            }}
-                            className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/40 rounded-lg transition-colors cursor-pointer shrink-0"
-                            title="Remove feature"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </button>
-                        </div>
-                      ))}
-
-                      {(!Array.isArray(editingItem.features) || editingItem.features.length === 0) && (
-                        <div className="p-3 text-center text-xs text-slate-400 border border-dashed border-slate-300 dark:border-slate-700 rounded-xl">
-                          No specific features configured for this model yet. Click "+ Add Feature" above to add features specifically for this model.
-                        </div>
-                      )}
                     </div>
                   </div>
 

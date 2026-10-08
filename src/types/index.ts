@@ -40,7 +40,6 @@ export interface Model {
   imageUrl?: string | null;
   description?: string | null;
   displayIssues?: string | null;
-  features?: HeroCardFeature[] | null;
   seoTitle?: string | null;
   seoDescription?: string | null;
   isActive: boolean;

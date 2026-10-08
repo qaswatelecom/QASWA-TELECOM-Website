@@ -709,25 +709,11 @@ apiRouter.get(['/models/:slug', '/repair/:slug'], async (req: Request, res: Resp
     const hasConfiguredIssues = m.displayIssues !== null && m.displayIssues !== undefined && m.displayIssues !== '';
 
     if (hasConfiguredIssues) {
-      let parsedData: any = null;
-      try {
-        parsedData = typeof m.displayIssues === 'string' ? JSON.parse(m.displayIssues) : m.displayIssues;
-      } catch {
-        parsedData = typeof m.displayIssues === 'string' ? m.displayIssues.split(',').map((s: string) => s.trim()).filter(Boolean) : [];
-      }
-
       let rawIssues: any[] = [];
-      let modelFeatures: any[] | null = null;
-
-      if (Array.isArray(parsedData)) {
-        rawIssues = parsedData;
-      } else if (parsedData && typeof parsedData === 'object') {
-        if (Array.isArray(parsedData.issues)) {
-          rawIssues = parsedData.issues;
-        }
-        if (Array.isArray(parsedData.features)) {
-          modelFeatures = parsedData.features;
-        }
+      try {
+        rawIssues = typeof m.displayIssues === 'string' ? JSON.parse(m.displayIssues) : m.displayIssues;
+      } catch {
+        rawIssues = typeof m.displayIssues === 'string' ? m.displayIssues.split(',').map((s: string) => s.trim()).filter(Boolean) : [];
       }
 
       if (Array.isArray(rawIssues)) {
@@ -747,9 +733,8 @@ apiRouter.get(['/models/:slug', '/repair/:slug'], async (req: Request, res: Resp
             const iconFromItem = typeof item === 'object' && item !== null ? item.icon : undefined;
             const badgeFromItem = typeof item === 'object' && item !== null ? item.badge : undefined;
             const colorFromItem = typeof item === 'object' && item !== null ? item.color : undefined;
-            const descFromItem = typeof item === 'object' && item !== null ? item.description : undefined;
 
-            // Find closest master issue to inherit default icon, badge, color if missing
+            // Find closest master issue to inherit icon, customIconUrl, badge, and color
             const cleanTitle = titleStr.toLowerCase();
             let matched = masterIssues.find((mi) => {
               if (typeof item === 'object' && item?.id && String(mi.id) === String(item.id)) return true;
@@ -777,46 +762,27 @@ apiRouter.get(['/models/:slug', '/repair/:slug'], async (req: Request, res: Resp
               matched = masterIssues[idx];
             }
 
-            // CRITICAL: Model-specific customizations take precedence!
-            // If the model specified its own customIconUrl, icon, badge, color, or description, use it!
-            const customIconStr = (customIconFromItem && typeof customIconFromItem === 'string' && customIconFromItem.trim() !== '')
-              ? customIconFromItem.trim()
-              : (matched?.customIconUrl && typeof matched.customIconUrl === 'string' && matched.customIconUrl.trim() !== '')
+            // CRITICAL: Ensure uploaded or replaced custom icon appears on customer frontend!
+            // Prefer master issue's uploaded customIconUrl so admin replacements immediately update,
+            // or fall back to item-level customIconUrl if set.
+            const customIconStr =
+              (matched?.customIconUrl && typeof matched.customIconUrl === 'string' && matched.customIconUrl.trim() !== '')
                 ? matched.customIconUrl.trim()
-                : null;
-
-            const finalIcon = (iconFromItem && typeof iconFromItem === 'string' && iconFromItem.trim() !== '')
-              ? iconFromItem.trim()
-              : ((matched?.icon && typeof matched.icon === 'string' && matched.icon.trim() !== '') ? matched.icon.trim() : 'Layers');
+                : (customIconFromItem && typeof customIconFromItem === 'string' && customIconFromItem.trim() !== '')
+                  ? customIconFromItem.trim()
+                  : null;
 
             return {
               id: typeof item === 'object' && item?.id ? item.id : (matched?.id || `issue-${idx + 1}`),
               // CRITICAL: Must be EXACT text entered/assigned by admin while adding/editing model!
               title: titleStr,
-              icon: finalIcon,
+              icon: (matched?.icon && typeof matched.icon === 'string' && matched.icon.trim() !== '') ? matched.icon.trim() : (iconFromItem || 'Layers'),
               customIconUrl: customIconStr,
               badge: badgeFromItem || matched?.badge || 'Certified cleanroom repair',
               color: colorFromItem || matched?.color || 'amber',
-              description: descFromItem || matched?.description || '',
             };
           });
       }
-
-      const heroCardConfig = await getHeroCardConfig();
-
-      return res.json({
-        model: {
-          ...m,
-          features: modelFeatures,
-        },
-        brand,
-        category,
-        displayIssues: resolvedIssues,
-        services: availableServices,
-        heroCardConfig: (modelFeatures && modelFeatures.length > 0)
-          ? { ...heroCardConfig, features: modelFeatures }
-          : heroCardConfig,
-      });
     } else {
       // Model has no displayIssues assigned by admin; do not show unselected master issues
       resolvedIssues = [];
@@ -2172,7 +2138,6 @@ apiRouter.post('/admin/models', async (req: Request, res: Response) => {
       imageUrl,
       description,
       displayIssues,
-      features,
       seoTitle,
       seoDescription,
       isActive,
@@ -2181,20 +2146,11 @@ apiRouter.post('/admin/models', async (req: Request, res: Response) => {
     } = req.body;
 
     const finalSlug = slug || name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-    let finalIssues: string | null = null;
-
-    if (Array.isArray(features)) {
-      const issueArray = Array.isArray(displayIssues)
-        ? displayIssues
-        : (displayIssues && typeof displayIssues === 'object' && Array.isArray(displayIssues.issues))
-          ? displayIssues.issues
-          : (typeof displayIssues === 'string' && displayIssues.startsWith('[') ? JSON.parse(displayIssues) : []);
-      finalIssues = JSON.stringify({ issues: issueArray, features });
-    } else if (displayIssues && typeof displayIssues === 'object') {
-      finalIssues = JSON.stringify(displayIssues);
-    } else if (typeof displayIssues === 'string') {
-      finalIssues = displayIssues;
-    }
+    const finalIssues = Array.isArray(displayIssues)
+      ? JSON.stringify(displayIssues)
+      : typeof displayIssues === 'string'
+      ? displayIssues
+      : null;
 
     const created = await db
       .insert(models)
@@ -2245,7 +2201,6 @@ apiRouter.put('/admin/models/:id', async (req: Request, res: Response) => {
       imageUrl,
       description,
       displayIssues,
-      features,
       seoTitle,
       seoDescription,
       isActive,
@@ -2253,19 +2208,11 @@ apiRouter.put('/admin/models/:id', async (req: Request, res: Response) => {
       serviceIds,
     } = req.body;
 
-    let finalIssues: string | null = null;
-    if (Array.isArray(features)) {
-      const issueArray = Array.isArray(displayIssues)
-        ? displayIssues
-        : (displayIssues && typeof displayIssues === 'object' && Array.isArray(displayIssues.issues))
-          ? displayIssues.issues
-          : (typeof displayIssues === 'string' && displayIssues.startsWith('[') ? JSON.parse(displayIssues) : []);
-      finalIssues = JSON.stringify({ issues: issueArray, features });
-    } else if (displayIssues && typeof displayIssues === 'object') {
-      finalIssues = JSON.stringify(displayIssues);
-    } else if (typeof displayIssues === 'string') {
-      finalIssues = displayIssues;
-    }
+    const finalIssues = Array.isArray(displayIssues)
+      ? JSON.stringify(displayIssues)
+      : typeof displayIssues === 'string'
+      ? displayIssues
+      : null;
 
     const updated = await db
       .update(models)
