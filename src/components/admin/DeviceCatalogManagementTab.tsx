@@ -25,6 +25,13 @@ import {
 import { DeviceCategory, Brand, Model, Service } from '../../types/index.ts';
 import { MediaPickerModal } from './MediaPickerModal.tsx';
 import { IssueCardsManagementTab } from './IssueCardsManagementTab.tsx';
+import { uploadImageToFirebaseStorage } from '../../lib/firebaseStorage.ts';
+import {
+  DEFAULT_DISPLAY_ISSUES,
+  DisplayIssueItem,
+  getIssueIcon,
+  getIssueStyles,
+} from '../../lib/issueIcons.ts';
 
 interface DeviceCatalogManagementTabProps {
   showToast: (msg: string) => void;
@@ -65,6 +72,8 @@ export const DeviceCatalogManagementTab: React.FC<DeviceCatalogManagementTabProp
   const [brandsList, setBrandsList] = useState<Brand[]>([]);
   const [modelsList, setModelsList] = useState<Model[]>([]);
   const [servicesList, setServicesList] = useState<Service[]>([]);
+  const [availableDisplayIssues, setAvailableDisplayIssues] = useState<DisplayIssueItem[]>(DEFAULT_DISPLAY_ISSUES);
+  const [newCustomIssueTitle, setNewCustomIssueTitle] = useState('');
   const [loading, setLoading] = useState(false);
 
   // Search & Filters
@@ -82,21 +91,37 @@ export const DeviceCatalogManagementTab: React.FC<DeviceCatalogManagementTabProp
   const [editingItem, setEditingItem] = useState<any>({});
   const [savingItem, setSavingItem] = useState(false);
 
+  // Auth headers helper for admin operations
+  const getAuthHeaders = () => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('qaswa_admin_token') : null;
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    return headers;
+  };
+
   // Load all catalog data
   const loadData = async () => {
     setLoading(true);
     try {
-      const [catsRes, brandsRes, modelsRes, servRes] = await Promise.all([
-        fetch('/api/admin/categories'),
-        fetch('/api/admin/brands'),
-        fetch('/api/admin/models'),
-        fetch('/api/admin/services'),
+      const headers = getAuthHeaders();
+      const [catsRes, brandsRes, modelsRes, servRes, issuesRes] = await Promise.all([
+        fetch('/api/admin/categories', { headers }),
+        fetch('/api/admin/brands', { headers }),
+        fetch('/api/admin/models', { headers }),
+        fetch('/api/admin/services', { headers }),
+        fetch('/api/admin/display-issues', { headers }),
       ]);
 
       if (catsRes.ok) setCategoriesList(await catsRes.json());
       if (brandsRes.ok) setBrandsList(await brandsRes.json());
       if (modelsRes.ok) setModelsList(await modelsRes.json());
       if (servRes.ok) setServicesList(await servRes.json());
+      if (issuesRes.ok) {
+        const issuesData = await issuesRes.json();
+        if (Array.isArray(issuesData) && issuesData.length > 0) {
+          setAvailableDisplayIssues(issuesData);
+        }
+      }
     } catch (err) {
       console.error('Failed to load catalog data:', err);
       showToast('Failed to load device catalog data');
@@ -187,11 +212,12 @@ export const DeviceCatalogManagementTab: React.FC<DeviceCatalogManagementTabProp
         slug: '',
         imageUrl: '',
         description: '',
-        displayIssues: COMMON_DISPLAY_ISSUES,
+        displayIssues: [], // Only issues selected by the admin will appear on frontend
         serviceIds: servicesList.map((s) => s.id),
         isActive: true,
         sortOrder: currentSectionModels.length + 1,
       });
+      setNewCustomIssueTitle('');
     }
     setModalOpen(true);
   };
@@ -200,22 +226,22 @@ export const DeviceCatalogManagementTab: React.FC<DeviceCatalogManagementTabProp
   const handleOpenEdit = (type: 'category' | 'brand' | 'model', item: any) => {
     setModalType(type);
     if (type === 'model') {
-      let issues: string[] = [];
+      let issues: any[] = [];
       if (item.displayIssues) {
         try {
           issues = typeof item.displayIssues === 'string' ? JSON.parse(item.displayIssues) : item.displayIssues;
         } catch {
-          issues = item.displayIssues.split(',').map((s: string) => s.trim());
+          issues = item.displayIssues.split(',').map((s: string) => s.trim()).filter(Boolean);
         }
-      } else {
-        issues = COMMON_DISPLAY_ISSUES;
       }
+      if (!Array.isArray(issues)) issues = [];
 
       setEditingItem({
         ...item,
         displayIssues: issues,
         serviceIds: item.serviceIds || servicesList.map((s) => s.id),
       });
+      setNewCustomIssueTitle('');
     } else {
       setEditingItem({ ...item });
     }
@@ -240,7 +266,7 @@ export const DeviceCatalogManagementTab: React.FC<DeviceCatalogManagementTabProp
     try {
       const res = await fetch(url, {
         method,
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
         body: JSON.stringify(editingItem),
       });
 
@@ -271,7 +297,10 @@ export const DeviceCatalogManagementTab: React.FC<DeviceCatalogManagementTabProp
     else if (type === 'model') endpoint = '/api/admin/models';
 
     try {
-      const res = await fetch(`${endpoint}/${id}`, { method: 'DELETE' });
+      const res = await fetch(`${endpoint}/${id}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders(),
+      });
       if (res.ok) {
         showToast(`${name} deleted successfully!`);
         await loadData();
@@ -294,7 +323,7 @@ export const DeviceCatalogManagementTab: React.FC<DeviceCatalogManagementTabProp
     try {
       const res = await fetch(endpoint, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
         body: JSON.stringify({ ...item, isActive: !item.isActive }),
       });
       if (res.ok) {
@@ -767,9 +796,26 @@ export const DeviceCatalogManagementTab: React.FC<DeviceCatalogManagementTabProp
                         </td>
 
                         <td className="py-3 px-4 text-slate-500">
-                          <span className="rounded-md bg-slate-100 dark:bg-slate-800 px-2 py-0.5 text-[10px] font-medium">
-                            {m.displayIssues ? 'Configured' : 'Default'}
-                          </span>
+                          {(() => {
+                            let count = 0;
+                            if (m.displayIssues) {
+                              try {
+                                const parsed = typeof m.displayIssues === 'string' ? JSON.parse(m.displayIssues) : m.displayIssues;
+                                if (Array.isArray(parsed)) count = parsed.length;
+                              } catch {
+                                count = m.displayIssues.split(',').filter(Boolean).length;
+                              }
+                            }
+                            return count > 0 ? (
+                              <span className="rounded-md bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-teal-800/60 px-2 py-0.5 text-[10px] font-bold">
+                                {count} {count === 1 ? 'issue' : 'issues'} assigned
+                              </span>
+                            ) : (
+                              <span className="rounded-md bg-slate-100 dark:bg-slate-800 text-slate-400 px-2 py-0.5 text-[10px] font-medium">
+                                None assigned
+                              </span>
+                            );
+                          })()}
                         </td>
 
                         <td className="py-3 px-4 text-slate-500">
@@ -1199,29 +1245,66 @@ export const DeviceCatalogManagementTab: React.FC<DeviceCatalogManagementTabProp
                     </div>
                   </div>
 
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Device Image URL
+                  {/* DEVICE IMAGE */}
+                  <div className="space-y-2">
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                      Device Image
                     </label>
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        value={editingItem.imageUrl || ''}
-                        onChange={(e) => setEditingItem({ ...editingItem, imageUrl: e.target.value })}
-                        placeholder="https://... or upload in Media Manager"
-                        className="flex-1 rounded-xl border border-slate-200 bg-slate-50 p-2.5 text-xs dark:bg-slate-800 dark:border-slate-700"
-                      />
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                      <label className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-[#00B2A2] cursor-pointer transition-colors text-xs font-semibold text-slate-700 dark:text-slate-300">
+                        <Upload className="h-4 w-4 text-[#00B2A2]" />
+                        <span>Upload Device Image (PNG, JPG, WEBP, SVG)</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            if (!file) return;
+                            try {
+                              const res = await uploadImageToFirebaseStorage(file, { category: 'models' });
+                              setEditingItem((prev: any) => ({ ...prev, imageUrl: res.url }));
+                              showToast('Model image uploaded successfully!');
+                            } catch (err: any) {
+                              showToast('Error uploading model image');
+                            }
+                          }}
+                          className="hidden"
+                        />
+                      </label>
                       <button
                         type="button"
                         onClick={() => {
                           setMediaPickerTarget('modelImage');
                           setMediaPickerOpen(true);
                         }}
-                        className="rounded-xl bg-[#00B2A2]/10 text-[#00B2A2] px-3 py-2 text-xs font-bold hover:bg-[#00B2A2] hover:text-white transition-colors cursor-pointer shrink-0"
+                        className="rounded-xl bg-[#00B2A2]/10 text-[#00B2A2] px-3.5 py-2.5 text-xs font-bold hover:bg-[#00B2A2] hover:text-white transition-colors cursor-pointer shrink-0"
                       >
                         🖼️ Media Manager
                       </button>
                     </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[11px] font-semibold text-slate-400 shrink-0">or Image URL:</span>
+                      <input
+                        type="text"
+                        value={editingItem.imageUrl || ''}
+                        onChange={(e) => setEditingItem({ ...editingItem, imageUrl: e.target.value })}
+                        placeholder="https://... or /uploads/models/..."
+                        className="w-full rounded-xl border border-slate-200 bg-white p-2 text-xs dark:bg-slate-800 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:border-[#00B2A2] focus:outline-none"
+                      />
+                    </div>
+                    {editingItem.imageUrl && (
+                      <div className="flex items-center gap-3 p-2 bg-slate-100 dark:bg-slate-800 rounded-xl">
+                        <img src={editingItem.imageUrl} alt="Model Preview" className="h-12 w-12 object-contain rounded-lg bg-white p-1" />
+                        <span className="text-[11px] font-mono text-slate-600 dark:text-slate-400 truncate flex-1">{editingItem.imageUrl}</span>
+                        <button
+                          type="button"
+                          onClick={() => setEditingItem((prev: any) => ({ ...prev, imageUrl: '' }))}
+                          className="text-red-500 hover:text-red-700 text-xs font-bold px-2 py-1 cursor-pointer"
+                        >
+                          ✕ Remove
+                        </button>
+                      </div>
+                    )}
                   </div>
 
                   <div>
@@ -1238,46 +1321,306 @@ export const DeviceCatalogManagementTab: React.FC<DeviceCatalogManagementTabProp
                   </div>
 
                   {/* DISPLAY ISSUES ASSIGNMENT */}
-                  <div className="rounded-2xl border border-slate-200 p-3.5 bg-slate-50 dark:border-slate-800 dark:bg-slate-800/50">
-                    <label className="block text-xs font-extrabold text-slate-900 dark:text-white mb-2 flex items-center justify-between">
-                      <span>Assign Display-Related Issues for this Model</span>
-                      <span className="text-[10px] text-slate-400 font-normal">Check all applicable faults</span>
-                    </label>
+                  <div className="rounded-2xl border border-slate-200 p-4 bg-slate-50 dark:border-slate-800 dark:bg-slate-800/50 space-y-3">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 dark:border-slate-700 pb-2.5">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <label className="text-xs font-black text-slate-900 dark:text-white">
+                            Assign Display-Related Issues for this Model
+                          </label>
+                          <span className="rounded-full bg-[#00B2A2]/10 text-[#00B2A2] px-2 py-0.5 text-[10px] font-bold">
+                            {(Array.isArray(editingItem.displayIssues) ? editingItem.displayIssues.length : 0)} Selected
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                          Only selected issues will appear on this model's live page. You can customize the exact text for this model below.
+                        </p>
+                      </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      {COMMON_DISPLAY_ISSUES.map((issue) => {
-                        const currentIssues: string[] = Array.isArray(editingItem.displayIssues)
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const all = (availableDisplayIssues.length > 0 ? availableDisplayIssues : DEFAULT_DISPLAY_ISSUES).map((item) => ({
+                              id: item.id,
+                              title: item.title,
+                              icon: item.icon,
+                              customIconUrl: item.customIconUrl || null,
+                              badge: item.badge || 'Certified cleanroom repair',
+                              color: item.color || 'teal',
+                            }));
+                            setEditingItem({ ...editingItem, displayIssues: all });
+                          }}
+                          className="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-teal-50 hover:bg-teal-100 text-teal-700 dark:bg-teal-950/60 dark:text-teal-300 dark:hover:bg-teal-900/60 transition-colors cursor-pointer"
+                        >
+                          Select All
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setEditingItem({ ...editingItem, displayIssues: [] })}
+                          className="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-700 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600 transition-colors cursor-pointer"
+                        >
+                          Clear All
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Master Display Issues List */}
+                    <div className="grid grid-cols-1 gap-2.5 max-h-[380px] overflow-y-auto pr-1">
+                      {(availableDisplayIssues.length > 0 ? availableDisplayIssues : DEFAULT_DISPLAY_ISSUES).map((masterIssue) => {
+                        const currentList: any[] = Array.isArray(editingItem.displayIssues)
                           ? editingItem.displayIssues
                           : [];
-                        const isChecked = currentIssues.includes(issue);
+
+                        // Find if this issue is assigned
+                        const assignedItem = currentList.find((item: any) => {
+                          if (typeof item === 'object' && item !== null) {
+                            if (item.id && item.id === masterIssue.id) return true;
+                            if (item.title && item.title.trim().toLowerCase() === masterIssue.title.trim().toLowerCase()) return true;
+                          } else if (typeof item === 'string') {
+                            if (item.trim().toLowerCase() === masterIssue.title.trim().toLowerCase()) return true;
+                          }
+                          return false;
+                        });
+
+                        const isChecked = Boolean(assignedItem);
+                        const assignedTitle = typeof assignedItem === 'object' && assignedItem?.title ? assignedItem.title : (typeof assignedItem === 'string' ? assignedItem : masterIssue.title);
+
+                        const IssueIcon = getIssueIcon(masterIssue.icon);
+                        const styles = getIssueStyles(masterIssue.color);
 
                         return (
-                          <label
-                            key={issue}
-                            className={`flex items-start gap-2 p-2 rounded-xl border text-[11px] cursor-pointer transition-colors ${
+                          <div
+                            key={masterIssue.id}
+                            className={`flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 p-2.5 rounded-xl border transition-colors ${
                               isChecked
-                                ? 'border-[#00B2A2] bg-[#00B2A2]/10 font-bold text-slate-900 dark:text-white'
-                                : 'border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
+                                ? 'border-[#00B2A2] bg-[#00B2A2]/5 dark:border-[#00B2A2]/50 dark:bg-[#00B2A2]/10'
+                                : 'border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800/80 opacity-75 hover:opacity-100'
                             }`}
                           >
-                            <input
-                              type="checkbox"
-                              checked={isChecked}
-                              onChange={(e) => {
-                                let updated: string[] = [];
-                                if (e.target.checked) {
-                                  updated = [...currentIssues, issue];
-                                } else {
-                                  updated = currentIssues.filter((i) => i !== issue);
-                                }
-                                setEditingItem({ ...editingItem, displayIssues: updated });
-                              }}
-                              className="mt-0.5 rounded text-[#00B2A2]"
-                            />
-                            <span>{issue}</span>
-                          </label>
+                            {/* Checkbox & Icon */}
+                            <div className="flex items-center gap-2.5 shrink-0">
+                              <input
+                                type="checkbox"
+                                checked={isChecked}
+                                onChange={(e) => {
+                                  let updated: any[] = [];
+                                  if (e.target.checked) {
+                                    // Add to selected issues with exact text
+                                    updated = [
+                                      ...currentList,
+                                      {
+                                        id: masterIssue.id,
+                                        title: assignedTitle || masterIssue.title,
+                                        icon: masterIssue.icon,
+                                        customIconUrl: masterIssue.customIconUrl || null,
+                                        badge: masterIssue.badge || 'Certified cleanroom repair',
+                                        color: masterIssue.color || 'teal',
+                                      },
+                                    ];
+                                  } else {
+                                    // Remove from selected issues
+                                    updated = currentList.filter((item: any) => {
+                                      if (typeof item === 'object' && item !== null) {
+                                        if (item.id && item.id === masterIssue.id) return false;
+                                        if (item.title && item.title.trim().toLowerCase() === masterIssue.title.trim().toLowerCase()) return false;
+                                        if (item.title && item.title.trim().toLowerCase() === assignedTitle.trim().toLowerCase()) return false;
+                                      } else if (typeof item === 'string') {
+                                        if (item.trim().toLowerCase() === masterIssue.title.trim().toLowerCase()) return false;
+                                        if (item.trim().toLowerCase() === assignedTitle.trim().toLowerCase()) return false;
+                                      }
+                                      return true;
+                                    });
+                                  }
+                                  setEditingItem({ ...editingItem, displayIssues: updated });
+                                }}
+                                className="h-4 w-4 rounded text-[#00B2A2] cursor-pointer"
+                              />
+
+                              <div className={`h-8 w-8 rounded-lg flex items-center justify-center border shrink-0 ${styles.color}`}>
+                                {masterIssue.customIconUrl ? (
+                                  <img
+                                    src={masterIssue.customIconUrl}
+                                    alt={masterIssue.title}
+                                    className="h-5 w-5 object-contain"
+                                  />
+                                ) : (
+                                  <IssueIcon className="h-4 w-4" />
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Editable Model-Specific Issue Text Input */}
+                            <div className="flex-1 min-w-0">
+                              <input
+                                type="text"
+                                value={assignedTitle}
+                                onChange={(e) => {
+                                  const newText = e.target.value;
+                                  let found = false;
+                                  const updated = currentList.map((item: any) => {
+                                    const matches = (typeof item === 'object' && (item.id === masterIssue.id || item.title === assignedTitle)) ||
+                                                    (typeof item === 'string' && (item === assignedTitle || item === masterIssue.title));
+                                    if (matches) {
+                                      found = true;
+                                      return typeof item === 'object'
+                                        ? { ...item, title: newText }
+                                        : {
+                                            id: masterIssue.id,
+                                            title: newText,
+                                            icon: masterIssue.icon,
+                                            customIconUrl: masterIssue.customIconUrl || null,
+                                            badge: masterIssue.badge || 'Certified cleanroom repair',
+                                            color: masterIssue.color || 'teal',
+                                          };
+                                    }
+                                    return item;
+                                  });
+
+                                  // If not checked yet, automatically check it with the customized text!
+                                  if (!found) {
+                                    updated.push({
+                                      id: masterIssue.id,
+                                      title: newText,
+                                      icon: masterIssue.icon,
+                                      customIconUrl: masterIssue.customIconUrl || null,
+                                      badge: masterIssue.badge || 'Certified cleanroom repair',
+                                      color: masterIssue.color || 'teal',
+                                    });
+                                  }
+
+                                  setEditingItem({ ...editingItem, displayIssues: updated });
+                                }}
+                                placeholder={masterIssue.title}
+                                className={`w-full rounded-lg border px-2.5 py-1.5 text-xs font-semibold focus:border-[#00B2A2] focus:outline-none transition-colors ${
+                                  isChecked
+                                    ? 'border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white'
+                                    : 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-500'
+                                }`}
+                              />
+                            </div>
+
+                            {/* Diagnostic Badge */}
+                            <span className="text-[10px] text-slate-400 dark:text-slate-500 shrink-0 hidden md:inline">
+                              {masterIssue.badge}
+                            </span>
+                          </div>
                         );
                       })}
+
+                      {/* Any custom issues added specifically for this model */}
+                      {(() => {
+                        const currentList: any[] = Array.isArray(editingItem.displayIssues) ? editingItem.displayIssues : [];
+                        const masterList = availableDisplayIssues.length > 0 ? availableDisplayIssues : DEFAULT_DISPLAY_ISSUES;
+                        const customOnly = currentList.filter((item: any) => {
+                          const itemTitle = typeof item === 'object' ? item.title : String(item);
+                          const itemId = typeof item === 'object' ? item.id : null;
+                          return !masterList.some((m) => m.id === itemId || m.title.trim().toLowerCase() === itemTitle.trim().toLowerCase());
+                        });
+
+                        if (customOnly.length === 0) return null;
+
+                        return (
+                          <div className="pt-2 border-t border-slate-200 dark:border-slate-700 space-y-2">
+                            <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block">
+                              Additional Model-Specific Custom Issues:
+                            </span>
+                            {customOnly.map((customItem: any, cIdx: number) => {
+                              const cTitle = typeof customItem === 'object' ? customItem.title : String(customItem);
+                              return (
+                                <div key={cIdx} className="flex items-center gap-2 p-2 rounded-xl border border-teal-300 bg-teal-50/50 dark:border-teal-800 dark:bg-teal-950/30">
+                                  <input
+                                    type="text"
+                                    value={cTitle}
+                                    onChange={(e) => {
+                                      const updatedText = e.target.value;
+                                      const updated = currentList.map((ci: any) => {
+                                        if (ci === customItem || (typeof ci === 'object' && ci.id === customItem.id)) {
+                                          return typeof ci === 'object' ? { ...ci, title: updatedText } : updatedText;
+                                        }
+                                        return ci;
+                                      });
+                                      setEditingItem({ ...editingItem, displayIssues: updated });
+                                    }}
+                                    className="flex-1 rounded-lg border border-teal-200 dark:border-teal-800 px-2 py-1 text-xs font-bold bg-white dark:bg-slate-900"
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const updated = currentList.filter((ci: any) => ci !== customItem && (!ci?.id || ci.id !== customItem.id));
+                                      setEditingItem({ ...editingItem, displayIssues: updated });
+                                    }}
+                                    className="text-red-500 hover:text-red-700 p-1 text-xs font-bold"
+                                    title="Remove this custom issue"
+                                  >
+                                    ✕
+                                  </button>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        );
+                      })()}
+                    </div>
+
+                    {/* Inline Add Custom Issue Input */}
+                    <div className="pt-2 border-t border-slate-200 dark:border-slate-700 flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={newCustomIssueTitle}
+                        onChange={(e) => setNewCustomIssueTitle(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            if (newCustomIssueTitle.trim()) {
+                              const currentList: any[] = Array.isArray(editingItem.displayIssues) ? editingItem.displayIssues : [];
+                              setEditingItem({
+                                ...editingItem,
+                                displayIssues: [
+                                  ...currentList,
+                                  {
+                                    id: `custom-${Date.now()}`,
+                                    title: newCustomIssueTitle.trim(),
+                                    icon: 'Sparkles',
+                                    customIconUrl: null,
+                                    badge: 'Model Fault Diagnosis',
+                                    color: 'teal',
+                                  },
+                                ],
+                              });
+                              setNewCustomIssueTitle('');
+                            }
+                          }
+                        }}
+                        placeholder="Add model-specific custom issue text (e.g. Dynamic Island OLED Glitch)..."
+                        className="flex-1 rounded-xl border border-slate-200 bg-white p-2 text-xs dark:bg-slate-900 dark:border-slate-700 focus:border-[#00B2A2] focus:outline-none"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (newCustomIssueTitle.trim()) {
+                            const currentList: any[] = Array.isArray(editingItem.displayIssues) ? editingItem.displayIssues : [];
+                            setEditingItem({
+                              ...editingItem,
+                              displayIssues: [
+                                ...currentList,
+                                {
+                                  id: `custom-${Date.now()}`,
+                                  title: newCustomIssueTitle.trim(),
+                                  icon: 'Sparkles',
+                                  customIconUrl: null,
+                                  badge: 'Model Fault Diagnosis',
+                                  color: 'teal',
+                                },
+                              ],
+                            });
+                            setNewCustomIssueTitle('');
+                          }
+                        }}
+                        className="rounded-xl bg-[#00B2A2] text-white px-3 py-2 text-xs font-bold hover:bg-[#009e90] transition-colors cursor-pointer shrink-0"
+                      >
+                        + Add Custom Issue
+                      </button>
                     </div>
                   </div>
 

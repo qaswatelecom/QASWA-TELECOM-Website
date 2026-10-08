@@ -640,62 +640,70 @@ apiRouter.get(['/models/:slug', '/repair/:slug'], async (req: Request, res: Resp
       }));
     }
 
-    // Parse display issues
+    // Parse display issues for this model
     const masterIssues = await getMasterDisplayIssuesConfig();
-    let rawIssues: any[] = [];
-    if (m.displayIssues) {
-      try {
-        rawIssues = JSON.parse(m.displayIssues);
-      } catch {
-        rawIssues = m.displayIssues.split(',').map((s) => s.trim());
-      }
-    }
-
     let resolvedIssues: any[] = [];
-    if (Array.isArray(rawIssues) && rawIssues.length > 0) {
-      resolvedIssues = rawIssues.map((item, idx) => {
-        if (typeof item === 'object' && item !== null && item.id) {
-          const byId = masterIssues.find((mi) => mi.id === item.id);
-          if (byId) return byId;
-          return item;
-        }
-        if (typeof item === 'object' && item !== null && item.title) {
-          const byTitle = masterIssues.find((mi) => mi.title.toLowerCase() === item.title.toLowerCase());
-          if (byTitle) return byTitle;
-          return item;
-        }
-        const titleStr = String(item).trim();
-        const matched = masterIssues.find(
-          (mi) =>
-            mi.id === titleStr ||
-            mi.title.toLowerCase() === titleStr.toLowerCase()
-        );
-        if (matched) {
-          return matched;
-        }
 
-        // Match against default issue titles so even if the title was renamed in masterIssues, the slot maps to masterIssues[idx]
-        const defaultMatchIndex = DEFAULT_DISPLAY_ISSUES_LIST.findIndex(
-          (di) => di.id === titleStr || di.title.toLowerCase() === titleStr.toLowerCase()
-        );
-        if (defaultMatchIndex !== -1 && masterIssues[defaultMatchIndex]) {
-          return masterIssues[defaultMatchIndex];
-        }
+    // Check if model has explicitly configured display issues
+    const hasConfiguredIssues = m.displayIssues !== null && m.displayIssues !== undefined && m.displayIssues !== '';
 
-        if (idx < masterIssues.length) {
-          return masterIssues[idx];
-        }
+    if (hasConfiguredIssues) {
+      let rawIssues: any[] = [];
+      try {
+        rawIssues = typeof m.displayIssues === 'string' ? JSON.parse(m.displayIssues) : m.displayIssues;
+      } catch {
+        rawIssues = typeof m.displayIssues === 'string' ? m.displayIssues.split(',').map((s: string) => s.trim()).filter(Boolean) : [];
+      }
 
-        return {
-          id: `issue-custom-${idx}`,
-          title: titleStr,
-          icon: 'AlertTriangle',
-          badge: 'Certified cleanroom repair',
-          color: 'teal',
-        };
-      });
+      if (Array.isArray(rawIssues)) {
+        // ONLY the issues selected/assigned by the admin for this model
+        resolvedIssues = rawIssues
+          .filter((item) => {
+            if (!item) return false;
+            if (typeof item === 'object' && !item.title) return false;
+            return true;
+          })
+          .map((item, idx) => {
+            const titleStr = typeof item === 'object' && item !== null && item.title
+              ? String(item.title).trim()
+              : String(item).trim();
+
+            const customIconFromItem = typeof item === 'object' && item !== null ? item.customIconUrl : undefined;
+            const iconFromItem = typeof item === 'object' && item !== null ? item.icon : undefined;
+            const badgeFromItem = typeof item === 'object' && item !== null ? item.badge : undefined;
+            const colorFromItem = typeof item === 'object' && item !== null ? item.color : undefined;
+
+            // Find closest master issue to inherit icon, customIconUrl, badge, and color
+            const cleanTitle = titleStr.toLowerCase();
+            const matched = masterIssues.find((mi) => {
+              const miTitle = (mi.title || '').toLowerCase();
+              if (typeof item === 'object' && item?.id && mi.id === item.id) return true;
+              if (miTitle === cleanTitle) return true;
+              if (cleanTitle.includes('glass') && miTitle.includes('glass')) return true;
+              if (cleanTitle.includes('green') && miTitle.includes('green')) return true;
+              if (cleanTitle.includes('black') && miTitle.includes('black')) return true;
+              if (cleanTitle.includes('touch') && miTitle.includes('touch')) return true;
+              if (cleanTitle.includes('flicker') && miTitle.includes('flicker')) return true;
+              if (cleanTitle.includes('truetone') && miTitle.includes('truetone')) return true;
+              if (cleanTitle.includes('bleed') && (miTitle.includes('bleed') || miTitle.includes('pressure'))) return true;
+              if (cleanTitle.includes('white screen') && miTitle.includes('white screen')) return true;
+              return false;
+            });
+
+            return {
+              id: typeof item === 'object' && item?.id ? item.id : (matched?.id || `issue-${idx + 1}`),
+              // CRITICAL: Must be EXACT text entered/assigned by admin while adding/editing model!
+              title: titleStr,
+              icon: iconFromItem || matched?.icon || 'Layers',
+              customIconUrl: customIconFromItem !== undefined ? customIconFromItem : (matched?.customIconUrl || null),
+              badge: badgeFromItem || matched?.badge || 'Certified cleanroom repair',
+              color: colorFromItem || matched?.color || 'amber',
+            };
+          });
+      }
     } else {
-      resolvedIssues = masterIssues;
+      // Model has no displayIssues assigned by admin; do not show unselected master issues
+      resolvedIssues = [];
     }
 
     res.json({

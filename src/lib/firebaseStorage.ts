@@ -54,9 +54,13 @@ export async function uploadImageToFirebaseStorage(
     const headers: Record<string, string> = { 'Content-Type': 'application/json' };
     if (token) headers['Authorization'] = `Bearer ${token}`;
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 8000);
+
     const res = await fetch('/api/admin/upload-image', {
       method: 'POST',
       headers,
+      signal: controller.signal,
       body: JSON.stringify({
         image: dataUrl,
         filename: file.name,
@@ -64,6 +68,7 @@ export async function uploadImageToFirebaseStorage(
         altText: displayName,
       }),
     });
+    clearTimeout(timeoutId);
 
     if (res.ok) {
       const data = await res.json();

@@ -89,7 +89,7 @@ export const IssuesPage: React.FC = () => {
                 <div
                   key={issueItem.id || idx}
                   onClick={() => toggleIssue(issueTitle)}
-                  className={`group relative flex flex-col justify-between rounded-2xl p-4 sm:p-5 transition-all duration-200 cursor-pointer border select-none ${
+                  className={`group relative flex flex-col justify-between rounded-xl px-3.5 py-3 transition-all duration-200 cursor-pointer border select-none ${
                     isSelected
                       ? styles.selectedClass + ' shadow-md'
                       : 'border-slate-200 bg-white hover:border-[#00B2A2]/60 dark:border-slate-800 dark:bg-slate-900 shadow-xs hover:shadow-md'
@@ -97,19 +97,19 @@ export const IssuesPage: React.FC = () => {
                 >
                   <div>
                     {/* Header: Issue Icon & Checkbox */}
-                    <div className="flex items-start justify-between gap-3 mb-3">
+                    <div className="flex items-start justify-between gap-2.5 mb-2">
                       <div
-                        className={`flex h-13 w-13 sm:h-14 sm:w-14 items-center justify-center rounded-xl shrink-0 border transition-transform duration-200 group-hover:scale-105 ${styles.color}`}
+                        className={`flex h-15 w-15 sm:h-16 sm:w-16 items-center justify-center rounded-xl shrink-0 border transition-transform duration-200 group-hover:scale-105 ${styles.color}`}
                       >
                         {issueItem.customIconUrl ? (
                           <img
                             src={issueItem.customIconUrl}
                             alt={issueTitle}
-                            className="h-8 w-8 sm:h-9 sm:w-9 object-contain"
+                            className="h-10 w-10 sm:h-11 sm:w-11 object-contain"
                             loading="lazy"
                           />
                         ) : (
-                          <IssueIcon className="h-7 w-7 sm:h-8 sm:w-8" />
+                          <IssueIcon className="h-9 w-9 sm:h-10 sm:w-10" />
                         )}
                       </div>
 
@@ -129,13 +129,13 @@ export const IssuesPage: React.FC = () => {
                     <span className="text-sm font-black text-slate-900 dark:text-white block group-hover:text-[#00B2A2] transition-colors leading-snug">
                       {issueTitle}
                     </span>
-                    <span className="text-[11px] text-slate-500 dark:text-slate-400 block mt-1">
+                    <span className="text-[11px] text-slate-500 dark:text-slate-400 block mt-0.5 line-clamp-1">
                       {issueBadge || 'Certified cleanroom repair'}
                     </span>
                   </div>
 
                   {/* Bottom selection state */}
-                  <div className="mt-4 pt-2.5 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
+                  <div className="mt-2 pt-1.5 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
                     <span
                       className={`text-[11px] font-bold ${
                         isSelected ? 'text-[#00B2A2]' : 'text-slate-400 dark:text-slate-500'
