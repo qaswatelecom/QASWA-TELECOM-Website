@@ -21,6 +21,7 @@ import {
   ChevronRight,
   Filter,
   Upload,
+  Sparkles,
 } from 'lucide-react';
 import { DeviceCategory, Brand, Model, Service } from '../../types/index.ts';
 import { MediaPickerModal } from './MediaPickerModal.tsx';
@@ -212,6 +213,29 @@ export const DeviceCatalogManagementTab: React.FC<DeviceCatalogManagementTabProp
         slug: '',
         imageUrl: '',
         description: '',
+        heroCard: {
+          title: '',
+          badge: defaultCat?.name || 'Mobile',
+          description: '',
+          features: [
+            {
+              title: 'Original Panel Preservation',
+              description: 'Keep your original AMOLED/Retina panel when only front glass is cracked',
+            },
+            {
+              title: 'Laser Flex Bonding Available',
+              description: 'Eliminate green lines and white screen issues with cold laser bonding',
+            },
+            {
+              title: 'Cleanroom OCA Lamination',
+              description: 'Bubble-free optical autoclave bonding identical to factory standards',
+            },
+            {
+              title: 'TrueTone & Sensor Calibration',
+              description: 'Ambient light and digitizer sensor data programmed to ensure 100% fidelity',
+            },
+          ],
+        },
         displayIssues: [], // Only issues selected by the admin will appear on frontend
         serviceIds: servicesList.map((s) => s.id),
         isActive: true,
@@ -268,8 +292,40 @@ export const DeviceCatalogManagementTab: React.FC<DeviceCatalogManagementTabProp
         return iss;
       });
 
+      const matchedCat = categoriesList.find((c) => c.slug === item.categorySlug || c.id === item.categoryId);
+      const defaultBadge = matchedCat?.name || 'Mobile';
+
+      // Load existing model-specific heroCard if present, or initialize with model defaults
+      const existingHero = item.heroCard;
+      const initialHeroCard = {
+        title: existingHero?.title ?? `${item.name} Display Repair`,
+        badge: existingHero?.badge ?? defaultBadge,
+        description: existingHero?.description ?? (item.description || `Precision display repair and touch glass refurbishing for ${item.name}.`),
+        features: (Array.isArray(existingHero?.features) && existingHero.features.length === 4)
+          ? existingHero.features
+          : [
+              {
+                title: 'Original Panel Preservation',
+                description: 'Keep your original AMOLED/Retina panel when only front glass is cracked',
+              },
+              {
+                title: 'Laser Flex Bonding Available',
+                description: 'Eliminate green lines and white screen issues with cold laser bonding',
+              },
+              {
+                title: 'Cleanroom OCA Lamination',
+                description: 'Bubble-free optical autoclave bonding identical to factory standards',
+              },
+              {
+                title: 'TrueTone & Sensor Calibration',
+                description: 'Ambient light and digitizer sensor data programmed to ensure 100% fidelity',
+              },
+            ],
+      };
+
       setEditingItem({
         ...item,
+        heroCard: initialHeroCard,
         displayIssues: normalizedIssues,
         serviceIds: item.serviceIds || servicesList.map((s) => s.id),
       });
@@ -1350,6 +1406,228 @@ export const DeviceCatalogManagementTab: React.FC<DeviceCatalogManagementTabProp
                       placeholder="Specialized display repair and glass refurbishing..."
                       className="w-full rounded-xl border border-slate-200 bg-slate-50 p-2.5 text-xs dark:bg-slate-800 dark:border-slate-700"
                     />
+                  </div>
+
+                  {/* ======================================================== */}
+                  {/* MODEL / ISSUE CARD CUSTOMIZATION (MODEL-SPECIFIC)         */}
+                  {/* ======================================================== */}
+                  <div className="rounded-2xl border-2 border-[#00B2A2]/30 p-4 bg-teal-50/20 dark:bg-teal-950/20 dark:border-teal-700/50 space-y-3.5">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-teal-100 dark:border-teal-900/50 pb-2.5">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <Sparkles className="h-4 w-4 text-[#00B2A2]" />
+                          <label className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
+                            Model / Issue Card (Top Header Card)
+                          </label>
+                          <span className="rounded-full bg-[#00B2A2]/10 text-[#00B2A2] px-2 py-0.5 text-[10px] font-bold">
+                            Model-Specific
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                          Customize every piece of text displayed inside this specific model's showcase card. Saved separately for this model.
+                        </p>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const fallbackBadge = categoriesList.find((c) => c.slug === editingItem.categorySlug)?.name || 'Mobile';
+                          const modelName = editingItem.name || 'Model';
+                          setEditingItem({
+                            ...editingItem,
+                            heroCard: {
+                              title: `${modelName} Display Repair`,
+                              badge: fallbackBadge,
+                              description: `Precision display repair and touch glass refurbishing for ${modelName}.`,
+                              features: [
+                                {
+                                  title: 'Original Panel Preservation',
+                                  description: 'Keep your original AMOLED/Retina panel when only front glass is cracked',
+                                },
+                                {
+                                  title: 'Laser Flex Bonding Available',
+                                  description: 'Eliminate green lines and white screen issues with cold laser bonding',
+                                },
+                                {
+                                  title: 'Cleanroom OCA Lamination',
+                                  description: 'Bubble-free optical autoclave bonding identical to factory standards',
+                                },
+                                {
+                                  title: 'TrueTone & Sensor Calibration',
+                                  description: 'Ambient light and digitizer sensor data programmed to ensure 100% fidelity',
+                                },
+                              ],
+                            },
+                          });
+                        }}
+                        className="text-[11px] font-bold text-[#00B2A2] hover:underline self-start sm:self-auto cursor-pointer"
+                      >
+                        ↺ Reset Card Text to Default
+                      </button>
+                    </div>
+
+                    {/* Card Title & Image Badge */}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <div className="sm:col-span-2">
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                          Main Card Heading / Title
+                        </label>
+                        <input
+                          type="text"
+                          value={editingItem.heroCard?.title ?? ''}
+                          onChange={(e) =>
+                            setEditingItem({
+                              ...editingItem,
+                              heroCard: {
+                                ...(editingItem.heroCard || {}),
+                                title: e.target.value,
+                              },
+                            })
+                          }
+                          placeholder={`e.g. ${editingItem.name || 'iPhone 15 Pro Max'} Display Repair`}
+                          className="w-full rounded-xl border border-slate-200 bg-white p-2.5 text-xs font-semibold text-slate-800 dark:bg-slate-800 dark:border-slate-700 dark:text-white focus:border-[#00B2A2] focus:outline-none"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                          Image Corner Badge
+                        </label>
+                        <input
+                          type="text"
+                          value={editingItem.heroCard?.badge ?? ''}
+                          onChange={(e) =>
+                            setEditingItem({
+                              ...editingItem,
+                              heroCard: {
+                                ...(editingItem.heroCard || {}),
+                                badge: e.target.value,
+                              },
+                            })
+                          }
+                          placeholder="e.g. Mobile, iPad, Watch"
+                          className="w-full rounded-xl border border-slate-200 bg-white p-2.5 text-xs font-semibold text-slate-800 dark:bg-slate-800 dark:border-slate-700 dark:text-white focus:border-[#00B2A2] focus:outline-none"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Card Description */}
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        Main Card Description / Subtitle
+                      </label>
+                      <textarea
+                        rows={2}
+                        value={editingItem.heroCard?.description ?? ''}
+                        onChange={(e) =>
+                          setEditingItem({
+                            ...editingItem,
+                            heroCard: {
+                              ...(editingItem.heroCard || {}),
+                              description: e.target.value,
+                            },
+                          })
+                        }
+                        placeholder="e.g. Precision display repair and touch glass refurbishing for iPhone 15 Pro Max."
+                        className="w-full rounded-xl border border-slate-200 bg-white p-2.5 text-xs text-slate-800 dark:bg-slate-800 dark:border-slate-700 dark:text-white focus:border-[#00B2A2] focus:outline-none"
+                      />
+                    </div>
+
+                    {/* 4 Feature / Issue Highlights */}
+                    <div className="space-y-2">
+                      <label className="block text-xs font-bold text-slate-800 dark:text-slate-200">
+                        Card Feature & Issue Highlights (4 Items)
+                      </label>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+                        {[0, 1, 2, 3].map((featIdx) => {
+                          const feat = (editingItem.heroCard?.features && editingItem.heroCard.features[featIdx]) || {
+                            title: '',
+                            description: '',
+                          };
+                          return (
+                            <div
+                              key={featIdx}
+                              className="rounded-xl border border-slate-200 bg-white p-2.5 dark:border-slate-700 dark:bg-slate-800/90 space-y-2 shadow-xs"
+                            >
+                              <div className="flex items-center gap-1.5 text-[11px] font-bold text-[#00B2A2]">
+                                <CheckCircle2 className="h-3.5 w-3.5" />
+                                <span>Feature #{featIdx + 1}</span>
+                              </div>
+
+                              <div>
+                                <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-0.5">
+                                  Heading / Title
+                                </label>
+                                <input
+                                  type="text"
+                                  value={feat.title}
+                                  onChange={(e) => {
+                                    const currentFeatures = [
+                                      ...((editingItem.heroCard?.features && editingItem.heroCard.features.length === 4)
+                                        ? editingItem.heroCard.features
+                                        : [
+                                            { title: 'Original Panel Preservation', description: 'Keep your original AMOLED/Retina panel when only front glass is cracked' },
+                                            { title: 'Laser Flex Bonding Available', description: 'Eliminate green lines and white screen issues with cold laser bonding' },
+                                            { title: 'Cleanroom OCA Lamination', description: 'Bubble-free optical autoclave bonding identical to factory standards' },
+                                            { title: 'TrueTone & Sensor Calibration', description: 'Ambient light and digitizer sensor data programmed to ensure 100% fidelity' },
+                                          ]),
+                                    ];
+                                    currentFeatures[featIdx] = {
+                                      ...currentFeatures[featIdx],
+                                      title: e.target.value,
+                                    };
+                                    setEditingItem({
+                                      ...editingItem,
+                                      heroCard: {
+                                        ...(editingItem.heroCard || {}),
+                                        features: currentFeatures,
+                                      },
+                                    });
+                                  }}
+                                  placeholder="e.g. Original Panel Preservation"
+                                  className="w-full rounded-lg border border-slate-200 bg-slate-50 p-1.5 text-xs font-semibold text-slate-800 dark:bg-slate-900 dark:border-slate-700 dark:text-white"
+                                />
+                              </div>
+
+                              <div>
+                                <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-0.5">
+                                  Description
+                                </label>
+                                <textarea
+                                  rows={2}
+                                  value={feat.description}
+                                  onChange={(e) => {
+                                    const currentFeatures = [
+                                      ...((editingItem.heroCard?.features && editingItem.heroCard.features.length === 4)
+                                        ? editingItem.heroCard.features
+                                        : [
+                                            { title: 'Original Panel Preservation', description: 'Keep your original AMOLED/Retina panel when only front glass is cracked' },
+                                            { title: 'Laser Flex Bonding Available', description: 'Eliminate green lines and white screen issues with cold laser bonding' },
+                                            { title: 'Cleanroom OCA Lamination', description: 'Bubble-free optical autoclave bonding identical to factory standards' },
+                                            { title: 'TrueTone & Sensor Calibration', description: 'Ambient light and digitizer sensor data programmed to ensure 100% fidelity' },
+                                          ]),
+                                    ];
+                                    currentFeatures[featIdx] = {
+                                      ...currentFeatures[featIdx],
+                                      description: e.target.value,
+                                    };
+                                    setEditingItem({
+                                      ...editingItem,
+                                      heroCard: {
+                                        ...(editingItem.heroCard || {}),
+                                        features: currentFeatures,
+                                      },
+                                    });
+                                  }}
+                                  placeholder="e.g. Keep your original AMOLED/Retina panel when only front glass is cracked"
+                                  className="w-full rounded-lg border border-slate-200 bg-slate-50 p-1.5 text-[11px] text-slate-800 dark:bg-slate-900 dark:border-slate-700 dark:text-white"
+                                />
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
                   </div>
 
                   {/* DISPLAY ISSUES ASSIGNMENT */}

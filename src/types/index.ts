@@ -27,6 +27,13 @@ export interface Brand {
   createdAt?: string;
 }
 
+export interface ModelHeroCard {
+  title?: string;
+  description?: string;
+  badge?: string;
+  features?: HeroCardFeature[];
+}
+
 export interface Model {
   id: number;
   brandId?: number | null;
@@ -40,6 +47,7 @@ export interface Model {
   imageUrl?: string | null;
   description?: string | null;
   displayIssues?: string | null;
+  heroCard?: ModelHeroCard | null;
   seoTitle?: string | null;
   seoDescription?: string | null;
   isActive: boolean;

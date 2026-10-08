@@ -33,6 +33,7 @@ export interface DisplayIssueItem {
   icon: string;
   customIconUrl?: string | null;
   badge?: string;
+  description?: string;
   color?: string; // 'amber' | 'emerald' | 'indigo' | 'sky' | 'purple' | 'teal' | 'rose' | 'green'
 }
 

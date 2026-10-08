@@ -545,6 +545,13 @@ export const IssueCardsManagementTab: React.FC<IssueCardsManagementTabProps> = (
                         #{idx + 1}
                       </span>
                       <button
+                        onClick={() => handleOpenEdit(idx)}
+                        className="p-1 text-[#00B2A2] hover:text-white hover:bg-[#00B2A2] rounded-lg transition-colors cursor-pointer"
+                        title="Edit this Issue Card"
+                      >
+                        <Edit className="h-3.5 w-3.5" />
+                      </button>
+                      <button
                         onClick={() => handleDeleteCard(idx)}
                         className="p-1 text-slate-400 hover:text-rose-500 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
                         title="Delete issue card"
@@ -554,48 +561,24 @@ export const IssueCardsManagementTab: React.FC<IssueCardsManagementTabProps> = (
                     </div>
                   </div>
 
-                  {/* Issue Title / Heading (Directly Editable) */}
-                  <div className="space-y-1 mb-2">
-                    <div className="flex items-center justify-between">
-                      <label className="flex items-center gap-1 text-[10px] font-bold text-slate-500 dark:text-slate-400">
-                        <Edit className="h-2.5 w-2.5 text-[#00B2A2]" />
-                        <span>Card Title / Heading:</span>
-                      </label>
-                      <span className="text-[9px] text-slate-400 font-semibold">Editable</span>
-                    </div>
-                    <textarea
-                      rows={2}
-                      value={issue.title}
-                      onChange={(e) => {
-                        const updated = [...issuesList];
-                        updated[idx] = { ...updated[idx], title: e.target.value };
-                        setIssuesList(updated);
-                      }}
-                      className="w-full text-xs font-bold rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-800/80 p-2 text-slate-900 dark:text-white focus:border-[#00B2A2] focus:bg-white dark:focus:bg-slate-900 focus:outline-none transition-colors"
-                      placeholder="Enter issue card heading..."
-                    />
+                  {/* Issue Title / Heading (Read-only on card, editable via Edit icon) */}
+                  <div className="mb-2">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">
+                      Card Title / Heading
+                    </span>
+                    <h4 className="text-sm font-black text-slate-900 dark:text-white leading-snug line-clamp-2">
+                      {issue.title}
+                    </h4>
                   </div>
 
-                  {/* Issue Description / Subtitle (Directly Editable) */}
-                  <div className="space-y-1 mb-2">
-                    <div className="flex items-center justify-between">
-                      <label className="flex items-center gap-1 text-[10px] font-bold text-slate-500 dark:text-slate-400">
-                        <Edit className="h-2.5 w-2.5 text-[#00B2A2]" />
-                        <span>Card Description / Text:</span>
-                      </label>
-                      <span className="text-[9px] text-slate-400 font-semibold">Editable</span>
-                    </div>
-                    <input
-                      type="text"
-                      value={issue.badge || ''}
-                      onChange={(e) => {
-                        const updated = [...issuesList];
-                        updated[idx] = { ...updated[idx], badge: e.target.value, description: e.target.value };
-                        setIssuesList(updated);
-                      }}
-                      className="w-full text-xs font-medium rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-800/80 px-2 py-1.5 text-slate-900 dark:text-white focus:border-[#00B2A2] focus:bg-white dark:focus:bg-slate-900 focus:outline-none transition-colors"
-                      placeholder="e.g. Certified cleanroom repair"
-                    />
+                  {/* Issue Description / Subtitle (Read-only on card, editable via Edit icon) */}
+                  <div className="mb-2.5">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">
+                      Card Description / Text
+                    </span>
+                    <p className="text-xs text-slate-600 dark:text-slate-300 font-medium line-clamp-2 bg-slate-50 dark:bg-slate-800/60 rounded-lg px-2.5 py-1.5 border border-slate-100 dark:border-slate-800">
+                      {issue.badge || issue.description || 'Certified cleanroom repair'}
+                    </p>
                   </div>
 
                   {/* Icon label */}

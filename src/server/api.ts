@@ -788,15 +788,40 @@ apiRouter.get(['/models/:slug', '/repair/:slug'], async (req: Request, res: Resp
       resolvedIssues = [];
     }
 
+    let modelHeroCard: any = null;
+    try {
+      const heroSetting = await db
+        .select()
+        .from(siteSettings)
+        .where(eq(siteSettings.key, `MODEL_CARD_${m.id}`))
+        .limit(1);
+      if (heroSetting[0]?.value) {
+        modelHeroCard = JSON.parse(heroSetting[0].value);
+      }
+    } catch (e) {
+      console.warn('Could not load model hero card:', e);
+    }
+
     const heroCardConfig = await getHeroCardConfig();
 
     res.json({
-      model: m,
+      model: {
+        ...m,
+        heroCard: modelHeroCard,
+      },
       brand,
       category,
       displayIssues: resolvedIssues,
       services: availableServices,
-      heroCardConfig,
+      heroCardConfig: modelHeroCard && (modelHeroCard.title || modelHeroCard.description || modelHeroCard.features)
+        ? {
+            headingTemplate: modelHeroCard.title || heroCardConfig.headingTemplate,
+            description: modelHeroCard.description || heroCardConfig.description,
+            features: (Array.isArray(modelHeroCard.features) && modelHeroCard.features.length === 4)
+              ? modelHeroCard.features
+              : heroCardConfig.features,
+          }
+        : heroCardConfig,
     });
   } catch (error: any) {
     console.error('Failed to fetch model details:', error);
@@ -2114,9 +2139,26 @@ apiRouter.get('/admin/models', async (req: Request, res: Response) => {
       serviceIdsByModel[link.modelId].push(link.serviceId);
     }
 
+    // Attach model-specific hero card configurations
+    const allHeroCardsRes = await db
+      .select()
+      .from(siteSettings)
+      .where(like(siteSettings.key, 'MODEL_CARD_%'));
+
+    const heroCardMap = new Map<number, any>();
+    for (const row of allHeroCardsRes) {
+      try {
+        const mId = Number(row.key.replace('MODEL_CARD_', ''));
+        if (!isNaN(mId)) {
+          heroCardMap.set(mId, JSON.parse(row.value));
+        }
+      } catch (e) {}
+    }
+
     const enriched = data.map((m) => ({
       ...m,
       serviceIds: serviceIdsByModel[m.id] || [],
+      heroCard: heroCardMap.get(m.id) || null,
     }));
 
     res.json(enriched);
@@ -2138,6 +2180,7 @@ apiRouter.post('/admin/models', async (req: Request, res: Response) => {
       imageUrl,
       description,
       displayIssues,
+      heroCard,
       seoTitle,
       seoDescription,
       isActive,
@@ -2182,7 +2225,23 @@ apiRouter.post('/admin/models', async (req: Request, res: Response) => {
       }
     }
 
-    res.status(201).json(created[0]);
+    // Persist model-specific hero card text if provided
+    if (created[0] && heroCard) {
+      try {
+        const val = JSON.stringify(heroCard);
+        await db
+          .insert(siteSettings)
+          .values({ key: `MODEL_CARD_${created[0].id}`, value: val })
+          .onConflictDoUpdate({
+            target: siteSettings.key,
+            set: { value: val },
+          });
+      } catch (hcErr) {
+        console.error('Failed to save model hero card:', hcErr);
+      }
+    }
+
+    res.status(201).json({ ...created[0], heroCard: heroCard || null });
   } catch (error: any) {
     res.status(500).json({ error: error.message || 'Failed to create model' });
   }
@@ -2201,6 +2260,7 @@ apiRouter.put('/admin/models/:id', async (req: Request, res: Response) => {
       imageUrl,
       description,
       displayIssues,
+      heroCard,
       seoTitle,
       seoDescription,
       isActive,
@@ -2245,7 +2305,23 @@ apiRouter.put('/admin/models/:id', async (req: Request, res: Response) => {
       }
     }
 
-    res.json(updated[0]);
+    // Persist model-specific hero card text
+    if (heroCard) {
+      try {
+        const val = JSON.stringify(heroCard);
+        await db
+          .insert(siteSettings)
+          .values({ key: `MODEL_CARD_${id}`, value: val })
+          .onConflictDoUpdate({
+            target: siteSettings.key,
+            set: { value: val },
+          });
+      } catch (hcErr) {
+        console.error('Failed to update model hero card:', hcErr);
+      }
+    }
+
+    res.json({ ...updated[0], heroCard: heroCard || null });
   } catch (error: any) {
     res.status(500).json({ error: error.message || 'Failed to update model' });
   }
@@ -2255,6 +2331,7 @@ apiRouter.delete('/admin/models/:id', async (req: Request, res: Response) => {
   try {
     const id = Number(req.params.id);
     await db.delete(modelServices).where(eq(modelServices.modelId, id));
+    await db.delete(siteSettings).where(eq(siteSettings.key, `MODEL_CARD_${id}`));
     await db.delete(models).where(eq(models.id, id));
     res.json({ success: true });
   } catch (error: any) {
