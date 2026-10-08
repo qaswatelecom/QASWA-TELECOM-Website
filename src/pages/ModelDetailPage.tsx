@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext.tsx';
-import { Model, Brand, DeviceCategory, Service } from '../types/index.ts';
+import { Model, Brand, DeviceCategory, Service, HeroCardConfig } from '../types/index.ts';
 import {
   ChevronLeft,
   Smartphone,
@@ -119,6 +119,7 @@ export const ModelDetailPage: React.FC<ModelDetailPageProps> = ({ modelSlug }) =
   const [displayIssues, setDisplayIssues] = useState<any[]>([]);
   const [services, setServices] = useState<Service[]>([]);
   const [selectedIssues, setSelectedIssues] = useState<string[]>([]);
+  const [heroCardConfig, setHeroCardConfig] = useState<HeroCardConfig | null>(null);
   const [loading, setLoading] = useState(true);
 
   // Booking Modal State
@@ -213,6 +214,9 @@ export const ModelDetailPage: React.FC<ModelDetailPageProps> = ({ modelSlug }) =
         setCategory(data.category);
         setDisplayIssues(data.displayIssues || []);
         setServices(data.services || []);
+        if (data.heroCardConfig) {
+          setHeroCardConfig(data.heroCardConfig);
+        }
         if (data.displayIssues && data.displayIssues.length > 0) {
           const firstTitle = typeof data.displayIssues[0] === 'object' && data.displayIssues[0]?.title
             ? data.displayIssues[0].title
@@ -536,101 +540,101 @@ export const ModelDetailPage: React.FC<ModelDetailPageProps> = ({ modelSlug }) =
         </nav>
 
         {/* Model Hero Showcase Card */}
-        <div className="rounded-2xl sm:rounded-3xl border border-slate-200/90 bg-white p-6 sm:p-8 md:p-10 shadow-sm dark:border-slate-800 dark:bg-slate-900/90 mb-10 overflow-hidden relative">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-            {/* Left: Device Image Showcase */}
-            <div className="lg:col-span-4 flex flex-col items-center justify-center">
-              <div className="relative h-64 sm:h-72 w-full max-w-sm rounded-2xl bg-slate-50 dark:bg-slate-800/60 p-4 border border-slate-100 dark:border-slate-800 flex items-center justify-center overflow-hidden shadow-inner group">
-                {model.imageUrl ? (
-                  <img
-                    src={model.imageUrl}
-                    alt={`${model.name} display`}
-                    className="h-full w-full object-contain filter drop-shadow-lg transition-transform duration-500 group-hover:scale-105"
-                  />
-                ) : (
-                  <DeviceIcon className="h-28 w-28 text-[#00B2A2]" />
-                )}
+        {(() => {
+          const resolvedHeading =
+            heroCardConfig?.headingTemplate
+              ? heroCardConfig.headingTemplate.replace(/\{model\}/gi, model.name)
+              : `${model.name} Display Repair`;
 
-                {/* Corner Badges */}
-                <div className="absolute top-3 left-3 flex flex-col gap-1.5">
-                  <span className="rounded-lg bg-black/60 backdrop-blur-md px-2.5 py-1 text-[11px] font-bold text-white shadow-xs">
-                    {categoryName}
-                  </span>
+          const resolvedDescription =
+            model.description ||
+            (heroCardConfig?.description
+              ? heroCardConfig.description.replace(/\{model\}/gi, model.name)
+              : `Precision display repair and touch glass refurbishing for ${model.name}. Performed in our Class-5 dust-free optical cleanroom with original panel preservation.`);
+
+          const resolvedFeatures =
+            heroCardConfig?.features && heroCardConfig.features.length === 4
+              ? heroCardConfig.features
+              : [
+                  {
+                    title: 'Original Panel Preservation',
+                    description: 'Keep your original AMOLED/Retina panel when only front glass is cracked',
+                  },
+                  {
+                    title: 'Laser Flex Bonding Available',
+                    description: 'Eliminate green lines and white screen issues with cold laser bonding',
+                  },
+                  {
+                    title: 'Cleanroom OCA Lamination',
+                    description: 'Bubble-free optical autoclave bonding identical to factory standards',
+                  },
+                  {
+                    title: 'TrueTone & Sensor Calibration',
+                    description: 'Ambient light and digitizer sensor data programmed to ensure 100% fidelity',
+                  },
+                ];
+
+          return (
+            <div className="rounded-2xl sm:rounded-3xl border border-slate-200/90 bg-white p-5 sm:p-6 md:p-7 shadow-sm dark:border-slate-800 dark:bg-slate-900/90 mb-8 sm:mb-10 overflow-hidden relative">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-center">
+                {/* Left: Device Image Showcase */}
+                <div className="lg:col-span-4 flex flex-col items-center justify-center">
+                  <div className="relative h-52 sm:h-56 md:h-60 w-full max-w-sm rounded-2xl bg-slate-50 dark:bg-slate-800/60 p-3 sm:p-4 border border-slate-100 dark:border-slate-800 flex items-center justify-center overflow-hidden shadow-inner group">
+                    {model.imageUrl ? (
+                      <img
+                        src={model.imageUrl}
+                        alt={`${model.name} display`}
+                        className="h-full w-full object-contain filter drop-shadow-lg transition-transform duration-500 group-hover:scale-105"
+                      />
+                    ) : (
+                      <DeviceIcon className="h-24 w-24 sm:h-28 sm:w-28 text-[#00B2A2]" />
+                    )}
+
+                    {/* Corner Badges */}
+                    <div className="absolute top-3 left-3 flex flex-col gap-1.5">
+                      <span className="rounded-lg bg-black/60 backdrop-blur-md px-2.5 py-1 text-[11px] font-bold text-white shadow-xs">
+                        {categoryName}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right: Model Info & Highlights */}
+                <div className="lg:col-span-8 flex flex-col justify-between">
+                  <div>
+                    <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">
+                      {resolvedHeading}
+                    </h1>
+
+                    <p className="mt-2 text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed max-w-2xl">
+                      {resolvedDescription}
+                    </p>
+
+                    {/* Display Engineering Features */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3 mt-4">
+                      {resolvedFeatures.map((feat, fIdx) => (
+                        <div
+                          key={fIdx}
+                          className="flex items-start gap-2.5 rounded-xl border border-slate-100 bg-slate-50/80 p-2.5 dark:border-slate-800 dark:bg-slate-800/50"
+                        >
+                          <CheckCircle2 className="h-4 w-4 text-[#00B2A2] shrink-0 mt-0.5" />
+                          <div>
+                            <span className="text-xs font-bold text-slate-900 dark:text-white block">
+                              {feat.title}
+                            </span>
+                            <span className="text-[11px] text-slate-500 dark:text-slate-400 block mt-0.5 leading-snug">
+                              {feat.description}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
-
-            {/* Right: Model Info & Highlights */}
-            <div className="lg:col-span-8 flex flex-col justify-between">
-              <div>
-                <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[#00B2A2] mb-1.5">
-                  <Sparkles className="h-4 w-4" />
-                  <span>Specialized Display Laboratory</span>
-                </div>
-
-                <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">
-                  {model.name} Display Repair
-                </h1>
-
-                <p className="mt-3 text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed max-w-2xl">
-                  {model.description ||
-                    `Specialized display repair and outer touch glass refurbishing for ${model.name}. Performed in our Class-5 dust-free optical cleanroom with original panel preservation.`}
-                </p>
-
-                {/* Display Engineering Features */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-6">
-                  <div className="flex items-start gap-2.5 rounded-xl border border-slate-100 bg-slate-50/80 p-3 dark:border-slate-800 dark:bg-slate-800/50">
-                    <CheckCircle2 className="h-4 w-4 text-[#00B2A2] shrink-0 mt-0.5" />
-                    <div>
-                      <span className="text-xs font-bold text-slate-900 dark:text-white block">
-                        Original Panel Preservation
-                      </span>
-                      <span className="text-[11px] text-slate-500 dark:text-slate-400 block mt-0.5">
-                        Keep your original AMOLED/Retina panel when only front glass is cracked
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-2.5 rounded-xl border border-slate-100 bg-slate-50/80 p-3 dark:border-slate-800 dark:bg-slate-800/50">
-                    <CheckCircle2 className="h-4 w-4 text-[#00B2A2] shrink-0 mt-0.5" />
-                    <div>
-                      <span className="text-xs font-bold text-slate-900 dark:text-white block">
-                        Laser Flex Bonding Available
-                      </span>
-                      <span className="text-[11px] text-slate-500 dark:text-slate-400 block mt-0.5">
-                        Eliminate green lines and white screen issues with cold laser bonding
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-2.5 rounded-xl border border-slate-100 bg-slate-50/80 p-3 dark:border-slate-800 dark:bg-slate-800/50">
-                    <CheckCircle2 className="h-4 w-4 text-[#00B2A2] shrink-0 mt-0.5" />
-                    <div>
-                      <span className="text-xs font-bold text-slate-900 dark:text-white block">
-                        Cleanroom OCA Lamination
-                      </span>
-                      <span className="text-[11px] text-slate-500 dark:text-slate-400 block mt-0.5">
-                        Bubble-free optical autoclave bonding identical to factory standards
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-2.5 rounded-xl border border-slate-100 bg-slate-50/80 p-3 dark:border-slate-800 dark:bg-slate-800/50">
-                    <CheckCircle2 className="h-4 w-4 text-[#00B2A2] shrink-0 mt-0.5" />
-                    <div>
-                      <span className="text-xs font-bold text-slate-900 dark:text-white block">
-                        TrueTone & Sensor Calibration
-                      </span>
-                      <span className="text-[11px] text-slate-500 dark:text-slate-400 block mt-0.5">
-                        Ambient light and digitizer sensor data programmed to ensure 100% fidelity
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+          );
+        })()}
 
         {/* ========================================================================= */}
         {/* SECTION 1: DISPLAY-RELATED ISSUES FOR THIS MODEL (MULTI-SELECT)           */}

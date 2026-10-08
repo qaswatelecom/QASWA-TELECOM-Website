@@ -17,7 +17,7 @@ import {
   Loader2,
   ImageIcon,
 } from 'lucide-react';
-import { DisplayIssueItem } from '../../types/index.ts';
+import { DisplayIssueItem, HeroCardConfig } from '../../types/index.ts';
 import {
   AVAILABLE_ISSUE_ICONS,
   DEFAULT_DISPLAY_ISSUES,
@@ -41,6 +41,31 @@ export const IssueCardsManagementTab: React.FC<IssueCardsManagementTabProps> = (
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
+  // Model Showcase Hero Card State
+  const [heroConfig, setHeroConfig] = useState<HeroCardConfig>({
+    headingTemplate: '{model} Display Repair',
+    description: 'Precision display repair and touch glass refurbishing for {model}. Performed in our Class-5 dust-free optical cleanroom with original panel preservation.',
+    features: [
+      {
+        title: 'Original Panel Preservation',
+        description: 'Keep your original AMOLED/Retina panel when only front glass is cracked',
+      },
+      {
+        title: 'Laser Flex Bonding Available',
+        description: 'Eliminate green lines and white screen issues with cold laser bonding',
+      },
+      {
+        title: 'Cleanroom OCA Lamination',
+        description: 'Bubble-free optical autoclave bonding identical to factory standards',
+      },
+      {
+        title: 'TrueTone & Sensor Calibration',
+        description: 'Ambient light and digitizer sensor data programmed to ensure 100% fidelity',
+      },
+    ],
+  });
+  const [savingHero, setSavingHero] = useState(false);
+
   // Edit Modal State
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
@@ -50,7 +75,7 @@ export const IssueCardsManagementTab: React.FC<IssueCardsManagementTabProps> = (
   const [mediaPickerOpen, setMediaPickerOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  // Fetch current issue cards from API
+  // Fetch current issue cards & hero card config from API
   const fetchIssues = async () => {
     try {
       setLoading(true);
@@ -69,6 +94,22 @@ export const IssueCardsManagementTab: React.FC<IssueCardsManagementTabProps> = (
       } else {
         setIssuesList(DEFAULT_DISPLAY_ISSUES);
       }
+
+      // Also fetch Hero Card config
+      try {
+        let heroRes = await fetch('/api/admin/hero-card-config', { headers });
+        if (!heroRes.ok) {
+          heroRes = await fetch('/api/hero-card-config');
+        }
+        if (heroRes.ok) {
+          const hData = await heroRes.json();
+          if (hData && Array.isArray(hData.features) && hData.features.length === 4) {
+            setHeroConfig(hData);
+          }
+        }
+      } catch (hErr) {
+        console.warn('Could not load hero card config:', hErr);
+      }
     } catch (err: any) {
       console.error('Error fetching display issues:', err);
       setIssuesList(DEFAULT_DISPLAY_ISSUES);
@@ -80,6 +121,36 @@ export const IssueCardsManagementTab: React.FC<IssueCardsManagementTabProps> = (
   useEffect(() => {
     fetchIssues();
   }, []);
+
+  // Save Model Showcase Hero Card config to backend
+  const handleSaveHeroConfig = async () => {
+    try {
+      setSavingHero(true);
+      const token = typeof window !== 'undefined' ? localStorage.getItem('qaswa_admin_token') : null;
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
+      const res = await fetch('/api/admin/hero-card-config', {
+        method: 'PUT',
+        headers,
+        body: JSON.stringify(heroConfig),
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to save Showcase Hero Card content');
+      }
+      showToast('Showcase Card content saved successfully');
+      if (onRefreshAll) {
+        onRefreshAll();
+      }
+    } catch (err: any) {
+      console.error('Error saving hero card config:', err);
+      showToast(err.message || 'Error saving Showcase Card content');
+    } finally {
+      setSavingHero(false);
+    }
+  };
 
   // Save full issues list to backend
   const saveIssuesToBackend = async (newList: DisplayIssueItem[]) => {
@@ -133,6 +204,8 @@ export const IssueCardsManagementTab: React.FC<IssueCardsManagementTabProps> = (
     updatedList[editingIndex] = {
       ...editingItem,
       title: editingItem.title.trim(),
+      badge: editingItem.badge?.trim() || '',
+      description: editingItem.badge?.trim() || '',
       icon: editingItem.icon || 'Layers',
       customIconUrl: editingItem.customIconUrl?.trim() || null,
     };
@@ -257,6 +330,131 @@ export const IssueCardsManagementTab: React.FC<IssueCardsManagementTabProps> = (
 
   return (
     <div className="space-y-6">
+      {/* ========================================================================= */}
+      {/* SECTION 1: MODEL SHOWCASE HERO CARD (DISPLAY LABORATORY HIGHLIGHTS)      */}
+      {/* ========================================================================= */}
+      <div className="bg-white dark:bg-slate-900 p-5 sm:p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
+          <div>
+            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#00B2A2] mb-1">
+              <Sparkles className="h-4 w-4" />
+              <span>Model Showcase Hero Card Content</span>
+            </div>
+            <h3 className="text-base font-extrabold text-slate-900 dark:text-white">
+              Edit Showcase Heading, Description & 4 Engineering Features
+            </h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 max-w-2xl">
+              All text inside the top showcase card (title, description, and each feature heading and description) is fully editable below and renders live on Customer/Frontend model pages. Use <code className="text-[#00B2A2] bg-[#00B2A2]/10 px-1 py-0.5 rounded text-[11px] font-mono">{'{model}'}</code> to automatically insert the device model name (e.g. Galaxy S24 Ultra, iPhone 16 Pro).
+            </p>
+          </div>
+
+          <button
+            onClick={handleSaveHeroConfig}
+            disabled={savingHero}
+            className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-[#00B2A2] hover:bg-[#009e90] transition-colors shadow-xs shrink-0 cursor-pointer"
+          >
+            {savingHero ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <Save className="h-3.5 w-3.5" />
+            )}
+            <span>{savingHero ? 'Saving Content...' : 'Save Showcase Card Text'}</span>
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Main Card Heading/Title */}
+          <div>
+            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+              Showcase Card Heading / Title
+            </label>
+            <input
+              type="text"
+              value={heroConfig.headingTemplate}
+              onChange={(e) => setHeroConfig({ ...heroConfig, headingTemplate: e.target.value })}
+              placeholder="{model} Display Repair"
+              className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#00B2A2]"
+            />
+            <p className="text-[10px] text-slate-400 mt-1">
+              Example: <span className="font-mono">{'{model} Display Repair'}</span>
+            </p>
+          </div>
+
+          {/* Main Card Description */}
+          <div>
+            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+              Showcase Card Main Description
+            </label>
+            <textarea
+              rows={2}
+              value={heroConfig.description}
+              onChange={(e) => setHeroConfig({ ...heroConfig, description: e.target.value })}
+              placeholder="Precision display repair and touch glass refurbishing for {model}..."
+              className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#00B2A2]"
+            />
+          </div>
+        </div>
+
+        {/* 4 Features */}
+        <div className="pt-2">
+          <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
+            Showcase Features (4 Engineering Highlights)
+          </label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {heroConfig.features.map((feat, fIdx) => (
+              <div
+                key={fIdx}
+                className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 space-y-2"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-bold text-[#00B2A2]">
+                    Feature #{fIdx + 1}
+                  </span>
+                  <CheckCircle2 className="h-3.5 w-3.5 text-[#00B2A2]" />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-600 dark:text-slate-400 mb-0.5">
+                    Feature Heading:
+                  </label>
+                  <input
+                    type="text"
+                    value={feat.title}
+                    onChange={(e) => {
+                      const updatedFeatures = [...heroConfig.features];
+                      updatedFeatures[fIdx] = { ...updatedFeatures[fIdx], title: e.target.value };
+                      setHeroConfig({ ...heroConfig, features: updatedFeatures });
+                    }}
+                    placeholder={`Feature ${fIdx + 1} title`}
+                    className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:border-[#00B2A2]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-600 dark:text-slate-400 mb-0.5">
+                    Feature Description:
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={feat.description}
+                    onChange={(e) => {
+                      const updatedFeatures = [...heroConfig.features];
+                      updatedFeatures[fIdx] = { ...updatedFeatures[fIdx], description: e.target.value };
+                      setHeroConfig({ ...heroConfig, features: updatedFeatures });
+                    }}
+                    placeholder={`Feature ${fIdx + 1} description`}
+                    className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-700 dark:text-slate-300 focus:outline-none focus:border-[#00B2A2]"
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* ========================================================================= */}
+      {/* SECTION 2: CUSTOMER ISSUES CARDS MANAGEMENT                              */}
+      {/* ========================================================================= */}
       {/* Top Banner / Controls */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
         <div>
@@ -268,7 +466,7 @@ export const IssueCardsManagementTab: React.FC<IssueCardsManagementTabProps> = (
             Display Issue Cards ({issuesList.length})
           </h2>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-2xl">
-            Edit the icon and issue title/text for each Issue Card. Changes saved here automatically update on the Customer/Frontend Issues Page and Device Model selection pages.
+            Edit the icon, issue title/heading, and description/text for each Issue Card. Changes saved here automatically update on the Customer/Frontend Issues Page and Device Model selection pages.
           </p>
         </div>
 
@@ -356,14 +554,14 @@ export const IssueCardsManagementTab: React.FC<IssueCardsManagementTabProps> = (
                     </div>
                   </div>
 
-                  {/* Issue Title / Text (Directly Editable) */}
+                  {/* Issue Title / Heading (Directly Editable) */}
                   <div className="space-y-1 mb-2">
                     <div className="flex items-center justify-between">
                       <label className="flex items-center gap-1 text-[10px] font-bold text-slate-500 dark:text-slate-400">
                         <Edit className="h-2.5 w-2.5 text-[#00B2A2]" />
-                        <span>Issue Card Text:</span>
+                        <span>Card Title / Heading:</span>
                       </label>
-                      <span className="text-[9px] text-slate-400">Editable</span>
+                      <span className="text-[9px] text-slate-400 font-semibold">Editable</span>
                     </div>
                     <textarea
                       rows={2}
@@ -374,17 +572,39 @@ export const IssueCardsManagementTab: React.FC<IssueCardsManagementTabProps> = (
                         setIssuesList(updated);
                       }}
                       className="w-full text-xs font-bold rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-800/80 p-2 text-slate-900 dark:text-white focus:border-[#00B2A2] focus:bg-white dark:focus:bg-slate-900 focus:outline-none transition-colors"
-                      placeholder="Enter issue card text..."
+                      placeholder="Enter issue card heading..."
                     />
                   </div>
 
-                  {/* Icon label & Diagnostic Badge */}
+                  {/* Issue Description / Subtitle (Directly Editable) */}
+                  <div className="space-y-1 mb-2">
+                    <div className="flex items-center justify-between">
+                      <label className="flex items-center gap-1 text-[10px] font-bold text-slate-500 dark:text-slate-400">
+                        <Edit className="h-2.5 w-2.5 text-[#00B2A2]" />
+                        <span>Card Description / Text:</span>
+                      </label>
+                      <span className="text-[9px] text-slate-400 font-semibold">Editable</span>
+                    </div>
+                    <input
+                      type="text"
+                      value={issue.badge || ''}
+                      onChange={(e) => {
+                        const updated = [...issuesList];
+                        updated[idx] = { ...updated[idx], badge: e.target.value, description: e.target.value };
+                        setIssuesList(updated);
+                      }}
+                      className="w-full text-xs font-medium rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-800/80 px-2 py-1.5 text-slate-900 dark:text-white focus:border-[#00B2A2] focus:bg-white dark:focus:bg-slate-900 focus:outline-none transition-colors"
+                      placeholder="e.g. Certified cleanroom repair"
+                    />
+                  </div>
+
+                  {/* Icon label */}
                   <div className="mt-2 space-y-1">
                     <div className="flex items-center gap-1.5 text-[11px] text-[#00B2A2] font-semibold">
-                      <span className="text-slate-400 font-normal">Icon:</span>
+                      <span className="text-slate-400 font-normal">Active Icon:</span>
                       {issue.customIconUrl ? (
                         <span className="bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 rounded text-[10px] font-bold">
-                          Custom Upload
+                          Custom Uploaded Icon
                         </span>
                       ) : (
                         <span className="font-mono bg-[#00B2A2]/10 px-1.5 py-0.5 rounded text-[10px]">
@@ -392,11 +612,6 @@ export const IssueCardsManagementTab: React.FC<IssueCardsManagementTabProps> = (
                         </span>
                       )}
                     </div>
-                    {issue.badge && (
-                      <span className="text-[11px] text-slate-500 dark:text-slate-400 block">
-                        {issue.badge}
-                      </span>
-                    )}
                   </div>
                 </div>
 
@@ -451,10 +666,10 @@ export const IssueCardsManagementTab: React.FC<IssueCardsManagementTabProps> = (
 
             {/* Modal Body (Scrollable) */}
             <div className="flex-1 overflow-y-auto p-5 space-y-5">
-              {/* 1. Issue Title / Text Input */}
+              {/* 1. Issue Title / Heading Input */}
               <div>
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-                  Issue Title / Text <span className="text-rose-500">*</span>
+                  Issue Card Title / Heading <span className="text-rose-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -464,7 +679,24 @@ export const IssueCardsManagementTab: React.FC<IssueCardsManagementTabProps> = (
                   className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm font-semibold text-slate-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-[#00B2A2] transition-all"
                 />
                 <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-1">
-                  This text appears prominently on the customer-facing Issue Card.
+                  This title appears prominently on the customer-facing Issue Card.
+                </p>
+              </div>
+
+              {/* 1b. Issue Description / Text Input */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                  Issue Card Description / Text
+                </label>
+                <input
+                  type="text"
+                  value={editingItem.badge || ''}
+                  onChange={(e) => setEditingItem({ ...editingItem, badge: e.target.value, description: e.target.value })}
+                  placeholder="e.g. Certified cleanroom repair / Laser line fault"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm font-semibold text-slate-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-[#00B2A2] transition-all"
+                />
+                <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-1">
+                  This description/text appears under the title on the frontend Issue Card.
                 </p>
               </div>
 

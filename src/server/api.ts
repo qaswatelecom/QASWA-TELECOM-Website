@@ -150,6 +150,65 @@ export async function getMasterDisplayIssuesConfig(): Promise<any[]> {
   return DEFAULT_DISPLAY_ISSUES_LIST;
 }
 
+export interface HeroCardFeature {
+  title: string;
+  description: string;
+}
+
+export interface HeroCardConfig {
+  headingTemplate: string;
+  description: string;
+  features: HeroCardFeature[];
+}
+
+export const DEFAULT_HERO_CARD_CONFIG: HeroCardConfig = {
+  headingTemplate: '{model} Display Repair',
+  description: 'Precision display repair and touch glass refurbishing for {model}. Performed in our Class-5 dust-free optical cleanroom with original panel preservation.',
+  features: [
+    {
+      title: 'Original Panel Preservation',
+      description: 'Keep your original AMOLED/Retina panel when only front glass is cracked',
+    },
+    {
+      title: 'Laser Flex Bonding Available',
+      description: 'Eliminate green lines and white screen issues with cold laser bonding',
+    },
+    {
+      title: 'Cleanroom OCA Lamination',
+      description: 'Bubble-free optical autoclave bonding identical to factory standards',
+    },
+    {
+      title: 'TrueTone & Sensor Calibration',
+      description: 'Ambient light and digitizer sensor data programmed to ensure 100% fidelity',
+    },
+  ],
+};
+
+export async function getHeroCardConfig(): Promise<HeroCardConfig> {
+  try {
+    const settingRes = await db
+      .select()
+      .from(siteSettings)
+      .where(eq(siteSettings.key, 'DISPLAY_HERO_CARD_CONFIG'))
+      .limit(1);
+    if (settingRes[0]?.value) {
+      const parsed = JSON.parse(settingRes[0].value);
+      if (parsed && typeof parsed === 'object') {
+        return {
+          headingTemplate: parsed.headingTemplate || DEFAULT_HERO_CARD_CONFIG.headingTemplate,
+          description: parsed.description || DEFAULT_HERO_CARD_CONFIG.description,
+          features: Array.isArray(parsed.features) && parsed.features.length === 4
+            ? parsed.features
+            : DEFAULT_HERO_CARD_CONFIG.features,
+        };
+      }
+    }
+  } catch (err) {
+    console.error('Error reading DISPLAY_HERO_CARD_CONFIG:', err);
+  }
+  return DEFAULT_HERO_CARD_CONFIG;
+}
+
 // ==========================================
 // 1. PUBLIC ENDPOINTS
 // ==========================================
@@ -157,7 +216,7 @@ export async function getMasterDisplayIssuesConfig(): Promise<any[]> {
 // Global bootstrap config (Site settings, categories, active brands, services, form fields)
 apiRouter.get('/public/bootstrap', async (_req: Request, res: Response) => {
   try {
-    const [allSettings, allCategories, allBrands, allServices, allFormFields, allStatuses, masterIssues] = await Promise.all([
+    const [allSettings, allCategories, allBrands, allServices, allFormFields, allStatuses, masterIssues, heroCardConfig] = await Promise.all([
       db.select().from(siteSettings),
       db.select().from(deviceCategories).where(eq(deviceCategories.isActive, true)).orderBy(asc(deviceCategories.sortOrder)),
       db.select().from(brands).where(eq(brands.isActive, true)).orderBy(asc(brands.sortOrder), asc(brands.name)),
@@ -165,6 +224,7 @@ apiRouter.get('/public/bootstrap', async (_req: Request, res: Response) => {
       db.select().from(customerFormFields).where(eq(customerFormFields.isEnabled, true)).orderBy(asc(customerFormFields.sortOrder)),
       db.select().from(orderStatuses).where(eq(orderStatuses.isActive, true)).orderBy(asc(orderStatuses.sortOrder)),
       getMasterDisplayIssuesConfig(),
+      getHeroCardConfig(),
     ]);
 
     const settingsMap: Record<string, string> = {};
@@ -190,6 +250,7 @@ apiRouter.get('/public/bootstrap', async (_req: Request, res: Response) => {
       formFields: allFormFields,
       orderStatuses: allStatuses,
       displayIssues: masterIssues,
+      heroCardConfig,
     });
   } catch (error: any) {
     console.error('Failed to fetch bootstrap data:', error);
@@ -675,27 +736,48 @@ apiRouter.get(['/models/:slug', '/repair/:slug'], async (req: Request, res: Resp
 
             // Find closest master issue to inherit icon, customIconUrl, badge, and color
             const cleanTitle = titleStr.toLowerCase();
-            const matched = masterIssues.find((mi) => {
-              const miTitle = (mi.title || '').toLowerCase();
-              if (typeof item === 'object' && item?.id && mi.id === item.id) return true;
+            let matched = masterIssues.find((mi) => {
+              if (typeof item === 'object' && item?.id && String(mi.id) === String(item.id)) return true;
+              const miTitle = (mi.title || '').trim().toLowerCase();
               if (miTitle === cleanTitle) return true;
-              if (cleanTitle.includes('glass') && miTitle.includes('glass')) return true;
-              if (cleanTitle.includes('green') && miTitle.includes('green')) return true;
-              if (cleanTitle.includes('black') && miTitle.includes('black')) return true;
-              if (cleanTitle.includes('touch') && miTitle.includes('touch')) return true;
-              if (cleanTitle.includes('flicker') && miTitle.includes('flicker')) return true;
-              if (cleanTitle.includes('truetone') && miTitle.includes('truetone')) return true;
-              if (cleanTitle.includes('bleed') && (miTitle.includes('bleed') || miTitle.includes('pressure'))) return true;
-              if (cleanTitle.includes('white screen') && miTitle.includes('white screen')) return true;
               return false;
             });
+
+            if (!matched) {
+              matched = masterIssues.find((mi) => {
+                const miTitle = (mi.title || '').trim().toLowerCase();
+                if (cleanTitle.includes('glass') && miTitle.includes('glass')) return true;
+                if (cleanTitle.includes('green') && miTitle.includes('green')) return true;
+                if (cleanTitle.includes('black') && miTitle.includes('black')) return true;
+                if (cleanTitle.includes('touch') && miTitle.includes('touch')) return true;
+                if (cleanTitle.includes('flicker') && miTitle.includes('flicker')) return true;
+                if (cleanTitle.includes('truetone') && miTitle.includes('truetone')) return true;
+                if (cleanTitle.includes('bleed') && (miTitle.includes('bleed') || miTitle.includes('pressure'))) return true;
+                if (cleanTitle.includes('white screen') && miTitle.includes('white screen')) return true;
+                return false;
+              });
+            }
+
+            if (!matched && masterIssues[idx]) {
+              matched = masterIssues[idx];
+            }
+
+            // CRITICAL: Ensure uploaded or replaced custom icon appears on customer frontend!
+            // Prefer master issue's uploaded customIconUrl so admin replacements immediately update,
+            // or fall back to item-level customIconUrl if set.
+            const customIconStr =
+              (matched?.customIconUrl && typeof matched.customIconUrl === 'string' && matched.customIconUrl.trim() !== '')
+                ? matched.customIconUrl.trim()
+                : (customIconFromItem && typeof customIconFromItem === 'string' && customIconFromItem.trim() !== '')
+                  ? customIconFromItem.trim()
+                  : null;
 
             return {
               id: typeof item === 'object' && item?.id ? item.id : (matched?.id || `issue-${idx + 1}`),
               // CRITICAL: Must be EXACT text entered/assigned by admin while adding/editing model!
               title: titleStr,
-              icon: iconFromItem || matched?.icon || 'Layers',
-              customIconUrl: customIconFromItem !== undefined ? customIconFromItem : (matched?.customIconUrl || null),
+              icon: (matched?.icon && typeof matched.icon === 'string' && matched.icon.trim() !== '') ? matched.icon.trim() : (iconFromItem || 'Layers'),
+              customIconUrl: customIconStr,
               badge: badgeFromItem || matched?.badge || 'Certified cleanroom repair',
               color: colorFromItem || matched?.color || 'amber',
             };
@@ -706,12 +788,15 @@ apiRouter.get(['/models/:slug', '/repair/:slug'], async (req: Request, res: Resp
       resolvedIssues = [];
     }
 
+    const heroCardConfig = await getHeroCardConfig();
+
     res.json({
       model: m,
       brand,
       category,
       displayIssues: resolvedIssues,
       services: availableServices,
+      heroCardConfig,
     });
   } catch (error: any) {
     console.error('Failed to fetch model details:', error);
@@ -2217,6 +2302,55 @@ apiRouter.put('/admin/display-issues', async (req: Request, res: Response) => {
     res.json({ success: true, issues });
   } catch (error: any) {
     res.status(500).json({ error: error.message || 'Failed to update display issues' });
+  }
+});
+
+// Model Showcase Hero Card Config (Display Highlights & Engineering Features)
+apiRouter.get('/hero-card-config', async (_req: Request, res: Response) => {
+  try {
+    const config = await getHeroCardConfig();
+    res.json(config);
+  } catch (error: any) {
+    res.status(500).json({ error: 'Failed to fetch hero card config' });
+  }
+});
+
+apiRouter.get('/admin/hero-card-config', async (_req: Request, res: Response) => {
+  try {
+    const config = await getHeroCardConfig();
+    res.json(config);
+  } catch (error: any) {
+    res.status(500).json({ error: 'Failed to fetch hero card config' });
+  }
+});
+
+apiRouter.put('/admin/hero-card-config', async (req: Request, res: Response) => {
+  try {
+    const { headingTemplate, description, features } = req.body;
+    const current = await getHeroCardConfig();
+    const updated: HeroCardConfig = {
+      headingTemplate: typeof headingTemplate === 'string' ? headingTemplate.trim() : current.headingTemplate,
+      description: typeof description === 'string' ? description.trim() : current.description,
+      features: Array.isArray(features) && features.length === 4
+        ? features.map((f: any, idx: number) => ({
+            title: String(f.title || current.features[idx]?.title || `Feature ${idx + 1}`).trim(),
+            description: String(f.description || current.features[idx]?.description || '').trim(),
+          }))
+        : current.features,
+    };
+
+    const value = JSON.stringify(updated);
+    await db
+      .insert(siteSettings)
+      .values({ key: 'DISPLAY_HERO_CARD_CONFIG', value })
+      .onConflictDoUpdate({
+        target: siteSettings.key,
+        set: { value },
+      });
+
+    res.json({ success: true, config: updated });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Failed to update hero card config' });
   }
 });
 

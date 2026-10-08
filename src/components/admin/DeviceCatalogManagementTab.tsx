@@ -260,7 +260,7 @@ export const DeviceCatalogManagementTab: React.FC<DeviceCatalogManagementTabProp
             id: iss.id || matched?.id || `issue-${idx + 1}`,
             title: iss.title || matched?.title || 'Display Issue',
             icon: iss.icon || matched?.icon || 'Layers',
-            customIconUrl: iss.customIconUrl !== undefined ? iss.customIconUrl : (matched?.customIconUrl || null),
+            customIconUrl: matched?.customIconUrl || iss.customIconUrl || null,
             badge: iss.badge || matched?.badge || 'Certified cleanroom repair',
             color: iss.color || matched?.color || 'teal',
           };
@@ -1505,7 +1505,7 @@ export const DeviceCatalogManagementTab: React.FC<DeviceCatalogManagementTabProp
                                         id: masterIssue.id,
                                         title: newText,
                                         icon: (typeof item === 'object' && item.icon) || masterIssue.icon,
-                                        customIconUrl: (typeof item === 'object' && item.customIconUrl !== undefined) ? item.customIconUrl : (masterIssue.customIconUrl || null),
+                                        customIconUrl: masterIssue.customIconUrl || ((typeof item === 'object' && item.customIconUrl) ? item.customIconUrl : null),
                                         badge: (typeof item === 'object' && item.badge) || masterIssue.badge || 'Certified cleanroom repair',
                                         color: (typeof item === 'object' && item.color) || masterIssue.color || 'teal',
                                       };

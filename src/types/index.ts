@@ -298,7 +298,19 @@ export interface DisplayIssueItem {
   icon: string;
   customIconUrl?: string | null;
   badge?: string;
+  description?: string;
   color?: string;
+}
+
+export interface HeroCardFeature {
+  title: string;
+  description: string;
+}
+
+export interface HeroCardConfig {
+  headingTemplate: string;
+  description: string;
+  features: HeroCardFeature[];
 }
 
 
