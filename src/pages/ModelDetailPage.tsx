@@ -32,6 +32,17 @@ import {
 import { generateBreadcrumbSchema, generateServiceSchema, useJsonLd, usePageSeo } from '../lib/seo.ts';
 import { getIssueIcon, getIssueStyles } from '../lib/issueIcons.ts';
 
+const WhatsAppIcon: React.FC<{ className?: string }> = ({ className = 'h-5 w-5' }) => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="currentColor"
+    className={className}
+    aria-hidden="true"
+  >
+    <path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2zm0 1.67c2.2 0 4.27.86 5.82 2.42 1.56 1.56 2.41 3.63 2.41 5.83 0 4.54-3.7 8.24-8.24 8.24-1.38 0-2.74-.35-3.94-1.02l-.28-.16-3.12.82.83-3.04-.18-.29c-.74-1.18-1.13-2.55-1.13-3.97 0-4.54 3.7-8.24 8.24-8.24zm-3.21 3.7c-.2 0-.39.01-.56.04-.2.03-.43.11-.62.32-.2.21-.76.73-.76 1.8 0 1.07.78 2.1.89 2.25.11.15 1.52 2.32 3.69 3.25 1.8.78 2.17.62 2.57.59.4-.04 1.29-.53 1.48-1.06.19-.52.19-.97.13-1.07-.06-.1-.22-.16-.46-.28-.24-.12-1.41-.7-1.63-.78-.22-.08-.38-.12-.54.12-.16.24-.62.78-.76.94-.14.16-.28.18-.52.06-.24-.12-1.01-.37-1.93-1.19-.71-.63-1.19-1.41-1.31-1.61-.12-.2-.01-.31.11-.43.11-.11.24-.29.36-.43.12-.14.16-.24.24-.4.08-.16.04-.3-.02-.42-.06-.12-.52-1.25-.71-1.72-.19-.46-.38-.4-.52-.41-.13-.01-.29-.01-.45-.01z" />
+  </svg>
+);
+
 const getIssueMeta = (issue: string) => {
   const lower = issue.toLowerCase();
   if (lower.includes('glass') || lower.includes('cracked')) {
@@ -741,7 +752,7 @@ export const ModelDetailPage: React.FC<ModelDetailPageProps> = ({ modelSlug }) =
             {/* ========================================================================= */}
             {/* PROMINENT "PROCEED WITH WHATSAPP" ENQUIRY PANEL (INSIDE THE SAME CARD)   */}
             {/* ========================================================================= */}
-            <div className="rounded-2xl sm:rounded-3xl bg-gradient-to-b from-slate-50/70 via-emerald-50/20 to-teal-50/30 dark:from-slate-800/40 dark:via-emerald-950/10 dark:to-teal-950/10 p-6 sm:p-8 text-center">
+            <div className="rounded-2xl sm:rounded-3xl bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800/80 p-6 sm:p-8 text-center">
               <div className="max-w-2xl mx-auto flex flex-col items-center">
                 
                 <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 mb-2">
@@ -788,8 +799,8 @@ export const ModelDetailPage: React.FC<ModelDetailPageProps> = ({ modelSlug }) =
                 </div>
 
                 {/* Quick Customer Details Form (Optional) */}
-                <div className="mt-6 w-full max-w-xl text-left bg-white/80 dark:bg-slate-800/80 backdrop-blur-xs rounded-2xl border border-slate-200/90 dark:border-slate-700/80 p-4 sm:p-5 shadow-xs">
-                  <div className="flex items-center justify-between mb-3 border-b border-slate-100 dark:border-slate-700/60 pb-2">
+                <div className="mt-6 w-full max-w-xl text-left bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/90 dark:border-slate-800 p-4 sm:p-5 shadow-xs">
+                  <div className="flex items-center justify-between mb-3 border-b border-slate-100 dark:border-slate-800 pb-2">
                     <div className="flex items-center gap-2">
                       <User className="h-4 w-4 text-[#00B2A2]" />
                       <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
@@ -863,7 +874,7 @@ export const ModelDetailPage: React.FC<ModelDetailPageProps> = ({ modelSlug }) =
                     ) : enquirySuccess ? (
                       <CheckCircle2 className="h-6 w-6 text-white" />
                     ) : (
-                      <MessageCircle className="h-6 w-6 fill-current" />
+                      <WhatsAppIcon className="h-6 w-6 text-white" />
                     )}
                     <span>
                       {submittingEnquiry
