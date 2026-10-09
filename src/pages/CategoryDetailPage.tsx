@@ -600,11 +600,11 @@ export const CategoryDetailPage: React.FC<CategoryDetailPageProps> = ({ category
                         e.preventDefault();
                         navigate(modelUrl);
                       }}
-                      className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-slate-200/90 bg-white p-2.5 sm:p-3.5 md:p-4 shadow-xs transition-all duration-300 hover:-translate-y-1.5 hover:border-[#00B2A2] hover:shadow-xl dark:border-slate-800 dark:bg-slate-900 cursor-pointer select-none block text-inherit no-underline"
+                      className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-slate-200/90 bg-white p-2 sm:p-2.5 md:p-3 shadow-xs transition-all duration-300 hover:-translate-y-1 hover:border-[#00B2A2] hover:shadow-lg dark:border-slate-800 dark:bg-slate-900 cursor-pointer select-none block text-inherit no-underline"
                     >
                     <div>
                       {/* Model Image Container */}
-                      <div className="relative h-24 sm:h-28 md:h-32 w-full overflow-hidden rounded-xl bg-slate-50 dark:bg-slate-800/80 mb-2 sm:mb-2.5 flex items-center justify-center p-1.5 sm:p-2">
+                      <div className="relative h-18 sm:h-20 md:h-24 w-full overflow-hidden rounded-xl bg-slate-50 dark:bg-slate-800/80 mb-1.5 sm:mb-2 flex items-center justify-center p-1 sm:p-1.5">
                         {model.imageUrl ? (
                           <img
                             src={model.imageUrl}
@@ -613,23 +613,19 @@ export const CategoryDetailPage: React.FC<CategoryDetailPageProps> = ({ category
                             loading="lazy"
                           />
                         ) : (
-                          <CategoryIcon className="h-8 w-8 sm:h-10 sm:w-10 text-[#00B2A2]" />
+                          <CategoryIcon className="h-6 w-6 sm:h-8 sm:w-8 text-[#00B2A2]" />
                         )}
                       </div>
 
-                      <span className="text-[10px] sm:text-[11px] font-bold text-[#00B2A2] uppercase tracking-wider block mb-0.5 truncate">
-                        {category.name}
-                      </span>
-
-                      <h3 className="text-[11px] sm:text-xs md:text-sm font-extrabold text-slate-900 dark:text-white group-hover:text-[#00B2A2] transition-colors line-clamp-2 leading-tight">
+                      <h3 className="text-[11px] sm:text-xs font-extrabold text-slate-900 dark:text-white group-hover:text-[#00B2A2] transition-colors line-clamp-2 leading-snug">
                         {model.name}
                       </h3>
                     </div>
 
-                    <div className="mt-2.5 pt-2 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-[10px] sm:text-xs font-bold text-[#00B2A2]">
+                    <div className="mt-2 pt-1.5 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-[10px] sm:text-[11px] font-bold text-[#00B2A2]">
                       <span className="truncate group-hover:underline">Display Services</span>
-                      <div className="h-5 w-5 sm:h-6 sm:w-6 rounded-full bg-[#00B2A2]/10 dark:bg-[#00B2A2]/20 flex items-center justify-center text-[#00B2A2] group-hover:bg-[#00B2A2] group-hover:text-white transition-colors shrink-0">
-                        <ArrowRight className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+                      <div className="h-4 w-4 sm:h-5 sm:w-5 rounded-full bg-[#00B2A2]/10 dark:bg-[#00B2A2]/20 flex items-center justify-center text-[#00B2A2] group-hover:bg-[#00B2A2] group-hover:text-white transition-colors shrink-0">
+                        <ArrowRight className="h-2 w-2 sm:h-2.5 sm:w-2.5" />
                       </div>
                     </div>
                   </a>

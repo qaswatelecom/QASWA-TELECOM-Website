@@ -332,11 +332,10 @@ export const DeviceCatalogManagementTab: React.FC<DeviceCatalogManagementTabProp
       });
       setNewCustomIssueTitle('');
     } else if (type === 'brand') {
-      const defaultDesc = `Dedicated display repair solutions for ${item.name} ${item.categorySlug || 'mobile'} devices with authentic OLED panels, optical cleanroom lamination, and laser bonding.`;
       setEditingItem({
         ...item,
-        title: item.title || `${item.name} Display Repair Services`,
-        description: item.description || defaultDesc,
+        title: item.title !== undefined && item.title !== null ? item.title : `${item.name} Display Repair Services`,
+        description: item.description !== undefined && item.description !== null ? item.description : '',
       });
     } else {
       setEditingItem({ ...item });
