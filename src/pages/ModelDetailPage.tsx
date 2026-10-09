@@ -8,7 +8,6 @@ import {
   Watch,
   Sparkles,
   CheckCircle2,
-  AlertTriangle,
   Wrench,
   Layers,
   Cpu,
@@ -589,7 +588,7 @@ export const ModelDetailPage: React.FC<ModelDetailPageProps> = ({ modelSlug }) =
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 items-center">
                 {/* Left: Device Image Showcase */}
                 <div className="lg:col-span-4 flex flex-col items-center justify-center">
-                  <div className="relative h-44 sm:h-48 md:h-52 w-full max-w-xs sm:max-w-sm rounded-2xl bg-slate-50 dark:bg-slate-800/60 p-2.5 sm:p-3 border border-slate-100 dark:border-slate-800 flex items-center justify-center overflow-hidden shadow-inner group">
+                  <div className="relative aspect-square w-44 sm:w-48 md:w-52 h-44 sm:h-48 md:h-52 rounded-2xl bg-slate-50 dark:bg-slate-800/60 p-2.5 sm:p-3 border border-slate-100 dark:border-slate-800 flex items-center justify-center overflow-hidden shadow-inner group">
                     {model.imageUrl ? (
                       <img
                         src={model.imageUrl}
@@ -647,256 +646,254 @@ export const ModelDetailPage: React.FC<ModelDetailPageProps> = ({ modelSlug }) =
         })()}
 
         {/* ========================================================================= */}
-        {/* SECTION 1: DISPLAY-RELATED ISSUES FOR THIS MODEL (MULTI-SELECT)           */}
+        {/* SECTION 1: DISPLAY-RELATED ISSUES FOR THIS MODEL & PROCEED WITH WHATSAPP (ONE CARD) */}
         {/* ========================================================================= */}
         <div id="display-issues-section" className="mb-12">
-          <div className="mb-6">
-            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#00B2A2] mb-1">
-              <AlertTriangle className="h-4 w-4" />
-              <span>Diagnostic Problem Assessment</span>
+          <div className="rounded-2xl sm:rounded-3xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900/95 shadow-sm p-5 sm:p-7 md:p-8 overflow-hidden">
+            <div className="mb-6 border-b border-slate-100 dark:border-slate-800/80 pb-4">
+              <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+                Display-Related Issues Reported & Solved for {model.name}
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-1 max-w-3xl">
+                Select one or multiple display faults your device is experiencing. You can choose all problems that apply:
+              </p>
             </div>
-            <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-              Display-Related Issues Reported & Solved for {model.name}
-            </h2>
-            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-1 max-w-3xl">
-              Select one or multiple display faults your device is experiencing. You can choose all problems that apply:
-            </p>
-          </div>
 
-          {/* Multi-Select Issue Cards with Issue Icons */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-3.5">
-            {displayIssues.map((issueItem, idx) => {
-              const issueTitle = typeof issueItem === 'object' && issueItem?.title ? issueItem.title : String(issueItem);
-              const issueIconName = typeof issueItem === 'object' && issueItem?.icon ? issueItem.icon : undefined;
-              const issueBadge = typeof issueItem === 'object' && issueItem?.badge ? issueItem.badge : undefined;
-              const issueColor = typeof issueItem === 'object' && issueItem?.color ? issueItem.color : undefined;
-              const customIconUrl = typeof issueItem === 'object' && issueItem?.customIconUrl ? issueItem.customIconUrl : undefined;
+            {/* Multi-Select Issue Cards with Issue Icons */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-3.5 mb-8">
+              {displayIssues.map((issueItem, idx) => {
+                const issueTitle = typeof issueItem === 'object' && issueItem?.title ? issueItem.title : String(issueItem);
+                const issueIconName = typeof issueItem === 'object' && issueItem?.icon ? issueItem.icon : undefined;
+                const issueBadge = typeof issueItem === 'object' && issueItem?.badge ? issueItem.badge : undefined;
+                const issueColor = typeof issueItem === 'object' && issueItem?.color ? issueItem.color : undefined;
+                const customIconUrl = typeof issueItem === 'object' && issueItem?.customIconUrl ? issueItem.customIconUrl : undefined;
 
-              const isSelected = selectedIssues.includes(issueTitle);
-              const meta = getIssueMeta(issueTitle);
-              const IssueIcon = issueIconName ? getIssueIcon(issueIconName) : meta.icon;
-              const styles = issueColor ? getIssueStyles(issueColor) : { color: meta.color, selectedClass: meta.selectedClass };
+                const isSelected = selectedIssues.includes(issueTitle);
+                const meta = getIssueMeta(issueTitle);
+                const IssueIcon = issueIconName ? getIssueIcon(issueIconName) : meta.icon;
+                const styles = issueColor ? getIssueStyles(issueColor) : { color: meta.color, selectedClass: meta.selectedClass };
 
-              return (
-                <div
-                  key={idx}
-                  onClick={() => toggleIssue(issueTitle)}
-                  className={`group relative flex flex-col justify-between rounded-xl px-3.5 py-3 transition-all duration-200 cursor-pointer border select-none ${
-                    isSelected
-                      ? styles.selectedClass + ' shadow-md'
-                      : 'border-slate-200 bg-white hover:border-[#00B2A2]/60 dark:border-slate-800 dark:bg-slate-900 shadow-xs hover:shadow-md'
-                  }`}
-                >
-                  <div>
-                    {/* Header: Issue Icon & Checkbox */}
-                    <div className="flex items-start justify-between gap-2.5 mb-2">
-                      <div
-                        className={`flex h-18 w-18 sm:h-20 sm:w-20 items-center justify-center rounded-2xl shrink-0 border transition-transform duration-200 group-hover:scale-105 shadow-xs ${styles.color}`}
-                      >
-                        {customIconUrl ? (
-                          <img
-                            src={customIconUrl}
-                            alt={issueTitle}
-                            className="h-12 w-12 sm:h-14 sm:w-14 object-contain"
-                            loading="lazy"
-                          />
-                        ) : (
-                          <IssueIcon className="h-11 w-11 sm:h-13 sm:w-13 stroke-[2.2]" />
-                        )}
+                return (
+                  <div
+                    key={idx}
+                    onClick={() => toggleIssue(issueTitle)}
+                    className={`group relative flex flex-col justify-between rounded-xl px-3.5 py-3 transition-all duration-200 cursor-pointer border select-none ${
+                      isSelected
+                        ? styles.selectedClass + ' shadow-md'
+                        : 'border-slate-200 bg-white hover:border-[#00B2A2]/60 dark:border-slate-800 dark:bg-slate-900 shadow-xs hover:shadow-md'
+                    }`}
+                  >
+                    <div>
+                      {/* Header: Issue Icon & Checkbox */}
+                      <div className="flex items-start justify-between gap-2.5 mb-2">
+                        <div
+                          className={`flex h-18 w-18 sm:h-20 sm:w-20 items-center justify-center rounded-2xl shrink-0 border transition-transform duration-200 group-hover:scale-105 shadow-xs ${styles.color}`}
+                        >
+                          {customIconUrl ? (
+                            <img
+                              src={customIconUrl}
+                              alt={issueTitle}
+                              className="h-12 w-12 sm:h-14 sm:w-14 object-contain"
+                              loading="lazy"
+                            />
+                          ) : (
+                            <IssueIcon className="h-11 w-11 sm:h-13 sm:w-13 stroke-[2.2]" />
+                          )}
+                        </div>
+
+                        {/* Custom Multi-Select Checkbox */}
+                        <div
+                          className={`h-5 w-5 rounded-md flex items-center justify-center transition-all ${
+                            isSelected
+                              ? 'bg-[#00B2A2] text-white shadow-xs'
+                              : 'border-2 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 group-hover:border-[#00B2A2]'
+                          }`}
+                        >
+                          {isSelected && <Check className="h-3.5 w-3.5 stroke-[3]" />}
+                        </div>
                       </div>
 
-                      {/* Custom Multi-Select Checkbox */}
-                      <div
-                        className={`h-5 w-5 rounded-md flex items-center justify-center transition-all ${
-                          isSelected
-                            ? 'bg-[#00B2A2] text-white shadow-xs'
-                            : 'border-2 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 group-hover:border-[#00B2A2]'
-                        }`}
-                      >
-                        {isSelected && <Check className="h-3.5 w-3.5 stroke-[3]" />}
-                      </div>
+                      {/* Issue Name & Diagnostic Badge */}
+                      <span className="text-sm font-black text-slate-900 dark:text-white block group-hover:text-[#00B2A2] transition-colors leading-snug">
+                        {issueTitle}
+                      </span>
+                      <span className="text-[11px] text-slate-500 dark:text-slate-400 block mt-0.5 line-clamp-1">
+                        {issueBadge || meta.badge || 'Certified cleanroom repair'}
+                      </span>
                     </div>
 
-                    {/* Issue Name & Diagnostic Badge */}
-                    <span className="text-sm font-black text-slate-900 dark:text-white block group-hover:text-[#00B2A2] transition-colors leading-snug">
-                      {issueTitle}
-                    </span>
-                    <span className="text-[11px] text-slate-500 dark:text-slate-400 block mt-0.5 line-clamp-1">
-                      {issueBadge || meta.badge || 'Certified cleanroom repair'}
-                    </span>
-                  </div>
-
-                  {/* Bottom selection state */}
-                  <div className="mt-2 pt-1.5 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
-                    <span className={`text-[11px] font-bold ${isSelected ? 'text-[#00B2A2]' : 'text-slate-400 dark:text-slate-500'}`}>
-                      {isSelected ? '✓ Selected' : 'Click to select'}
-                    </span>
-                    {isSelected && (
-                      <span className="text-[10px] font-extrabold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-md border border-emerald-500/20">
-                        Added to Enquiry
+                    {/* Bottom selection state */}
+                    <div className="mt-2 pt-1.5 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
+                      <span className={`text-[11px] font-bold ${isSelected ? 'text-[#00B2A2]' : 'text-slate-400 dark:text-slate-500'}`}>
+                        {isSelected ? '✓ Selected' : 'Click to select'}
                       </span>
-                    )}
+                      {isSelected && (
+                        <span className="text-[10px] font-extrabold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-md border border-emerald-500/20">
+                          Added to Enquiry
+                        </span>
+                      )}
+                    </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
 
-          {/* ========================================================================= */}
-          {/* PROMINENT "PROCEED WITH WHATSAPP" ENQUIRY PANEL (BOTTOM CENTRE)          */}
-          {/* ========================================================================= */}
-          <div className="mt-8 rounded-3xl border-2 border-emerald-500/40 bg-gradient-to-b from-white via-emerald-50/30 to-teal-50/40 dark:from-slate-900 dark:via-emerald-950/20 dark:to-teal-950/20 p-6 sm:p-8 text-center shadow-lg dark:border-emerald-500/30">
-            <div className="max-w-2xl mx-auto flex flex-col items-center">
-              
-              <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 mb-2">
-                <CheckCircle2 className="h-4 w-4" />
-                <span>Selected Display Issues ({selectedIssues.length})</span>
-              </div>
-
-              <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
-                Proceed With WhatsApp Enquiry
-              </h3>
-
-              <p className="mt-1.5 text-xs sm:text-sm text-slate-600 dark:text-slate-400 max-w-lg">
-                Device: <strong className="text-slate-800 dark:text-slate-200">{categoryName}</strong> • Brand: <strong className="text-slate-800 dark:text-slate-200">{brand?.name || 'Device'}</strong> • Model: <strong className="text-slate-800 dark:text-slate-200">{model.name}</strong>
-              </p>
-
-              {/* Badges of all currently selected issues */}
-              <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
-                {selectedIssues.length === 0 ? (
-                  <span className="text-xs font-semibold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border border-amber-500/30 px-3 py-1.5 rounded-xl">
-                    Please click at least one display issue above to continue
-                  </span>
-                ) : (
-                  selectedIssues.map((iss, i) => (
-                    <span
-                      key={i}
-                      className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 text-white px-3 py-1.5 text-xs font-extrabold shadow-xs"
-                    >
-                      <Check className="h-3 w-3 stroke-[3]" />
-                      <span>{iss}</span>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toggleIssue(iss);
-                        }}
-                        className="ml-1 hover:text-rose-200 cursor-pointer"
-                        title="Remove issue"
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
-                    </span>
-                  ))
-                )}
-              </div>
-
-              {/* Quick Customer Details Form (Optional) */}
-              <div className="mt-6 w-full max-w-xl text-left bg-white/80 dark:bg-slate-800/80 backdrop-blur-xs rounded-2xl border border-slate-200/90 dark:border-slate-700/80 p-4 sm:p-5 shadow-xs">
-                <div className="flex items-center justify-between mb-3 border-b border-slate-100 dark:border-slate-700/60 pb-2">
-                  <div className="flex items-center gap-2">
-                    <User className="h-4 w-4 text-[#00B2A2]" />
-                    <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
-                      Customer Information (Optional)
-                    </span>
-                  </div>
-                  <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-900/50">
-                    Instant WhatsApp Consultation
-                  </span>
+            {/* ========================================================================= */}
+            {/* PROMINENT "PROCEED WITH WHATSAPP" ENQUIRY PANEL (INSIDE THE SAME CARD)   */}
+            {/* ========================================================================= */}
+            <div className="rounded-2xl sm:rounded-3xl border-2 border-emerald-500/40 bg-gradient-to-b from-white via-emerald-50/30 to-teal-50/40 dark:from-slate-900 dark:via-emerald-950/20 dark:to-teal-950/20 p-6 sm:p-8 text-center shadow-md dark:border-emerald-500/30">
+              <div className="max-w-2xl mx-auto flex flex-col items-center">
+                
+                <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 mb-2">
+                  <CheckCircle2 className="h-4 w-4" />
+                  <span>Selected Display Issues ({selectedIssues.length})</span>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
-                  {/* Full Name Field */}
-                  <div>
-                    <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block mb-1">
-                      Full Name
-                    </label>
-                    <input
-                      type="text"
-                      value={enquiryCustomerName}
-                      onChange={(e) => setEnquiryCustomerName(e.target.value)}
-                      placeholder="Enter your name"
-                      className="w-full text-xs rounded-xl border border-slate-200 dark:border-slate-700 px-3 py-2.5 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:border-[#00B2A2] focus:ring-1 focus:ring-[#00B2A2] transition-colors"
-                    />
-                  </div>
+                <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
+                  Proceed With WhatsApp Enquiry
+                </h3>
 
-                  {/* Phone Number Field */}
-                  <div>
-                    <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block mb-1">
-                      Phone Number
-                    </label>
-                    <input
-                      type="tel"
-                      value={enquiryCustomerPhone}
-                      onChange={(e) => setEnquiryCustomerPhone(e.target.value)}
-                      placeholder="e.g. 9876543210"
-                      className="w-full text-xs rounded-xl border border-slate-200 dark:border-slate-700 px-3 py-2.5 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:border-[#00B2A2] focus:ring-1 focus:ring-[#00B2A2] transition-colors"
-                    />
-                  </div>
-
-                  {/* City Field */}
-                  <div>
-                    <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block mb-1">
-                      City
-                    </label>
-                    <input
-                      type="text"
-                      value={enquiryCustomerCity}
-                      onChange={(e) => setEnquiryCustomerCity(e.target.value)}
-                      placeholder="e.g. Mumbai"
-                      className="w-full text-xs rounded-xl border border-slate-200 dark:border-slate-700 px-3 py-2.5 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:border-[#00B2A2] focus:ring-1 focus:ring-[#00B2A2] transition-colors"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Bottom Centre "Proceed With WhatsApp" CTA */}
-              <div className="mt-6 flex flex-col items-center justify-center gap-3">
-                <button
-                  type="button"
-                  onClick={handleProceedWithWhatsApp}
-                  disabled={submittingEnquiry}
-                  className={`inline-flex items-center justify-center gap-2.5 rounded-2xl px-10 py-4 text-base sm:text-lg font-black text-white shadow-xl transition-all cursor-pointer ${
-                    submittingEnquiry
-                      ? 'bg-[#008f82] opacity-90 cursor-wait'
-                      : 'bg-[#00b2a2] hover:bg-[#009b8d] hover:shadow-[#00b2a2]/35 hover:scale-[1.02] active:scale-[0.99]'
-                  }`}
-                >
-                  {submittingEnquiry ? (
-                    <RefreshCw className="h-6 w-6 animate-spin text-white" />
-                  ) : enquirySuccess ? (
-                    <CheckCircle2 className="h-6 w-6 text-white" />
-                  ) : (
-                    <MessageCircle className="h-6 w-6 fill-current" />
-                  )}
-                  <span>
-                    {submittingEnquiry
-                      ? 'Saving enquiry...'
-                      : enquirySuccess
-                      ? 'Saved! Opening WhatsApp...'
-                      : 'Proceed With WhatsApp'}
-                  </span>
-                  {!submittingEnquiry && !enquirySuccess && <ArrowRight className="h-5 w-5" />}
-                </button>
-
-                {enquiryError && (
-                  <div className="text-xs font-semibold text-rose-500 text-center flex items-center gap-1.5 bg-rose-50 dark:bg-rose-950/40 px-3.5 py-1.5 rounded-xl border border-rose-200 dark:border-rose-900">
-                    <AlertCircle className="h-4 w-4 shrink-0 text-rose-500" />
-                    <span>{enquiryError}</span>
-                  </div>
-                )}
-                {enquirySuccess && (
-                  <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 text-center flex items-center gap-1.5 bg-emerald-50 dark:bg-emerald-950/40 px-3.5 py-1.5 rounded-xl border border-emerald-200 dark:border-emerald-900">
-                    <CheckCircle2 className="h-4 w-4 shrink-0" />
-                    Enquiry saved successfully to database! Opening WhatsApp...
-                  </span>
-                )}
-
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 text-center max-w-md">
-                  All {selectedIssues.length} selected display issue{selectedIssues.length !== 1 ? 's' : ''} and customer details are saved securely into our database before connecting to WhatsApp.
+                <p className="mt-1.5 text-xs sm:text-sm text-slate-600 dark:text-slate-400 max-w-lg">
+                  Device: <strong className="text-slate-800 dark:text-slate-200">{categoryName}</strong> • Brand: <strong className="text-slate-800 dark:text-slate-200">{brand?.name || 'Device'}</strong> • Model: <strong className="text-slate-800 dark:text-slate-200">{model.name}</strong>
                 </p>
-              </div>
 
+                {/* Badges of all currently selected issues */}
+                <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+                  {selectedIssues.length === 0 ? (
+                    <span className="text-xs font-semibold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border border-amber-500/30 px-3 py-1.5 rounded-xl">
+                      Please click at least one display issue above to continue
+                    </span>
+                  ) : (
+                    selectedIssues.map((iss, i) => (
+                      <span
+                        key={i}
+                        className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 text-white px-3 py-1.5 text-xs font-extrabold shadow-xs"
+                      >
+                        <Check className="h-3 w-3 stroke-[3]" />
+                        <span>{iss}</span>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleIssue(iss);
+                          }}
+                          className="ml-1 hover:text-rose-200 cursor-pointer"
+                          title="Remove issue"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </span>
+                    ))
+                  )}
+                </div>
+
+                {/* Quick Customer Details Form (Optional) */}
+                <div className="mt-6 w-full max-w-xl text-left bg-white/80 dark:bg-slate-800/80 backdrop-blur-xs rounded-2xl border border-slate-200/90 dark:border-slate-700/80 p-4 sm:p-5 shadow-xs">
+                  <div className="flex items-center justify-between mb-3 border-b border-slate-100 dark:border-slate-700/60 pb-2">
+                    <div className="flex items-center gap-2">
+                      <User className="h-4 w-4 text-[#00B2A2]" />
+                      <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
+                        Customer Information (Optional)
+                      </span>
+                    </div>
+                    <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-900/50">
+                      Instant WhatsApp Consultation
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                    {/* Full Name Field */}
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                        Full Name
+                      </label>
+                      <input
+                        type="text"
+                        value={enquiryCustomerName}
+                        onChange={(e) => setEnquiryCustomerName(e.target.value)}
+                        placeholder="Enter your name"
+                        className="w-full text-xs rounded-xl border border-slate-200 dark:border-slate-700 px-3 py-2.5 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:border-[#00B2A2] focus:ring-1 focus:ring-[#00B2A2] transition-colors"
+                      />
+                    </div>
+
+                    {/* Phone Number Field */}
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                        Phone Number
+                      </label>
+                      <input
+                        type="tel"
+                        value={enquiryCustomerPhone}
+                        onChange={(e) => setEnquiryCustomerPhone(e.target.value)}
+                        placeholder="e.g. 9876543210"
+                        className="w-full text-xs rounded-xl border border-slate-200 dark:border-slate-700 px-3 py-2.5 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:border-[#00B2A2] focus:ring-1 focus:ring-[#00B2A2] transition-colors"
+                      />
+                    </div>
+
+                    {/* City Field */}
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                        City
+                      </label>
+                      <input
+                        type="text"
+                        value={enquiryCustomerCity}
+                        onChange={(e) => setEnquiryCustomerCity(e.target.value)}
+                        placeholder="e.g. Mumbai"
+                        className="w-full text-xs rounded-xl border border-slate-200 dark:border-slate-700 px-3 py-2.5 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:border-[#00B2A2] focus:ring-1 focus:ring-[#00B2A2] transition-colors"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Bottom Centre "Proceed With WhatsApp" CTA */}
+                <div className="mt-6 flex flex-col items-center justify-center gap-3">
+                  <button
+                    type="button"
+                    onClick={handleProceedWithWhatsApp}
+                    disabled={submittingEnquiry}
+                    className={`inline-flex items-center justify-center gap-2.5 rounded-2xl px-10 py-4 text-base sm:text-lg font-black text-white shadow-xl transition-all cursor-pointer ${
+                      submittingEnquiry
+                        ? 'bg-[#008f82] opacity-90 cursor-wait'
+                        : 'bg-[#00b2a2] hover:bg-[#009b8d] hover:shadow-[#00b2a2]/35 hover:scale-[1.02] active:scale-[0.99]'
+                    }`}
+                  >
+                    {submittingEnquiry ? (
+                      <RefreshCw className="h-6 w-6 animate-spin text-white" />
+                    ) : enquirySuccess ? (
+                      <CheckCircle2 className="h-6 w-6 text-white" />
+                    ) : (
+                      <MessageCircle className="h-6 w-6 fill-current" />
+                    )}
+                    <span>
+                      {submittingEnquiry
+                        ? 'Saving enquiry...'
+                        : enquirySuccess
+                        ? 'Saved! Opening WhatsApp...'
+                        : 'Proceed With WhatsApp'}
+                    </span>
+                    {!submittingEnquiry && !enquirySuccess && <ArrowRight className="h-5 w-5" />}
+                  </button>
+
+                  {enquiryError && (
+                    <div className="text-xs font-semibold text-rose-500 text-center flex items-center gap-1.5 bg-rose-50 dark:bg-rose-950/40 px-3.5 py-1.5 rounded-xl border border-rose-200 dark:border-rose-900">
+                      <AlertCircle className="h-4 w-4 shrink-0 text-rose-500" />
+                      <span>{enquiryError}</span>
+                    </div>
+                  )}
+                  {enquirySuccess && (
+                    <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 text-center flex items-center gap-1.5 bg-emerald-50 dark:bg-emerald-950/40 px-3.5 py-1.5 rounded-xl border border-emerald-200 dark:border-emerald-900">
+                      <CheckCircle2 className="h-4 w-4 shrink-0" />
+                      Enquiry saved successfully to database! Opening WhatsApp...
+                    </span>
+                  )}
+
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 text-center max-w-md">
+                    All {selectedIssues.length} selected display issue{selectedIssues.length !== 1 ? 's' : ''} and customer details are saved securely into our database before connecting to WhatsApp.
+                  </p>
+                </div>
+
+              </div>
             </div>
           </div>
         </div>
