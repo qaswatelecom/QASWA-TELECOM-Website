@@ -485,6 +485,20 @@ apiRouter.get(
       .where(eq(deviceCategories.slug, categorySlug))
       .limit(1);
 
+    // Look up custom brand card title and description from siteSettings
+    try {
+      const cardSetting = await db
+        .select()
+        .from(siteSettings)
+        .where(eq(siteSettings.key, `BRAND_CARD_${foundBrand.id}`))
+        .limit(1);
+      if (cardSetting[0]?.value) {
+        const parsed = JSON.parse(cardSetting[0].value);
+        if (parsed.title) (foundBrand as any).title = parsed.title;
+        if (parsed.description !== undefined) (foundBrand as any).description = parsed.description;
+      }
+    } catch (e) {}
+
     res.json({ category: cat[0] || null, brand: foundBrand, models: brandModels });
   } catch (error: any) {
     res.status(500).json({ error: 'Failed to fetch brand models' });
@@ -2017,7 +2031,33 @@ apiRouter.get('/admin/brands', async (req: Request, res: Response) => {
     }
 
     const data = await query.orderBy(asc(brands.sortOrder), asc(brands.name));
-    res.json(data);
+
+    // Also fetch BRAND_CARD_% from siteSettings
+    const allBrandCardsRes = await db
+      .select()
+      .from(siteSettings)
+      .where(like(siteSettings.key, 'BRAND_CARD_%'));
+
+    const brandCardMap = new Map<number, any>();
+    for (const row of allBrandCardsRes) {
+      try {
+        const bId = Number(row.key.replace('BRAND_CARD_', ''));
+        if (!isNaN(bId)) {
+          brandCardMap.set(bId, JSON.parse(row.value));
+        }
+      } catch (e) {}
+    }
+
+    const enriched = data.map((b) => {
+      const card = brandCardMap.get(b.id);
+      return {
+        ...b,
+        title: card?.title || b.seoTitle || `${b.name} Display Repair Services`,
+        description: card?.description !== undefined ? card.description : b.description,
+      };
+    });
+
+    res.json(enriched);
   } catch (error: any) {
     res.status(500).json({ error: 'Failed to fetch brands' });
   }
@@ -2025,8 +2065,9 @@ apiRouter.get('/admin/brands', async (req: Request, res: Response) => {
 
 apiRouter.post('/admin/brands', async (req: Request, res: Response) => {
   try {
-    const { categoryId, categorySlug, name, slug, logoUrl, description, seoTitle, seoDescription, isActive, sortOrder, noNeedBrandUrl } = req.body;
+    const { categoryId, categorySlug, name, slug, logoUrl, title, description, seoTitle, seoDescription, isActive, sortOrder, noNeedBrandUrl } = req.body;
     const finalSlug = (noNeedBrandUrl || slug === '#') ? '#' : (slug || name.toLowerCase().replace(/[^a-z0-9]+/g, '-'));
+    const finalTitle = title || `${name} Display Repair Services`;
     const created = await db
       .insert(brands)
       .values({
@@ -2036,13 +2077,30 @@ apiRouter.post('/admin/brands', async (req: Request, res: Response) => {
         slug: finalSlug,
         logoUrl,
         description,
-        seoTitle,
+        seoTitle: finalTitle,
         seoDescription,
         isActive: isActive !== false,
         sortOrder: Number(sortOrder) || 0,
       })
       .returning();
-    res.status(201).json(created[0]);
+
+    if (created[0]) {
+      try {
+        const val = JSON.stringify({
+          title: finalTitle,
+          description: description || '',
+        });
+        await db
+          .insert(siteSettings)
+          .values({ key: `BRAND_CARD_${created[0].id}`, value: val })
+          .onConflictDoUpdate({
+            target: siteSettings.key,
+            set: { value: val },
+          });
+      } catch (err) {}
+    }
+
+    res.status(201).json({ ...created[0], title: finalTitle });
   } catch (error: any) {
     res.status(500).json({ error: error.message || 'Failed to create brand' });
   }
@@ -2051,8 +2109,9 @@ apiRouter.post('/admin/brands', async (req: Request, res: Response) => {
 apiRouter.put('/admin/brands/:id', async (req: Request, res: Response) => {
   try {
     const id = Number(req.params.id);
-    const { categoryId, categorySlug, name, slug, logoUrl, description, seoTitle, seoDescription, isActive, sortOrder, noNeedBrandUrl } = req.body;
+    const { categoryId, categorySlug, name, slug, logoUrl, title, description, seoTitle, seoDescription, isActive, sortOrder, noNeedBrandUrl } = req.body;
     const finalSlug = (noNeedBrandUrl || slug === '#') ? '#' : (slug || name.toLowerCase().replace(/[^a-z0-9]+/g, '-'));
+    const finalTitle = title || `${name} Display Repair Services`;
     const updated = await db
       .update(brands)
       .set({
@@ -2062,14 +2121,29 @@ apiRouter.put('/admin/brands/:id', async (req: Request, res: Response) => {
         slug: finalSlug,
         logoUrl,
         description,
-        seoTitle,
+        seoTitle: finalTitle,
         seoDescription,
         isActive: isActive !== false,
         sortOrder: Number(sortOrder) || 0,
       })
       .where(eq(brands.id, id))
       .returning();
-    res.json(updated[0]);
+
+    try {
+      const val = JSON.stringify({
+        title: finalTitle,
+        description: description || '',
+      });
+      await db
+        .insert(siteSettings)
+        .values({ key: `BRAND_CARD_${id}`, value: val })
+        .onConflictDoUpdate({
+          target: siteSettings.key,
+          set: { value: val },
+        });
+    } catch (err) {}
+
+    res.json({ ...updated[0], title: finalTitle });
   } catch (error: any) {
     res.status(500).json({ error: error.message || 'Failed to update brand' });
   }
@@ -2078,6 +2152,7 @@ apiRouter.put('/admin/brands/:id', async (req: Request, res: Response) => {
 apiRouter.delete('/admin/brands/:id', async (req: Request, res: Response) => {
   try {
     const id = Number(req.params.id);
+    await db.delete(siteSettings).where(eq(siteSettings.key, `BRAND_CARD_${id}`));
     await db.delete(brands).where(eq(brands.id, id));
     res.json({ success: true });
   } catch (error: any) {

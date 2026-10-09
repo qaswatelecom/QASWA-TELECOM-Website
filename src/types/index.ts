@@ -19,6 +19,7 @@ export interface Brand {
   name: string;
   slug: string;
   logoUrl?: string | null;
+  title?: string | null;
   description?: string | null;
   seoTitle?: string | null;
   seoDescription?: string | null;

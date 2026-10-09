@@ -197,6 +197,7 @@ export const DeviceCatalogManagementTab: React.FC<DeviceCatalogManagementTabProp
         name: '',
         slug: '',
         logoUrl: '',
+        title: '',
         description: '',
         isActive: true,
         sortOrder: currentSectionBrands.length + 1,
@@ -330,6 +331,13 @@ export const DeviceCatalogManagementTab: React.FC<DeviceCatalogManagementTabProp
         serviceIds: item.serviceIds || servicesList.map((s) => s.id),
       });
       setNewCustomIssueTitle('');
+    } else if (type === 'brand') {
+      const defaultDesc = `Dedicated display repair solutions for ${item.name} ${item.categorySlug || 'mobile'} devices with authentic OLED panels, optical cleanroom lamination, and laser bonding.`;
+      setEditingItem({
+        ...item,
+        title: item.title || `${item.name} Display Repair Services`,
+        description: item.description || defaultDesc,
+      });
     } else {
       setEditingItem({ ...item });
     }
@@ -1199,21 +1207,53 @@ export const DeviceCatalogManagementTab: React.FC<DeviceCatalogManagementTabProp
                     </div>
                   </div>
 
-                  {/* 8. Description */}
-                  <div>
-                    <div className="flex items-center justify-between mb-1">
-                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
-                        Description
-                      </label>
-                      <span className="text-[10px] text-slate-400">Admin-only notes (Not displayed on live website)</span>
+                  {/* BRAND SHOWCASE TEXT CUSTOMIZATION (LIVE WEBSITE BRAND HEADER) */}
+                  <div className="rounded-2xl border-2 border-[#00B2A2]/30 p-4 bg-teal-50/20 dark:bg-teal-950/20 dark:border-teal-700/50 space-y-3.5">
+                    <div className="flex items-center justify-between border-b border-teal-100 dark:border-teal-900/50 pb-2">
+                      <div className="flex items-center gap-2">
+                        <Sparkles className="h-4 w-4 text-[#00B2A2]" />
+                        <label className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
+                          Brand Showcase Card (Live Website Content)
+                        </label>
+                      </div>
+                      <span className="rounded-full bg-[#00B2A2]/10 text-[#00B2A2] px-2 py-0.5 text-[10px] font-bold">
+                        Live Brand Page
+                      </span>
                     </div>
-                    <textarea
-                      rows={3}
-                      value={editingItem.description || ''}
-                      onChange={(e) => setEditingItem({ ...editingItem, description: e.target.value })}
-                      placeholder="Internal administration notes regarding display repairs for this brand..."
-                      className="w-full rounded-xl border border-slate-200 bg-slate-50 p-2.5 text-xs dark:bg-slate-800 dark:border-slate-700 focus:border-[#00B2A2] focus:outline-none"
-                    />
+
+                    {/* Brand Heading / Title */}
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                          Brand Page Heading / Title *
+                        </label>
+                        <span className="text-[10px] text-slate-400">Main title on this brand's repair page</span>
+                      </div>
+                      <input
+                        type="text"
+                        value={editingItem.title ?? ''}
+                        onChange={(e) => setEditingItem({ ...editingItem, title: e.target.value })}
+                        placeholder={`e.g. ${editingItem.name || 'Apple iPhone'} Display Repair Services`}
+                        className="w-full rounded-xl border border-slate-200 bg-white p-2.5 text-xs font-semibold text-slate-900 dark:bg-slate-800 dark:border-slate-700 dark:text-white focus:border-[#00B2A2] focus:outline-none"
+                      />
+                    </div>
+
+                    {/* Brand Description / Summary */}
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                          Brand Page Description / Summary *
+                        </label>
+                        <span className="text-[10px] text-slate-400">Summary paragraph displayed on live website</span>
+                      </div>
+                      <textarea
+                        rows={3}
+                        value={editingItem.description ?? ''}
+                        onChange={(e) => setEditingItem({ ...editingItem, description: e.target.value })}
+                        placeholder={`Dedicated display repair solutions for ${editingItem.name || 'Apple iPhone'} mobile devices with authentic OLED panels, optical cleanroom lamination, and laser bonding.`}
+                        className="w-full rounded-xl border border-slate-200 bg-white p-2.5 text-xs text-slate-900 dark:bg-slate-800 dark:border-slate-700 dark:text-white focus:border-[#00B2A2] focus:outline-none leading-relaxed"
+                      />
+                    </div>
                   </div>
 
                   {/* Active Toggle */}
