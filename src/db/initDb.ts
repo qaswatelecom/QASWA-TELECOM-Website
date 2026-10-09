@@ -13,9 +13,44 @@ export async function ensureDatabaseSchema() {
     `);
     const tableCount = Number(checkResult.rows[0]?.count || 0);
 
-    // If tables already exist (e.g. Cloud SQL or pre-provisioned database), skip DDL completely
-    // to avoid "permission denied for schema public" on users without DDL privileges
+    // If tables already exist (e.g. Cloud SQL or pre-provisioned database), ensure customer_enquiries exists
     if (tableCount >= 2) {
+      try {
+        await pool.query(`
+          CREATE TABLE IF NOT EXISTS customer_enquiries (
+            id SERIAL PRIMARY KEY,
+            customer_name TEXT,
+            customer_phone TEXT,
+            customer_city TEXT,
+            device_category TEXT NOT NULL DEFAULT 'Mobile',
+            brand TEXT NOT NULL,
+            model TEXT NOT NULL,
+            display_issue TEXT NOT NULL,
+            customer_message TEXT,
+            status TEXT DEFAULT 'New',
+            whatsapp_status TEXT DEFAULT 'Sent',
+            enquiry_date TEXT,
+            enquiry_time TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+          );
+          ALTER TABLE customer_enquiries ADD COLUMN IF NOT EXISTS customer_name TEXT;
+          ALTER TABLE customer_enquiries ADD COLUMN IF NOT EXISTS customer_phone TEXT;
+          ALTER TABLE customer_enquiries ADD COLUMN IF NOT EXISTS customer_city TEXT;
+          ALTER TABLE customer_enquiries ADD COLUMN IF NOT EXISTS device_category TEXT DEFAULT 'Mobile';
+          ALTER TABLE customer_enquiries ADD COLUMN IF NOT EXISTS brand TEXT;
+          ALTER TABLE customer_enquiries ADD COLUMN IF NOT EXISTS model TEXT;
+          ALTER TABLE customer_enquiries ADD COLUMN IF NOT EXISTS display_issue TEXT;
+          ALTER TABLE customer_enquiries ADD COLUMN IF NOT EXISTS customer_message TEXT;
+          ALTER TABLE customer_enquiries ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'New';
+          ALTER TABLE customer_enquiries ADD COLUMN IF NOT EXISTS whatsapp_status TEXT DEFAULT 'Sent';
+          ALTER TABLE customer_enquiries ADD COLUMN IF NOT EXISTS enquiry_date TEXT;
+          ALTER TABLE customer_enquiries ADD COLUMN IF NOT EXISTS enquiry_time TEXT;
+          ALTER TABLE customer_enquiries ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+          ALTER TABLE customer_enquiries ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+        `);
+      } catch (ddlErr: any) {}
+
       await seedDatabaseIfEmpty();
       await ensureCoreDeviceCategories();
       return;
