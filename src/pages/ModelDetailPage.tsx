@@ -741,7 +741,7 @@ export const ModelDetailPage: React.FC<ModelDetailPageProps> = ({ modelSlug }) =
             {/* ========================================================================= */}
             {/* PROMINENT "PROCEED WITH WHATSAPP" ENQUIRY PANEL (INSIDE THE SAME CARD)   */}
             {/* ========================================================================= */}
-            <div className="rounded-2xl sm:rounded-3xl border-2 border-emerald-500/40 bg-gradient-to-b from-white via-emerald-50/30 to-teal-50/40 dark:from-slate-900 dark:via-emerald-950/20 dark:to-teal-950/20 p-6 sm:p-8 text-center shadow-md dark:border-emerald-500/30">
+            <div className="rounded-2xl sm:rounded-3xl bg-gradient-to-b from-slate-50/70 via-emerald-50/20 to-teal-50/30 dark:from-slate-800/40 dark:via-emerald-950/10 dark:to-teal-950/10 p-6 sm:p-8 text-center">
               <div className="max-w-2xl mx-auto flex flex-col items-center">
                 
                 <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 mb-2">
