@@ -328,7 +328,7 @@ export const DeviceCatalogManagementTab: React.FC<DeviceCatalogManagementTabProp
         ...item,
         heroCard: initialHeroCard,
         displayIssues: normalizedIssues,
-        serviceIds: item.serviceIds || servicesList.map((s) => s.id),
+        serviceIds: Array.isArray(item.serviceIds) ? item.serviceIds : servicesList.map((s) => s.id),
       });
       setNewCustomIssueTitle('');
     } else if (type === 'brand') {

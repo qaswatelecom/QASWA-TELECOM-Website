@@ -336,7 +336,7 @@ export const BrandDetailPage: React.FC<BrandDetailPageProps> = ({ brandSlug, cat
                 >
                 <div>
                   {/* Model Image Container */}
-                  <div className="relative h-18 sm:h-20 md:h-24 w-full overflow-hidden rounded-xl bg-slate-50 dark:bg-slate-800/80 mb-1.5 sm:mb-2 flex items-center justify-center p-1 sm:p-1.5">
+                  <div className="relative w-full aspect-square overflow-hidden rounded-xl bg-slate-50 dark:bg-slate-800/80 mb-2 flex items-center justify-center p-2">
                     {model.imageUrl ? (
                       <img
                         src={model.imageUrl}
@@ -345,7 +345,7 @@ export const BrandDetailPage: React.FC<BrandDetailPageProps> = ({ brandSlug, cat
                         loading="lazy"
                       />
                     ) : (
-                      <BrandIcon className="h-6 w-6 sm:h-8 sm:w-8 text-[#00B2A2]" />
+                      <BrandIcon className="h-8 w-8 text-[#00B2A2]" />
                     )}
                   </div>
 

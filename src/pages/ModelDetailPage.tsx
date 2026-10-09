@@ -901,62 +901,61 @@ export const ModelDetailPage: React.FC<ModelDetailPageProps> = ({ modelSlug }) =
         {/* ========================================================================= */}
         {/* SECTION 2: DEDICATED DISPLAY REPAIR SERVICES FOR THIS MODEL              */}
         {/* ========================================================================= */}
-        <div className="mb-12">
-          <div className="mb-6">
-            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#00B2A2] mb-1">
-              <Layers className="h-4 w-4" />
-              <span>Available Display Repair Services</span>
+        {services && services.length > 0 ? (
+          <div className="mb-12">
+            <div className="mb-6">
+              <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#00B2A2] mb-1">
+                <Layers className="h-4 w-4" />
+                <span>Available Display Repair Services</span>
+              </div>
+              <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+                Specialized Display Solutions for {model.name}
+              </h2>
             </div>
-            <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-              Specialized Display Solutions for {model.name}
-            </h2>
-            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-1 max-w-3xl">
-              Our certified screen laboratory handles every level of display repair, from glass lamination to laser micro-bonding.
-            </p>
-          </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {services.map((service) => (
-              <div
-                key={service.id}
-                className="group relative flex flex-col justify-between rounded-2xl border border-slate-200/90 bg-white p-5 shadow-xs transition-all duration-300 hover:border-[#00B2A2] hover:shadow-lg dark:border-slate-800 dark:bg-slate-900"
-              >
-                <div>
-                  <div className="flex items-center justify-between mb-3.5">
-                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#00B2A2]/10 text-[#00B2A2] dark:bg-[#00B2A2]/20">
-                      <Wrench className="h-5 w-5" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              {services.map((service) => (
+                <div
+                  key={service.id}
+                  className="group relative flex flex-col justify-between rounded-2xl border border-slate-200/90 bg-white p-5 shadow-xs transition-all duration-300 hover:border-[#00B2A2] hover:shadow-lg dark:border-slate-800 dark:bg-slate-900"
+                >
+                  <div>
+                    <div className="flex items-center justify-between mb-3.5">
+                      <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#00B2A2]/10 text-[#00B2A2] dark:bg-[#00B2A2]/20">
+                        <Wrench className="h-5 w-5" />
+                      </div>
+                      <span className="rounded-full bg-slate-100 dark:bg-slate-800 px-2.5 py-0.5 text-[10px] font-bold text-slate-600 dark:text-slate-300">
+                        Display Exclusive
+                      </span>
                     </div>
-                    <span className="rounded-full bg-slate-100 dark:bg-slate-800 px-2.5 py-0.5 text-[10px] font-bold text-slate-600 dark:text-slate-300">
-                      Display Exclusive
-                    </span>
+
+                    <h3 className="text-base font-extrabold text-slate-900 dark:text-white group-hover:text-[#00B2A2] transition-colors">
+                      {service.name}
+                    </h3>
+
+                    <p className="text-xs text-slate-600 dark:text-slate-300 mt-2 leading-relaxed">
+                      {service.description ||
+                        `High-precision display repair procedure designed specifically for ${model.name} panel specifications.`}
+                    </p>
                   </div>
 
-                  <h3 className="text-base font-extrabold text-slate-900 dark:text-white group-hover:text-[#00B2A2] transition-colors">
-                    {service.name}
-                  </h3>
-
-                  <p className="text-xs text-slate-600 dark:text-slate-300 mt-2 leading-relaxed">
-                    {service.description ||
-                      `High-precision display repair procedure designed specifically for ${model.name} panel specifications.`}
-                  </p>
+                  <div className="mt-5 pt-4 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
+                    <span className="text-xs font-bold text-[#00B2A2]">
+                      Cleanroom Calibrated
+                    </span>
+                    <button
+                      onClick={() => handleWhatsAppConsult(service.name)}
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-[#00B2A2]/10 dark:bg-[#00B2A2]/20 px-3 py-1.5 text-xs font-bold text-[#00B2A2] hover:bg-[#00B2A2] hover:text-white transition-colors cursor-pointer"
+                    >
+                      <span>Enquire</span>
+                      <ArrowRight className="h-3 w-3" />
+                    </button>
+                  </div>
                 </div>
-
-                <div className="mt-5 pt-4 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
-                  <span className="text-xs font-bold text-[#00B2A2]">
-                    Cleanroom Calibrated
-                  </span>
-                  <button
-                    onClick={() => handleWhatsAppConsult(service.name)}
-                    className="inline-flex items-center gap-1.5 rounded-lg bg-[#00B2A2]/10 dark:bg-[#00B2A2]/20 px-3 py-1.5 text-xs font-bold text-[#00B2A2] hover:bg-[#00B2A2] hover:text-white transition-colors cursor-pointer"
-                  >
-                    <span>Enquire</span>
-                    <ArrowRight className="h-3 w-3" />
-                  </button>
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
+        ) : null}
 
         {/* Cleanroom Lab Standards Section */}
         <div className="rounded-2xl border border-teal-200/60 bg-gradient-to-br from-teal-50/70 via-white to-teal-50/40 p-6 sm:p-8 dark:border-teal-900/40 dark:from-slate-900 dark:via-slate-900 dark:to-teal-950/20 shadow-xs mb-10">

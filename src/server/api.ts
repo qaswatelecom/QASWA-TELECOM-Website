@@ -708,7 +708,7 @@ apiRouter.get(['/models/:slug', '/repair/:slug'], async (req: Request, res: Resp
       category = cRes[0] || null;
     }
 
-    // Get linked display services
+    // Get linked display services (strictly respect admin assigned services)
     const linked = await db
       .select({
         service: services,
@@ -718,31 +718,14 @@ apiRouter.get(['/models/:slug', '/repair/:slug'], async (req: Request, res: Resp
       .where(and(eq(modelServices.modelId, m.id), eq(modelServices.isActive, true), eq(services.isActive, true)))
       .orderBy(asc(services.sortOrder), asc(services.name));
 
-    let availableServices: any[] = [];
-    if (linked.length > 0) {
-      availableServices = linked.map((l) => ({
-        id: l.service.id,
-        name: l.service.name,
-        slug: l.service.slug,
-        icon: l.service.icon,
-        imageUrl: l.service.imageUrl,
-        description: l.service.description,
-      }));
-    } else {
-      const allActive = await db
-        .select()
-        .from(services)
-        .where(eq(services.isActive, true))
-        .orderBy(asc(services.sortOrder), asc(services.name));
-      availableServices = allActive.map((s) => ({
-        id: s.id,
-        name: s.name,
-        slug: s.slug,
-        icon: s.icon,
-        imageUrl: s.imageUrl,
-        description: s.description,
-      }));
-    }
+    const availableServices = linked.map((l) => ({
+      id: l.service.id,
+      name: l.service.name,
+      slug: l.service.slug,
+      icon: l.service.icon,
+      imageUrl: l.service.imageUrl,
+      description: l.service.description,
+    }));
 
     // Parse display issues for this model
     const masterIssues = await getMasterDisplayIssuesConfig();
